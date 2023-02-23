@@ -1,12 +1,10 @@
 # ApkShellext2_hy  
-![](https://img.shields.io/badge/latest version-v3.0.0-blue.svg?style=flat)
+![](https://img.shields.io/badge/version-v3.0.0-blue.svg?style=flat)
 
 A Windows shell extension supporting icon for files of
 * .apk (android package)
 * .ipa (iOS app package)
 * .appx .appxbundle (Windows phone 8.1/10 app package, .xap is not supported)
-
-This is the code repository, please visit the project page http://apkshellext.com .
 
 #### [IMPORTANT]
 
