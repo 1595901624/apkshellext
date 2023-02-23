@@ -9,7 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>ApkShellext2</RootNamespace>
     <AssemblyName>ApkShellext2</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
@@ -43,7 +43,7 @@
     <SignAssembly>true</SignAssembly>
   </PropertyGroup>
   <PropertyGroup>
-    <AssemblyOriginatorKeyFile>apkshellext2.key.pfx</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>apkshellext2_hy.pfx</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <PropertyGroup>
     <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
@@ -657,7 +657,7 @@
     <Content Include="Resources\Patreon_Mark_Coral.jpg" />
     <Content Include="WebP-wrapper\WebPTest\libwebp_x64.dll" />
     <Content Include="WebP-wrapper\WebPTest\libwebp_x86.dll" />
-    <None Include="apkshellext2.key.pfx" />
+    <None Include="apkshellext2_hy.pfx" />
     <None Include="app.config">
       <SubType>Designer</SubType>
     </None>

@@ -9,9 +9,9 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("ApkShellext2")]
 [assembly: AssemblyDescription("Windows shell plugin enabling showing app package file icon on windows.")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("KKHOMEBREW")]
+[assembly: AssemblyCompany("Haoyu Cloris")]
 [assembly: AssemblyProduct("ApkShellext2")]
-[assembly: AssemblyCopyright("Copyright © KK 2019")]
+[assembly: AssemblyCopyright("Copyright © Haoyu Cloris 2023")]
 [assembly: AssemblyTrademark("ApkShellExt")]
 
 // 将 ComVisible 设置为 false 使此程序集中的类型
@@ -31,7 +31,7 @@ using System.Runtime.InteropServices;
 //
 // 可以指定所有这些值，也可以使用“生成号”和“修订号”的默认值，
 // 方法是按如下所示使用“*”: 
-[assembly: AssemblyVersion("0.2.0.7")]
+[assembly: AssemblyVersion("0.3.0.0")]
 [assembly: NeutralResourcesLanguage("en-US")]
 //[assembly: AssemblyVersion("0.1.2.*")]
 //[assembly: AssemblyFileVersion("0.1.0")]
