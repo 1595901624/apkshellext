@@ -33,6 +33,12 @@ A Windows shell extension supporting icon for files of
  - [x] Hook up adb function with namespace extension.
  - [x] drag-drop to install / uninstall to phone ([Please visit ApkInstaller]([1595901624/ApkInstaller: 一款可以在Windows上双击安装APK的软件 (github.com)](https://github.com/1595901624/ApkInstaller)))
 
+#### [Donate]
+
+* [PayPal](PayPal.Me/haoyu94)
+
+* AliPay: 1595901624@qq.com
+
 #### [Thanks]
 
 Thank you to [kkguo](https://github.com/kkguo) for all open source projects.
@@ -50,4 +56,3 @@ Thank you to [kkguo](https://github.com/kkguo) for all open source projects.
 | [SVG](https://github.com/vvvv/SVG)                                  | SVG format renderer                            |
 | [WebP-Wrapper](https://github.com/JosePineiro/WebP-wrapper)         | WebP format renderer
 | [Thanasis Georgiou](https://github.com/sakisds)                     | Project web page |
-#### 
