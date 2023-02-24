@@ -1,0 +1,52 @@
+#ignore thumbnails created by windows
+Thumbs.db
+
+#Ignore files build by Visual Studio
+*.user
+*.aps
+*.pch
+*.vspscc
+*_i.c
+*_p.c
+*.ncb
+*.suo
+*.bak
+*.cache
+*.ilk
+*.log
+.vs/
+[Bb]in
+[Dd]ebug*/
+*.sbr
+obj/
+[Rr]elease*/
+_ReSharper*/
+SharpShell/.nuget
+SharpShell/ipch/
+*.sdf
+*.opensdf
+Build/Tools/ServerManager.vshost.exe.manifest
+!Release/
+Release/2.*
+Release/nuspec/SharpShell/lib
+Release/nuspec/SharpShellTools/lib
+SharpShell/packages
+*.db
+*.opendb
+
+# SharpShellNativeBridge intermediates.
+SharpShell/Release
+SharpShell/x64
+SharpShell/SharpShellNativeBridge/Release
+SharpShell/SharpShellNativeBridge/x64
+
+# Artifacts
+SharpShell/artifacts
+
+# Artifacts which are automatically copied into other asseblies.
+SharpShell/SharpShell/NativeBridge/SharpShellNativeBridge32.dll
+SharpShell/SharpShell/NativeBridge/SharpShellNativeBridge64.dll
+SharpShell/Tools/ServerRegistrationManager/EmbeddedReferences/SharpShell.dll
+
+# Test project user specific files.
+DllWithResources.vcxproj.filters

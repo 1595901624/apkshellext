@@ -356,18 +356,12 @@
     <Compile Include="SharpShell\SharpShell\SharpShell\SharpNamespaceExtension\StandardPropertyKey.cs" />
     <Compile Include="SharpShell\SharpShell\SharpShell\SharpNamespaceExtension\VirtualFolder.cs" />
     <Compile Include="SharpShell\SharpShell\SharpShell\SharpPreviewHandler\PreviewHandlerAttribute.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\SharpPreviewHandler\PreviewHandlerControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="SharpShell\SharpShell\SharpShell\SharpPreviewHandler\PreviewHandlerHost.cs">
-      <SubType>Form</SubType>
-    </Compile>
+    <Compile Include="SharpShell\SharpShell\SharpShell\SharpPreviewHandler\PreviewHandlerControl.cs" />
+    <Compile Include="SharpShell\SharpShell\SharpShell\SharpPreviewHandler\PreviewHandlerHost.cs" />
     <Compile Include="SharpShell\SharpShell\SharpShell\SharpPreviewHandler\PreviewHandlerRegistrar.cs" />
     <Compile Include="SharpShell\SharpShell\SharpShell\SharpPreviewHandler\SharpPreviewHandler.cs" />
     <Compile Include="SharpShell\SharpShell\SharpShell\SharpPropertySheet\PropertyPageProxy.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\SharpPropertySheet\SharpPropertyPage.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
+    <Compile Include="SharpShell\SharpShell\SharpShell\SharpPropertySheet\SharpPropertyPage.cs" />
     <Compile Include="SharpShell\SharpShell\SharpShell\SharpPropertySheet\SharpPropertySheet.cs" />
     <Compile Include="SharpShell\SharpShell\SharpShell\SharpShellServer.cs" />
     <Compile Include="SharpShell\SharpShell\SharpShell\SharpThumbnailHandler\SharpThumbnailHandler.cs" />
