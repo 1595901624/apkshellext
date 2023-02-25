@@ -16,12 +16,15 @@ namespace ApkShellext2 {
     /// </summary>
     public class AppPackageReader : IDisposable{
         public const string extAPK = ".apk";
+        public const string extAAB = ".aab";
         public const string extIPA = ".ipa";
         public const string extAPPX = ".appx";
         public const string extAPPXBUNDLE = ".appxbundle";
 
         public enum AppType {
             AndroidApp,
+            // Android App Bundle
+            AndroidAab,
             iOSApp,
             WindowsPhoneAppBundle,
             WindowsPhoneApp
@@ -87,15 +90,28 @@ namespace ApkShellext2 {
 
         public static AppType getAppType(string path) {
             string suffix = Path.GetExtension(path);
-            if (suffix == extAPK) {
+            if (suffix == extAPK)
+            {
                 return AppType.AndroidApp;
-            } else if (suffix == extIPA) {
+            }
+            else if (suffix == extIPA)
+            {
                 return AppType.iOSApp;
-            } else if (suffix == extAPPXBUNDLE) {
+            }
+            else if (suffix == extAPPXBUNDLE)
+            {
                 return AppType.WindowsPhoneAppBundle;
-            } else if (suffix == extAPPX) {
+            }
+            else if (suffix == extAPPX)
+            {
                 return AppType.WindowsPhoneApp;
-            } else {
+            }
+            else if (suffix == extAAB) 
+            {
+                return AppType.AndroidAab;
+            } 
+            else 
+            {
                 throw new NotSupportedException(suffix + " type is not supported.");
             }
         }
@@ -110,6 +126,8 @@ namespace ApkShellext2 {
                     return new AppxBundleReader(path);
                 case AppType.WindowsPhoneApp:
                     return new AppxReader(path);
+                    case AppType.AndroidAab:
+                    return new AabReader(path);
                 default :
                     throw new NotSupportedException("File type is not supported.");
             }
