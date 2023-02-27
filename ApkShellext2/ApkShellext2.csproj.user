@@ -16,7 +16,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug2|AnyCPU'">
     <StartProgram>C:\Windows\Microsoft.NET\Framework64\v4.0.30319\regasm.exe</StartProgram>
-    <StartWorkingDirectory>C:\Users\guojin\Documents\Brews\ApkShellext2\ApkShellext2\bin\Debug\</StartWorkingDirectory>
+    <StartWorkingDirectory>D:\Project\C#\apkshellext\ApkShellext2\bin\Debug\</StartWorkingDirectory>
     <StartArguments>/codebase apkshellext2.dll</StartArguments>
     <StartAction>Program</StartAction>
   </PropertyGroup>

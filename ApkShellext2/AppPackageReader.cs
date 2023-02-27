@@ -7,6 +7,8 @@ using System.Drawing;
 using System.Globalization;
 using ApkQuickReader;
 using System.IO;
+using Microsoft.VisualBasic.Logging;
+using System.Windows.Forms;
 
 namespace ApkShellext2 {
     /// <summary>
@@ -126,7 +128,8 @@ namespace ApkShellext2 {
                     return new AppxBundleReader(path);
                 case AppType.WindowsPhoneApp:
                     return new AppxReader(path);
-                    case AppType.AndroidAab:
+                case AppType.AndroidAab:
+                    Utility.Log(null, "AndroidAab", "load AabReader");
                     return new AabReader(path);
                 default :
                     throw new NotSupportedException("File type is not supported.");

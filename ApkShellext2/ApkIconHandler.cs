@@ -23,6 +23,7 @@ namespace ApkShellext2 {
     [ClassInterface(ClassInterfaceType.None)]
     [COMServerAssociation(AssociationType.ClassOfExtension, ".apk")]
     [COMServerAssociation(AssociationType.ClassOfExtension, ".ipa")]
+    [COMServerAssociation(AssociationType.ClassOfExtension, ".aab")]
     [COMServerAssociation(AssociationType.ClassOfExtension, ".appxbundle")]
     [COMServerAssociation(AssociationType.ClassOfExtension, ".appx")]
     public class ApkIconHandler : SharpIconHandler {
