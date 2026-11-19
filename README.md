@@ -1,6 +1,6 @@
 # ApkShellext2
 
-[![release](https://img.shields.io/badge/release_3.4.1-blue)](https://github.com/nkh0472/apkshellext/releases)
+[![release](https://img.shields.io/badge/release_3.4.2-blue)](https://github.com/nkh0472/apkshellext/releases)
 [![.NET](https://img.shields.io/badge/.NET_Framework-4.8-512BD4)](#build-from-source)
 [![license](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
@@ -36,7 +36,7 @@ A Windows shell extension that shows the real app icon, package info tip and a m
 2. Run `install.bat` **as administrator** — it registers the extension for both 64-bit and 32-bit Explorer hosts.
 3. If icons do not refresh, run `restart_explorer.bat`.
 
-**Uninstall:** run `uninstall.bat` as administrator. If file icons persist afterwards, the leftover is the Windows icon cache (`IconCache.db` / `thumbcache_*.db`), not the extension; the archive's `TEST-GUIDE.txt` contains the cleanup commands. When upgrading from an older installation in a *different* folder, unregister the old DLL first (`regasm.exe /u`, both bitnesses).
+**Uninstall:** run `uninstall.bat` as administrator — it unregisters both 64-bit and 32-bit views, sweeps the registration even if the DLL was already deleted (safe to run from any install folder of this version), and removes the legacy COM entries left by pre-3.4.2 builds. If file icons persist afterwards, the leftover is the Windows icon cache (`IconCache.db` / `thumbcache_*.db`), not the extension; delete it and restart Explorer.
 
 ## Settings
 
@@ -76,6 +76,7 @@ Full bilingual release notes are on the [Releases page](https://github.com/nkh04
 
 | Version | Summary |
 |---------|---------|
+| 3.4.2 | Modernized install/uninstall scripts: dual-bitness registration, offline registry sweep, legacy COM-entry cleanup; COM surface restricted to the four shell handlers |
 | 3.4.1 | VectorDrawable rendering re-based onto the embedded SVG engine (gradients incl. multi-stop/angle/radial, nested groups, clip paths); indirect color references resolved |
 | 3.4.0 | Split-APK bundles (`.apks`/`.apkm`/`.xapk`); zip-bomb & overflow hardening in all readers; MSIX bundle member-name decoding |
 | 3.3.1 | FacadeResolver — fixes silent vector-icon failure inside Explorer; vector group transforms; adaptive-icon fallback chain |

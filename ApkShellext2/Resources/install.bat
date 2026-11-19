@@ -1,9 +1,11 @@
 @ECHO OFF
+SetLocal EnableExtensions
+TITLE APK Shell Extension 2 - Install
 ECHO #######################################################
 ECHO ##            APK Shell Extension  2                 ##
-ECHO ##                                                   ##
-ECHO ##           http://www.apkshellext.com              ##
+ECHO ##      https://github.com/nkh0472/apkshellext       ##
 ECHO #######################################################
+ECHO.
 
 REM === check and get the UAC for administrator privilege ===
 REM elevation is launched through a 64-bit cscript (Sysnative alias when the caller
@@ -27,27 +29,79 @@ if '%~1' EQU '1' (
     "%CSCRIPT%" //nologo "%temp%\apkshellext_elev.vbs"
     del "%temp%\apkshellext_elev.vbs" 2>nul
     exit /b
-	
+
 :gotAdmin
-    pushd "%CD%"
     CD /D "%~dp0"
-:--------------------------------------
-
-REM pick the 64-bit regasm on 64-bit Windows (PROCESSOR_ARCHITEW6432 set when a
-REM 32-bit caller was somehow left elevated; the vbs re-launch above avoids it)
-set FRAMEWORK=%windir%\Microsoft.NET\Framework
-if /i "%PROCESSOR_ARCHITECTURE%"=="AMD64" set FRAMEWORK=%FRAMEWORK%64
-if /i "%PROCESSOR_ARCHITEW6432%"=="AMD64" set FRAMEWORK=%windir%\Microsoft.NET\Framework64
-set DOTNETVERSION=v4.0.30319
-set REGASM="%FRAMEWORK%\%DOTNETVERSION%\regasm.exe"
-%REGASM% /codebase "%~dp0\apkshellext2.dll"
-
-ECHO Done!
 ECHO.
-ECHO /-------------------------------------------------------------------\
-ECHO  apkshellext is an open-source project,
-ECHO  Please visit http://www.apkshellext.com for more information
-ECHO \-------------------------------------------------------------------/
 
+if not exist "%~dp0ApkShellext2.dll" (
+    echo ERROR: ApkShellext2.dll not found next to this script.
+    echo Extract the whole archive to the final folder first, then run install.bat again.
+    pause
+    exit /b 1
+)
+
+set "REGASM64=%windir%\Microsoft.NET\Framework64\v4.0.30319\regasm.exe"
+set "REGASM32=%windir%\Microsoft.NET\Framework\v4.0.30319\regasm.exe"
+
+if not exist "%REGASM64%" (
+    echo ERROR: .NET Framework 4.x regasm.exe not found at "%REGASM64%".
+    pause
+    exit /b 1
+)
+
+REM === register with BOTH regasm bitnesses ===
+REM 64-bit view serves explorer.exe; 32-bit view serves 32-bit host processes
+REM (older file dialogs etc). Registering only one view leaves the other hosts
+REM without icons and is a known source of half-uninstalled states.
+ECHO [1/4] Registering shell handlers (64-bit view)...
+"%REGASM64%" /codebase "%~dp0ApkShellext2.dll"
+if not '%errorlevel%' EQU '0' (
+    echo ERROR: 64-bit registration failed with code %errorlevel%.
+    pause
+    exit /b 1
+)
+if exist "%REGASM32%" (
+    ECHO [1/4] Registering shell handlers (32-bit view)...
+    "%REGASM32%" /codebase "%~dp0ApkShellext2.dll"
+    if not '%errorlevel%' EQU '0' echo WARNING: 32-bit registration failed; 64-bit hosts still work.
+)
+
+REM === show which DLL the shell will actually load (both views) ===
+ECHO.
+ECHO [2/4] Active registration (both views):
+ECHO     this folder: %~dp0
+for %%V in (
+    "HKLM\SOFTWARE\Classes\CLSID\{1F869CEE-4FDA-35D9-896F-43975A87D1F6}\InprocServer32"
+    "HKLM\SOFTWARE\WOW6432Node\Classes\CLSID\{1F869CEE-4FDA-35D9-896F-43975A87D1F6}\InprocServer32"
+) do (
+    reg query %%V /v CodeBase 2>nul | findstr /i CodeBase
+    if errorlevel 1 echo     (view has no CodeBase entry: %%~V)
+)
+echo     If a CodeBase above points to ANOTHER folder, an old copy is still
+echo     registered - run uninstall.bat from that old folder as well.
+
+REM === notify shell + restart explorer so new handlers load immediately ===
+ECHO.
+ECHO [3/4] Notifying the shell...
+ie4uinit.exe -show >nul 2>&1
+choice /C YN /M "Restart Explorer now to take effect (recommended)"
+if '%errorlevel%' EQU '2' goto verify
+taskkill /f /im explorer.exe >nul 2>&1
+timeout /t 2 /nobreak >nul
+start "" explorer.exe
+
+:verify
+
+REM === verify ===
+ECHO.
+ECHO [4/4] Verifying...
+reg query "HKLM\SOFTWARE\Classes\CLSID\{1F869CEE-4FDA-35D9-896F-43975A87D1F6}" >nul 2>&1
+if '%errorlevel%' EQU '0' (
+    echo Install OK: icon handler registered and pointing at "%~dp0".
+) else (
+    echo WARNING: verification failed - CLSID not found in 64-bit view after install.
+)
+ECHO.
 PAUSE
-@ECHO ON
+exit /b 0
