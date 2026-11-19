@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -41,7 +41,8 @@ namespace ApkShellext2
         {
             Log("create AabReader new");
             FileName = path;
-            openStream(new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read));
+            // FileShare.Delete so Explorer can delete/rename the package while handlers are alive (kkguo/apkshellext#103)
+            openStream(new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read | FileShare.Delete));
         }
 
 
@@ -140,22 +141,24 @@ namespace ApkShellext2
         public Bitmap getImage(string path, Size size)
         {
             ZipEntry iconz;
-            if (zip.FindEntry(path, true) > 0)
+            if (zip.FindEntry(path, true) >= 0)
             {
                 iconz = zip.GetEntry(path);
-                if (path.EndsWith(".png") || path.EndsWith(".jpg") || path.EndsWith(".jpeg") ||
-                    path.EndsWith(".gif") || path.EndsWith(".tif") || path.EndsWith(".tiff"))
+                // case-insensitive extension dispatch, see kkguo/apkshellext#99
+                string ext = System.IO.Path.GetExtension(path).ToLowerInvariant();
+                if (ext == ".png" || ext == ".jpg" || ext == ".jpeg" ||
+                    ext == ".gif" || ext == ".tif" || ext == ".tiff")
                 {
                     return Utility.ResizeBitmap((Bitmap)Image.FromStream(zip.GetInputStream(iconz)), size);
                 }
-                else if (path.EndsWith(".webp"))
+                else if (ext == ".webp")
                 {
                     WebP webp = new WebP();
                     byte[] bytes = new BinaryReader(zip.GetInputStream(iconz)).ReadBytes((int)iconz.Size);
                     //webp.Decode(bytes).Save(FileName+".webp");
                     return Utility.ResizeBitmap(webp.Decode(bytes), size);
                 }
-                else if (path.EndsWith(".xml"))
+                else if (ext == ".xml")
                 {
                     XmlDocument doc = ExtractCompressedXml(path);
                     if (doc.FirstChild.Name == "adaptive-icon")

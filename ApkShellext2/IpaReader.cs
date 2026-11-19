@@ -44,7 +44,8 @@ namespace ApkShellext2
 
         public IpaReader(string path) {
             FileName = path;
-            openStream(new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read));
+            // FileShare.Delete so Explorer can delete/rename the package while handlers are alive (kkguo/apkshellext#103)
+            openStream(new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read | FileShare.Delete));
         }
 
         public IpaReader(Stream stream) {

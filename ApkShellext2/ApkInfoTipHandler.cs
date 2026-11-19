@@ -1,4 +1,4 @@
-﻿using ApkQuickReader;
+using ApkQuickReader;
 using Microsoft.Win32;
 using SharpShell.Attributes;
 using SharpShell.Diagnostics;
@@ -33,8 +33,8 @@ namespace ApkShellext2 {
             try {
                 Utility.Localize();
                 string TipPattern = Utility.GetSetting("ToolTipPattern", NonLocalizeResources.strInfoTipDefault);
-                bool isapk = SelectedItemPath.EndsWith(".apk");
-                bool isipa = SelectedItemPath.EndsWith(".ipa");
+                bool isapk = SelectedItemPath.EndsWith(".apk", StringComparison.OrdinalIgnoreCase);
+                bool isipa = SelectedItemPath.EndsWith(".ipa", StringComparison.OrdinalIgnoreCase);
                 
                 using (AppPackageReader reader = AppPackageReader.Read(SelectedItemPath)) {
                     return ApkContextMenu.ReplaceVariables(TipPattern, reader);

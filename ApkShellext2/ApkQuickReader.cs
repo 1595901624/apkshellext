@@ -1,4 +1,4 @@
-﻿using ApkShellext2;
+using ApkShellext2;
 using ICSharpCode.SharpZipLib.Zip;
 using System;
 using System.Collections;
@@ -1150,7 +1150,8 @@ namespace ApkQuickReader
         /// <param name="culture"></param>
         public ApkReader(string filename, string culture = "") {
             FileName = filename;
-            openStream(new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.Read));
+            // FileShare.Delete so Explorer can delete/rename the package while our icon/infotip handles are alive (kkguo/apkshellext#103)
+            openStream(new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.Read | FileShare.Delete));
         }
 
         public ApkReader(Stream stream, string culture = "") {
@@ -1252,17 +1253,19 @@ namespace ApkQuickReader
         /// <returns>Bitmap or </returns>
         public Bitmap getImage(string path, Size size) {
             ZipEntry iconz;
-            if (zip.FindEntry(path, true) > 0) {
+            if (zip.FindEntry(path, true) >= 0) {
                 iconz = zip.GetEntry(path);
-                if (path.EndsWith(".png") || path.EndsWith(".jpg") || path.EndsWith(".jpeg") || 
-                    path.EndsWith(".gif") || path.EndsWith(".tif") || path.EndsWith(".tiff")) {
+                // case-insensitive extension dispatch, see kkguo/apkshellext#99 (res/drawable/Icon.PNG matched no branch)
+                string ext = System.IO.Path.GetExtension(path).ToLowerInvariant();
+                if (ext == ".png" || ext == ".jpg" || ext == ".jpeg" ||
+                    ext == ".gif" || ext == ".tif" || ext == ".tiff") {
                     return Utility.ResizeBitmap((Bitmap)Image.FromStream(zip.GetInputStream(iconz)),size);
-                } else if (path.EndsWith(".webp")) {
+                } else if (ext == ".webp") {
                     WebP webp = new WebP();
                     byte[] bytes = new BinaryReader(zip.GetInputStream(iconz)).ReadBytes((int)iconz.Size);
                     //webp.Decode(bytes).Save(FileName+".webp");
                     return Utility.ResizeBitmap(webp.Decode(bytes),size);
-                } else if (path.EndsWith(".xml")) {
+                } else if (ext == ".xml") {
                     XmlDocument doc = ExtractCompressedXml(path);
                     if (doc.FirstChild.Name == "adaptive-icon") {
                         return parseAdaptiveIcon(doc, size);

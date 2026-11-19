@@ -1,5 +1,5 @@
 # ApkShellext2_hy  
-![](https://img.shields.io/badge/version-v3.1.0-blue.svg?style=flat)
+![](https://img.shields.io/badge/version-v3.2.0-blue.svg?style=flat)
 
 A Windows shell extension supporting icon for files of
 * .apk (android package)
@@ -11,6 +11,12 @@ A Windows shell extension supporting icon for files of
 **This project is based on `ApkShellExt2`, which has not been updated by the original author for two years, and I will continue to maintain this project if I have spare time. In addition, my other project is also based on this project, I hope you support more.**
 
 #### [Change]
+
+* [3.2.0] Bug fixes (issue triage)
+  * Fix: icon not shown when the archive stores its icon with an uppercase extension (`Icon.PNG`) — extension dispatch in `getImage` is now case-insensitive for .apk and .aab; `.APK`/`.IPA` infotip/context-menu detection likewise. (kkguo/apkshellext#99)
+  * Fix: package file could not be deleted/renamed in Explorer while icon/infotip handlers were alive — all package FileStreams now opened with `FileShare.Delete`. (kkguo/apkshellext#103)
+  * Fix: install.bat/uninstall.bat failed to elevate when invoked by a 32-bit process on Windows 10/11 (WOW64 runas bug); elevation now always runs through a 64-bit cscript and the 64-bit regasm is picked via PROCESSOR_ARCHITECTURE. (kkguo/apkshellext#116)
+  * Fix: post-build batch silently failed on LF-only line endings (cmd GOTO limitation); `.gitattributes` now pins CRLF for `*.bat`/`*.cmd`.
 
 * [3.1.0] Dependency modernization (still .NET Framework 4.8)
   * Security: native libwebp rebuilt from 1.0.3 (2013) to **1.6.0** — fixes CVE-2023-4863, CVE-2023-51294 and a dozen more; x86/x64 built with MSVC static CRT, libsharpyuv statically linked (`ApkShellext2/LibWebP/`, rebuild script in `build/libwebp/`).

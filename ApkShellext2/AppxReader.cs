@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -44,7 +44,9 @@ namespace ApkShellext2 {
 
         public AppxReader(string path) {
             FileName = path;
-            zip = new ZipFile(FileName);
+            // open with FileShare.Delete so Explorer can delete/rename the package while handlers are alive (kkguo/apkshellext#103);
+            // ZipFile owns the stream (IsStreamOwner defaults to true), Dispose->zip.Close() closes it
+            zip = new ZipFile(new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read | FileShare.Delete));
             Extract();
         }
 

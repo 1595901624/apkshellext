@@ -1,4 +1,4 @@
-﻿using ApkQuickReader;
+using ApkQuickReader;
 using ApkShellext2.Properties;
 using Microsoft.Win32;
 using QRCoder;
@@ -303,8 +303,8 @@ namespace ApkShellext2 {
             string suffix = Path.GetExtension(path);
             string newFileName = "";
             string renamePattern = Utility.GetSetting("RenamePattern", NonLocalizeResources.strRenamePatternDefault);
-            bool isapk = SelectedItemPaths.ElementAt(0).EndsWith(".apk");
-            bool isipa = SelectedItemPaths.ElementAt(0).EndsWith(".ipa");
+            bool isapk = SelectedItemPaths.ElementAt(0).EndsWith(".apk", StringComparison.OrdinalIgnoreCase);
+            bool isipa = SelectedItemPaths.ElementAt(0).EndsWith(".ipa", StringComparison.OrdinalIgnoreCase);
 
             try {
                 using (AppPackageReader reader = AppPackageReader.Read(path)) {                    
