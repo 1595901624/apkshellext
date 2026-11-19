@@ -1,84 +1,113 @@
-# ApkShellext2_hy  
-![](https://img.shields.io/badge/version-v3.4.0-blue.svg?style=flat)
+# ApkShellext2
 
-A Windows shell extension supporting icon for files of
-* .apk (android package)
-* .apks .apkm .xapk (split-APK bundles, new in 3.4.0)
-* .ipa (iOS app package)
-* .appx .appxbundle (Windows phone 8.1/10 app package, .xap is not supported)
+[![release](https://img.shields.io/badge/release_3.4.0-blue)](https://github.com/nkh0472/apkshellext/releases)
+[![.NET](https://img.shields.io/badge/.NET_Framework-4.8-512BD4)](#build-from-source)
+[![license](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
-#### [IMPORTANT]
+A Windows shell extension that shows the real app icon, package info tip and a management context menu for mobile app packages in File Explorer.
 
-**This project is based on `ApkShellExt2`, which has not been updated by the original author for two years, and I will continue to maintain this project if I have spare time. In addition, my other project is also based on this project, I hope you support more.**
+在资源管理器中为手机应用安装包显示真实图标、悬浮信息与右键管理菜单的 Windows 外壳扩展。支持 Windows 10 / 11，运行于 .NET Framework 4.8。
 
-#### [Change]
+## Supported file types
 
-* [3.4.0] Split-APK bundles & zip hardening
-  * New: .apks / .apkm / .xapk split-bundle icons and info
-  * Security: bounded, ratio-capped zip reads everywhere (anti zip-bomb / size overflow)
-  * Security: XML drawable recursion depth & canvas size limits
-  * 安全：为全部归档读取路径增设容量与解压比率上限，防御压缩炸弹、长度溢出与递归异常
+| Extension | Icon | Info tip | Context menu | Thumbnail |
+|-----------|:----:|:--------:|:------------:|:---------:|
+| `.apk`    | ✔ | ✔ | ✔ | ✔ |
+| `.apks` `.apkm` `.xapk` (split bundles, since 3.4.0) | ✔ | ✔ | ✔ | — |
+| `.aab`    | ✔ | — | — | — |
+| `.ipa`    | ✔ | ✔ | ✔ | — |
+| `.appx` `.appxbundle` | ✔ | ✔ | ✔ | — |
 
-* [3.3.1] Vector icons fixed at the root
-  * Fix: facade assembly resolution inside explorer (vector icons silently blank)
-  * Fix: vector `<group>` transforms honored; adaptive-icon fallback chain
-  * 修复：宿主进程内依赖解析失败导致的矢量图标空白；支持矢量分组变换；完善自适应图标降级处理
+`.xap` is not supported.
 
-* [3.3.0] Localized app names & icon regressions
-  * New: localized `android:label` with language preference in Preferences
-  * Fix: SVG 3.5.0 path regression; PNG blank-icon buffering; modeless Preferences
-  * 新增：应用名称多语言支持；修复：SVG 与 PNG 图标渲染回归；首选项窗口改为非模态
+## Features
 
-* [3.2.0] Bug fixes (issue triage)
-  * Fix: uppercase icon extensions (#99); FileShare.Delete (#103); WOW64 elevation (#116); CRLF build scripts
-  * 修复：大写扩展名识别、文件占用冲突、64 位提权失败与构建脚本换行问题
+- Real package icons at every Explorer zoom level, with Android adaptive-icon rendering and automatic fallback to the legacy icon when a variant cannot be drawn
+- Localized app names: labels follow your UI language, or a language you pick in Preferences (since 3.3.0)
+- Info tip with version, package name, size, target platform and other parsed metadata
+- Context menu: batch rename with custom patterns, open the app's store page
+- Overlay badges distinguishing app types
+- Localized UI — translations are managed on [Crowdin](https://crowdin.com/project/apkshellext)
+- Hardened archive parsing: decompression-ratio and size caps on every read path (since 3.4.0), libwebp 1.6.0 (since 3.1.0)
 
-* [3.1.0] Dependency modernization (still .NET Framework 4.8)
-  * Security: libwebp 1.0.3 → 1.6.0 (CVE-2023-4863 etc.), SharpZipLib 1.4.2, QRCoder 1.4.2, SVG.NET 3.5.0, WebP-wrapper master
-  * Removed Ionic.Zlib & dead Google.Protobuf refs; new signing key workflow; postbuild packaging fixes
-  * 依赖库整体升级，修复 libwebp 相关安全漏洞
+## Install
 
-* [3.0.0]
-  * Fix: Crashes Chrome and Edge when downloading an apk/ipa/appx/ file.
-  * Upgrade .Net Framework version to 4.8.0.
+1. Download the latest release archive and extract it to a permanent folder (e.g. `C:\Program Files\ApkShellext2\`).
+2. Run `install.bat` **as administrator** — it registers the extension for both 64-bit and 32-bit Explorer hosts.
+3. If icons do not refresh, run `restart_explorer.bat`.
 
-#### [Features]
- - [x] Display app icon in Windows File Explorer with best resolution. __DOES NOT work with other file manager due to .NET restriction__
- - [x] Customize-able Info-Tip for showing package information.
- - [x] Context menu for batch renaming, use customize-able patterns.
- - [x] Go to app store from context menu.
- - [x] Auto-check new version.
- - [x] Show overlay icon for different type of apps.
- - [x] Support multiple languages: Thanks to contributors on https://crowdin.com/project/apkshellext
-   
-#### [Todo]
- - [X] Adaptive-icon support (Beta)
- - [ ] protobuf support
- - [ ] QR code to download to phone
- - [x] Hook up adb function with namespace extension.
- - [x] drag-drop to install / uninstall to phone ([Please visit ApkInstaller]([1595901624/ApkInstaller: 一款可以在Windows上双击安装APK的软件 (github.com)](https://github.com/1595901624/ApkInstaller)))
+**Uninstall:** run `uninstall.bat` as administrator. If file icons persist afterwards, the leftover is the Windows icon cache (`IconCache.db` / `thumbcache_*.db`), not the extension; the archive's `TEST-GUIDE.txt` contains the cleanup commands. When upgrading from an older installation in a *different* folder, unregister the old DLL first (`regasm.exe /u`, both bitnesses).
 
-#### [Donate]
+## Settings
 
-* [PayPal](PayPal.Me/haoyu94)
+Right-click a package → **ApkShellext2 → Preferences** (modeless, never blocks Explorer). Settings live under `HKCU\SOFTWARE\ApkShellext2`, including `SupportAdaptiveIcon`, `UseAppNameLanguage` / `AppNameLanguage`, and info-tip customization.
 
-* AliPay: 1595901624@qq.com
+## Known limitations
 
-#### [Thanks]
+- Icons work in Windows File Explorer only; third-party file managers host the COM object in-process, which .NET shell extensions do not support.
+- Adaptive icons whose foreground is a widget-layout XML (not a drawable) fall back to the legacy icon, mirroring Android's own behaviour.
 
-Thank you to [kkguo](https://github.com/kkguo) for all open source projects.
+## Build from source
 
-|||
-| --- | --- |
-| [SharpShell](https://github.com/dwmkerr/sharpshell)                 | Shell extension library                        |
-| [SharpZip](https://github.com/icsharpcode/SharpZipLib)              | Zip function implementation in C#              |
-| [Iteedee.ApkReader](https://github.com/hylander0/Iteedee.ApkReader) | the original APK reader, not in use currently  |
-| [PlistCS](https://github.com/animetrics/PlistCS)                    | iOS plist file reader                          |
-| [PNGDecrush](https://github.com/MikeWeller/PNGDecrush)              | PNG decrush lib                                |
-| [QRCoder](https://github.com/codebude/QRCoder)                      | QR code generator                              |
-| [Ultimate Social](https://www.iconfinder.com/iconsets/ultimate-social) | A free icon set for social medias           |
-| [SVG](https://github.com/vvvv/SVG)                                  | SVG format renderer                            |
-| [WebP-Wrapper](https://github.com/JosePineiro/WebP-wrapper)         | WebP format renderer
-| [Thanasis Georgiou](https://github.com/sakisds)                     | Project web page |
-| [apk-info](https://github.com/delvinru/apk-info)                    | Split-APK (.apks/.apkm/.xapk) container layout, base-selection order & anti-zip-bomb doctrine |
-| [apkspec](https://apkspec.readthedocs.io/)                          | Unofficial .apks / split-APK bundle specification |
+```
+git clone --recursive -b ApkShellext2_hy https://github.com/nkh0472/apkshellext.git
+msbuild ApkShellext2.sln /p:Configuration=Release /p:Platform="Any CPU"
+```
+
+Requires Visual Studio 2019+ (MSBuild + Roslyn) and the .NET Framework 4.8 targeting pack. Release builds sign with `ApkShellext2\apkshellext2_hy.snk` — generate your own key with `sn -k` (the key file is not committed). The bundled `libwebp` 1.6.0 binaries can be rebuilt with the scripts in `build/libwebp/`.
+
+## Project history & maintainers
+
+| Period | Maintainer | Contribution |
+|--------|-----------|--------------|
+| 2009 – | [kkguo (Jingang Guo)](https://github.com/kkguo) | Original author of ApkShellext2 |
+| – 2023 | [1595901624 (luhaoyu)](https://github.com/1595901624) | Maintained v3.x, created the `ApkShellext2_hy` branch (.aab support and more) |
+| 2026 – | [nkh0472](https://github.com/nkh0472) | Current maintainer: dependency modernization (libwebp 1.6.0), Windows 11 icon fixes, localized labels, split-APK bundles, archive hardening |
+
+## Funding
+
+The PayPal / Alipay channels below are the **previous maintainer's** (1595901624) and are kept only as historical attribution from the original README. The current maintainer publishes no donation channel.
+
+- PayPal (1595901624): [PayPal.Me/haoyu94](https://PayPal.Me/haoyu94)
+- AliPay (1595901624): 1595901624@qq.com
+
+## Changelog
+
+Full bilingual release notes are on the [Releases page](https://github.com/nkh0472/apkshellext/releases).
+
+| Version | Summary |
+|---------|---------|
+| 3.4.0 | Split-APK bundles (`.apks`/`.apkm`/`.xapk`); zip-bomb & overflow hardening in all readers; MSIX bundle member-name decoding |
+| 3.3.1 | FacadeResolver — fixes silent vector-icon failure inside Explorer; vector group transforms; adaptive-icon fallback chain |
+| 3.3.0 | Localized app names; SVG/PNG icon regression fixes; modeless Preferences |
+| 3.2.0 | Case-insensitive icon extensions (#99); FileShare.Delete (#103); WOW64-safe elevation (#116) |
+| 3.1.0 | Dependency modernization: libwebp 1.6.0 (CVE-2023-4863 et al.), SharpZipLib 1.4.2, QRCoder 1.4.2, SVG.NET 3.5.0 — *had an SVG regression, fixed in 3.3.1* |
+| 3.0.0 | Fixed Chrome/Edge download crash; upgraded to .NET Framework 4.8 |
+
+## Roadmap
+
+- Protobuf metadata support (`.aab` bundle metadata, `toc.pb` details)
+- QR code in info tip for download-to-phone
+- Icon probing inside config splits
+
+## Thanks
+
+The project stands on these open-source works:
+
+| Component | Role |
+|-----------|------|
+| [SharpShell](https://github.com/dwmkerr/sharpshell) | Shell extension framework |
+| [libwebp](https://chromium.googlesource.com/webm/libwebp) | WebP codec (1.6.0, built from source) |
+| [WebP-wrapper](https://github.com/JosePineiro/WebP-wrapper) | WebP C# bindings |
+| [SharpZipLib](https://github.com/icsharpcode/SharpZipLib) | Zip archive access |
+| [SVG](https://github.com/vvvv/SVG) | SVG / vector-drawable rendering |
+| [QRCoder](https://github.com/codebude/QRCoder) | QR code generation |
+| [PlistCS](https://github.com/animetrics/PlistCS) | iOS plist reader |
+| [PNGDecrush](https://github.com/MikeWeller/PNGDecrush) | PNG zlib re-encoding |
+| [apk-info](https://github.com/delvinru/apk-info) | Split-APK container layout & anti-zip-bomb doctrine |
+| [apkspec](https://apkspec.readthedocs.io/) | Unofficial split-APK bundle specification |
+| [Ultimate Social](https://www.iconfinder.com/iconsets/ultimate-social) | Overlay icon set |
+
+## License
+
+[MIT](LICENSE) — Copyright (c) 2015 Jingang Guo, KK.
