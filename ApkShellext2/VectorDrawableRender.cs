@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -335,7 +335,9 @@ namespace ApkShellext2
 #else
             #region Use SVG lib
             try {
-                Svg.Pathing.SvgPathSegmentList l = SvgPathBuilder.Parse(pathdata);
+                // Svg 3.5.0 Parse() takes ReadOnlySpan<char>; the net461 System.Memory
+                // package lacks the implicit string conversion (core3.0+ only).
+                Svg.Pathing.SvgPathSegmentList l = SvgPathBuilder.Parse(pathdata.ToCharArray());
                 foreach (Svg.Pathing.SvgPathSegment s in l) {
                     s.AddToPath(path);
                 }

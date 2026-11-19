@@ -1,18 +1,12 @@
 [submodule "ApkShellext2/SharpZipLib"]
 	path = ApkShellext2/SharpZipLib
-	url = https://github.com/kkguo/SharpZipLib.git
+	url = https://github.com/icsharpcode/SharpZipLib.git
 [submodule "ApkShellext2/PlistCS"]
 	path = ApkShellext2/PlistCS
 	url = https://github.com/kkguo/PlistCS.git
 [submodule "ApkShellext2/PNGDecrush"]
 	path = ApkShellext2/PNGDecrush
-	url = https://github.com/kkguo/PNGDecrush.git
-[submodule "ApkShellext2/Ionic.Zlib"]
-	path = ApkShellext2/Ionic.Zlib
-	url = https://github.com/kkguo/Ionic.Zlib.git
-[submodule "QRCoder"]
-	path = QRCoder
-	url = https://github.com/kkguo/QRCoder.git
+	url = https://github.com/nkh0472/PNGDecrush.git
 [submodule "ApkShellext2/QRCoder"]
 	path = ApkShellext2/QRCoder
 	url = https://github.com/codebude/QRCoder.git
@@ -22,3 +16,4 @@
 [submodule "ApkShellext2/WebP-wrapper"]
 	path = ApkShellext2/WebP-wrapper
 	url = https://github.com/JosePineiro/WebP-wrapper.git
+
