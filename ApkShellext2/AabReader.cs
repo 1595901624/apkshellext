@@ -149,7 +149,11 @@ namespace ApkShellext2
                 if (ext == ".png" || ext == ".jpg" || ext == ".jpeg" ||
                     ext == ".gif" || ext == ".tif" || ext == ".tiff")
                 {
-                    return Utility.ResizeBitmap((Bitmap)Image.FromStream(zip.GetInputStream(iconz)), size);
+                    // fully buffer before decoding: GDI+ decodes PNG lazily and renders BLANK pixels when
+                    // scaled from SharpZipLib 1.4.2's non-seekable zip streams after they are closed
+                    byte[] imgBytes = new BinaryReader(zip.GetInputStream(iconz)).ReadBytes((int)iconz.Size);
+                    using (MemoryStream ms = new MemoryStream(imgBytes))
+                        return Utility.ResizeBitmap((Bitmap)Image.FromStream(ms), size);
                 }
                 else if (ext == ".webp")
                 {

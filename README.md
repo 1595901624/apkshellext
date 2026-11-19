@@ -1,5 +1,5 @@
 # ApkShellext2_hy  
-![](https://img.shields.io/badge/version-v3.2.0-blue.svg?style=flat)
+![](https://img.shields.io/badge/version-v3.3.0-blue.svg?style=flat)
 
 A Windows shell extension supporting icon for files of
 * .apk (android package)
@@ -11,6 +11,13 @@ A Windows shell extension supporting icon for files of
 **This project is based on `ApkShellExt2`, which has not been updated by the original author for two years, and I will continue to maintain this project if I have spare time. In addition, my other project is also based on this project, I hope you support more.**
 
 #### [Change]
+
+* [3.3.0] Localized app names & icon regressions
+  * New: `android:label` localization — *Preferences ▸ Rename* gained "Use app name language" with a language dropdown (default: follow UI language). `{#appname}` in rename patterns and the info-tip now resolve the label's resource configurations with Android-like ranking: exact language+region > language without region > same language other region > locale-less default. Verified against a corpus of 83 APKs (18 with localized labels, e.g. Ice Box 冰箱, SnoreLab いびきラボ/鼾声分析器).
+  * Fix: vector (adaptive/monochrome) icons collapsed to a solid color with SVG.NET 3.5.0 — `Convert2Path` now threads the current path point through `SvgPathSegment.AddToPath` instead of relying on the obsolete one-arg overload (segments' `Start` is no longer filled since 3.x).
+  * Fix: PNG icons could paint blank — entry bytes are fully buffered before `Image.FromStream` (GDI+ defers PNG decoding, which deadlocks against SharpZipLib 1.4.2's non-seekable entry streams); applied to .apk, .aab and .appx logo paths.
+  * Fix: the Preferences window was modal and froze the Explorer window until closed; it is now a modeless singleton.
+  * Build: `System.Runtime.CompilerServices.Unsafe` facade raised to 6.0.0, resolving the MSB3277 conflict introduced by System.Text.Encoding.CodePages 5.0.0 (QRCoder PayloadGenerator).
 
 * [3.2.0] Bug fixes (issue triage)
   * Fix: icon not shown when the archive stores its icon with an uppercase extension (`Icon.PNG`) — extension dispatch in `getImage` is now case-insensitive for .apk and .aab; `.APK`/`.IPA` infotip/context-menu detection likewise. (kkguo/apkshellext#99)

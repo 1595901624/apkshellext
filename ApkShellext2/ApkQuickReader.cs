@@ -1177,7 +1177,8 @@ namespace ApkQuickReader
         }
         public override string AppName {
             get {
-                return getAttribute(TagApplication, AttrLabel);
+                // localized label: applyLocaleFilter() prefers the configured app-name language
+                return getAttribute(TagApplication, AttrLabel, true);
             }
         }
         public override string Version {
@@ -1210,7 +1211,11 @@ namespace ApkQuickReader
         /// <param name="attr"></param>
         /// <returns></returns>
         public string getAttribute(string tag, string attr) {
-            return QuickSearchManifestXml(tag, attr);
+            return getAttribute(tag, attr, false);
+        }
+
+        public string getAttribute(string tag, string attr, bool preferLocale) {
+            return QuickSearchManifestXml(tag, attr, preferLocale);
         }
 
         // get an icon with size
@@ -1259,7 +1264,14 @@ namespace ApkQuickReader
                 string ext = System.IO.Path.GetExtension(path).ToLowerInvariant();
                 if (ext == ".png" || ext == ".jpg" || ext == ".jpeg" ||
                     ext == ".gif" || ext == ".tif" || ext == ".tiff") {
-                    return Utility.ResizeBitmap((Bitmap)Image.FromStream(zip.GetInputStream(iconz)),size);
+                    // fully buffer before decoding: GDI+ scaled DrawImage silently renders BLANK pixels
+                    // from SharpZipLib 1.4.2's non-seekable decompression streams (0.86's were buffered)
+                    using (Stream raw = zip.GetInputStream(iconz)) {
+                        MemoryStream ms = new MemoryStream((int)Math.Max(iconz.Size, 4096));
+                        raw.CopyTo(ms);
+                        ms.Position = 0;
+                        return Utility.ResizeBitmap((Bitmap)Image.FromStream(ms), size);
+                    }
                 } else if (ext == ".webp") {
                     WebP webp = new WebP();
                     byte[] bytes = new BinaryReader(zip.GetInputStream(iconz)).ReadBytes((int)iconz.Size);
@@ -1543,7 +1555,11 @@ namespace ApkQuickReader
         /// <param name="attribute"></param>
         /// <returns></returns>
         public string QuickSearchManifestXml(string tag, string attribute) {
-            return QuickSearchCompressedXml(manifest, tag, attribute);
+            return QuickSearchCompressedXml(manifest, tag, attribute, false);
+        }
+
+        public string QuickSearchManifestXml(string tag, string attribute, bool preferLocale) {
+            return QuickSearchCompressedXml(manifest, tag, attribute, preferLocale);
         }
 
         /// <summary>
@@ -1554,7 +1570,7 @@ namespace ApkQuickReader
         /// <param name="attribute"></param>
         /// <param name="sub"></param>
         /// <returns></returns>
-        private string QuickSearchCompressedXml(byte[] xml, string xpath, string attribute) {
+        private string QuickSearchCompressedXml(byte[] xml, string xpath, string attribute, bool preferLocale) {
             using (MemoryStream ms = new MemoryStream(xml))
             using (BinaryReader br = new BinaryReader(ms)) {
                 Log("Search xml for " + xpath + " " + attribute);
@@ -1594,7 +1610,7 @@ namespace ApkQuickReader
                                         ms.Seek(4 + 2 + 1, SeekOrigin.Current); // skip rawValue/size/0/
                                         DATA_TYPE dataType = (DATA_TYPE)br.ReadByte();
                                         uint data = br.ReadUInt32();
-                                        return convertData(xml, dataType, data);
+                                        return convertData(xml, dataType, data, preferLocale);
                                     }
                                 }
                             }
@@ -1685,6 +1701,10 @@ namespace ApkQuickReader
         }
 
         private string convertData(byte[] bytes, DATA_TYPE type, UInt32 data) {
+            return convertData(bytes, type, data, false);
+        }
+
+        private string convertData(byte[] bytes, DATA_TYPE type, UInt32 data, bool preferLocale) {
             switch (type) {
                 case DATA_TYPE.TYPE_STRING:
                     return QuickSearchStringPool(bytes, data);
@@ -1693,7 +1713,8 @@ namespace ApkQuickReader
                         ApkResource r = QuickSearchResource((UInt32)data);
                         int ind = 0;
                         if (r.Count > 1)
-                            ind = applyFilter(r);
+                            // localized app names: label lookups prefer the configured language over density
+                            ind = preferLocale ? applyLocaleFilter(r) : applyFilter(r);
                         return r.values[ind].ToString();
                     } catch (Exception ex) {
                         Log("Error happen when finding resource with ID:0x" + data.ToString("X8") + ex.Message);
@@ -1839,11 +1860,28 @@ namespace ApkQuickReader
                 decode[0] = (byte)(code[2] & 0x1F);
                 decode[1] = (byte)(((code[3] & 0x3) << 3) + (code[2] & 0xE0) >> 1);
             } else {
-                decode[0] = code[0];
-                decode[1] = code[1];
+                decode[0] = code[2];
+                decode[1] = code[3];
             }
             country = System.Text.Encoding.ASCII.GetString(decode);
-            return new CultureInfo(country + "-" + language);
+            // locale-less configs (0x00,0x00...) or garbage BCP47 bytes are not cultures: null
+            language = language.Trim((char)0, ' ');
+            country = country.Trim((char)0, ' ');
+            if (language.Length == 0 || !IsAsciiAlpha(language) || (country.Length > 0 && !IsAsciiAlpha(country)))
+                return null;
+            try {
+                return country.Length == 0
+                    ? CultureInfo.GetCultureInfo(language)
+                    : CultureInfo.GetCultureInfo(language.ToLowerInvariant() + "-" + country.ToUpperInvariant());
+            } catch {
+                try { return CultureInfo.GetCultureInfo(language); } catch { return null; }
+            }
+        }
+
+        private static bool IsAsciiAlpha(string s) {
+            foreach (char c in s)
+                if ((c < 'a' || c > 'z') && (c < 'A' || c > 'Z')) return false;
+            return true;
         }
 
         // for handling loop reference
@@ -1969,6 +2007,51 @@ namespace ApkQuickReader
                 }
             }
             return best;
+        }
+
+        /// <summary>
+        /// Picks the entry whose locale best matches the requested app-name language (localized names
+        /// feature, kkguo/apkshellext). Ranking: exact language+region > region-neutral entry of the
+        /// same language > same language with a different region > locale-less default config > 0.
+        /// Returns applyFilter() when the feature is off so legacy behaviour is untouched.
+        /// </summary>
+        private int applyLocaleFilter(ApkResource r) {
+            CultureInfo want = Utility.requestedNameCulture();
+            if (want == null) return applyFilter(r);
+
+            string wantLang = want.TwoLetterISOLanguageName;
+            string wantRegion = "";
+            int dash = want.Name.IndexOf('-');
+            if (dash > 0) wantRegion = want.Name.Substring(dash + 1);
+
+            int neutral = -1, sameLang = -1, defaultCfg = -1;
+            for (int i = 0; i < r.configs.Count; i++) {
+                byte[] conf = r.configs[i];
+                if (conf == null || conf.Length < 8) continue; // ResTable_config minus size prefix: lang@4 country@6
+                byte[] code = new byte[4];
+                Array.Copy(conf, 4, code, 0, 4);
+                CultureInfo cul;
+                try { cul = getCulture(code); } catch { continue; }
+                if (cul == null) {
+                    if (defaultCfg < 0) defaultCfg = i; // locale-less = default configuration
+                    continue;
+                }
+                if (!string.Equals(cul.TwoLetterISOLanguageName, wantLang, StringComparison.OrdinalIgnoreCase))
+                    continue;
+                int culDash = cul.Name.IndexOf('-');
+                string culRegion = culDash > 0 ? cul.Name.Substring(culDash + 1) : "";
+                if (culRegion.Length == 0) {
+                    if (neutral < 0) neutral = i;
+                } else if (string.Equals(culRegion, wantRegion, StringComparison.OrdinalIgnoreCase)) {
+                    return i; // exact language + region
+                } else if (sameLang < 0) {
+                    sameLang = i;
+                }
+            }
+            if (neutral >= 0) return neutral;
+            if (sameLang >= 0) return sameLang;
+            if (defaultCfg >= 0) return defaultCfg;
+            return 0;
         }
 
         #region IDispose

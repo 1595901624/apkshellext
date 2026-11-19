@@ -139,9 +139,12 @@ namespace ApkShellext2 {
                     }
                 }
                 if (logo != null) {
-                    //byte[] imageBytes = new byte[logo.Size];
-                    //zip.GetInputStream(logo).Read(imageBytes, 0, (int)logo.Size);
-                    return new Bitmap(zip.GetInputStream(logo));
+                    // buffer fully: a Bitmap over the live zip stream decodes lazily and turns blank once
+                    // the reader/stream is disposed (shell draws later); SharpZipLib 1.4.2 streams are
+                    // non-seekable so GDI+ cannot recover.
+                    byte[] imageBytes = new byte[logo.Size];
+                    zip.GetInputStream(logo).Read(imageBytes, 0, (int)logo.Size);
+                    return new Bitmap(new MemoryStream(imageBytes));
                 } else {
                     throw new EntryPointNotFoundException("Cannot find Logo file: " + iconPath);
                 }

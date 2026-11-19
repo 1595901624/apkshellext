@@ -1,4 +1,4 @@
-﻿namespace ApkShellext2 {
+namespace ApkShellext2 {
     partial class Preferences {
         /// <summary>
         /// Required designer variable.
@@ -35,6 +35,9 @@
             this.pnlRenamingReplace = new System.Windows.Forms.TableLayoutPanel();
             this.ckReplaceSpace = new System.Windows.Forms.CheckBox();
             this.txtReplaceWhiteSpace = new System.Windows.Forms.TextBox();
+            this.pnlAppNameLang = new System.Windows.Forms.TableLayoutPanel();
+            this.ckUseAppNameLang = new System.Windows.Forms.CheckBox();
+            this.combAppNameLang = new System.Windows.Forms.ComboBox();
             this.btnResetRenamePattern = new System.Windows.Forms.Button();
             this.pnlIcon = new System.Windows.Forms.TableLayoutPanel();
             this.ckShowIPA = new System.Windows.Forms.CheckBox();
@@ -74,6 +77,7 @@
             this.pnlLeft.SuspendLayout();
             this.pnlRenaming.SuspendLayout();
             this.pnlRenamingReplace.SuspendLayout();
+            this.pnlAppNameLang.SuspendLayout();
             this.pnlIcon.SuspendLayout();
             this.pnlGeneral.SuspendLayout();
             this.pnlRight.SuspendLayout();
@@ -154,14 +158,15 @@
             this.pnlRenaming.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.pnlRenaming.ColumnCount = 1;
             this.pnlRenaming.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
-            this.pnlRenaming.Controls.Add(this.llbPatternVariables, 0, 3);
+            this.pnlRenaming.Controls.Add(this.llbPatternVariables, 0, 4);
             this.pnlRenaming.Controls.Add(this.txtRenamePattern, 0, 1);
             this.pnlRenaming.Controls.Add(this.lblRenamePattern, 0, 0);
             this.pnlRenaming.Controls.Add(this.pnlRenamingReplace, 0, 2);
+            this.pnlRenaming.Controls.Add(this.pnlAppNameLang, 0, 3);
             this.pnlRenaming.Dock = System.Windows.Forms.DockStyle.Fill;
             this.pnlRenaming.Location = new System.Drawing.Point(3, 3);
             this.pnlRenaming.Name = "pnlRenaming";
-            this.pnlRenaming.RowCount = 4;
+            this.pnlRenaming.RowCount = 5;
             this.pnlRenaming.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.pnlRenaming.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.pnlRenaming.RowStyles.Add(new System.Windows.Forms.RowStyle());
@@ -233,6 +238,47 @@
             this.txtReplaceWhiteSpace.Size = new System.Drawing.Size(357, 20);
             this.txtReplaceWhiteSpace.TabIndex = 22;
             this.txtReplaceWhiteSpace.TextChanged += new System.EventHandler(this.TxtReplaceWhiteSpace_TextChanged);
+            // 
+            // pnlAppNameLang
+            // 
+            this.pnlAppNameLang.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.pnlAppNameLang.AutoSize = true;
+            this.pnlAppNameLang.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.pnlAppNameLang.ColumnCount = 2;
+            this.pnlAppNameLang.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
+            this.pnlAppNameLang.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
+            this.pnlAppNameLang.Controls.Add(this.ckUseAppNameLang, 0, 0);
+            this.pnlAppNameLang.Controls.Add(this.combAppNameLang, 1, 0);
+            this.pnlAppNameLang.Location = new System.Drawing.Point(3, 71);
+            this.pnlAppNameLang.Name = "pnlAppNameLang";
+            this.pnlAppNameLang.RowCount = 1;
+            this.pnlAppNameLang.RowStyles.Add(new System.Windows.Forms.RowStyle());
+            this.pnlAppNameLang.Size = new System.Drawing.Size(478, 26);
+            this.pnlAppNameLang.TabIndex = 25;
+            // 
+            // ckUseAppNameLang
+            // 
+            this.ckUseAppNameLang.AutoSize = true;
+            this.ckUseAppNameLang.Location = new System.Drawing.Point(3, 3);
+            this.ckUseAppNameLang.Name = "ckUseAppNameLang";
+            this.ckUseAppNameLang.Size = new System.Drawing.Size(140, 17);
+            this.ckUseAppNameLang.TabIndex = 20;
+            this.ckUseAppNameLang.Text = "ckUseAppNameLang";
+            this.ckUseAppNameLang.UseVisualStyleBackColor = true;
+            this.ckUseAppNameLang.CheckedChanged += new System.EventHandler(this.CkUseAppNameLang_CheckedChanged);
+            // 
+            // combAppNameLang
+            // 
+            this.combAppNameLang.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.combAppNameLang.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.combAppNameLang.Location = new System.Drawing.Point(242, 3);
+            this.combAppNameLang.Name = "combAppNameLang";
+            this.combAppNameLang.Size = new System.Drawing.Size(233, 21);
+            this.combAppNameLang.TabIndex = 21;
+            this.combAppNameLang.SelectedIndexChanged += new System.EventHandler(this.CombAppNameLang_SelectedIndexChanged);
             // 
             // btnResetRenamePattern
             // 
@@ -733,6 +779,8 @@
             this.pnlRenaming.PerformLayout();
             this.pnlRenamingReplace.ResumeLayout(false);
             this.pnlRenamingReplace.PerformLayout();
+            this.pnlAppNameLang.ResumeLayout(false);
+            this.pnlAppNameLang.PerformLayout();
             this.pnlIcon.ResumeLayout(false);
             this.pnlIcon.PerformLayout();
             this.pnlGeneral.ResumeLayout(false);
@@ -798,6 +846,9 @@
         private System.Windows.Forms.CheckBox ckAdaptiveIconSupport;
         private System.Windows.Forms.LinkLabel llbPatternVariables;
         private System.Windows.Forms.TableLayoutPanel pnlRenamingReplace;
+        private System.Windows.Forms.TableLayoutPanel pnlAppNameLang;
+        private System.Windows.Forms.CheckBox ckUseAppNameLang;
+        private System.Windows.Forms.ComboBox combAppNameLang;
         private System.Windows.Forms.TextBox txtReplaceWhiteSpace;
         private System.Windows.Forms.Button btnPatreon;
     }

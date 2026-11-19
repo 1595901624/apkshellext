@@ -1,4 +1,4 @@
-﻿using Microsoft.Win32;
+using Microsoft.Win32;
 using SharpShell.Diagnostics;
 using System;
 using System.Collections.Generic;
@@ -135,6 +135,23 @@ namespace ApkShellext2 {
                 Settings.Default[key] = value;
                 Settings.Default.Save();
             }
+        }
+
+        /// <summary>
+        /// Culture whose localized app labels (android:label via resources.arsc) should be preferred,
+        /// or null when the feature is off (legacy behaviour: first/default resource config wins).
+        /// Controlled by Preferences → Renaming: 'UseAppNameLanguage' + 'AppNameLanguage' (empty = UI culture).
+        /// </summary>
+        public static CultureInfo requestedNameCulture() {
+            try {
+                if (GetSetting("UseAppNameLanguage", "False") != "True")
+                    return null;
+                string name = GetSetting("AppNameLanguage", "").Trim();
+                if (name.Length > 0) {
+                    try { return CultureInfo.GetCultureInfo(name); } catch { }
+                }
+            } catch { }
+            return System.Threading.Thread.CurrentThread.CurrentUICulture;
         }
 #pragma warning restore CS0162 // Unreachable code detected
         #endregion

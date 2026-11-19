@@ -1,5 +1,6 @@
-﻿using SharpShell.Diagnostics;
+using SharpShell.Diagnostics;
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Net;
@@ -138,6 +139,28 @@ namespace ApkShellext2 {
             ckReplaceSpace.Checked = Utility.GetSetting("ReplaceSpace", "False") == "True";
             txtReplaceWhiteSpace.Enabled = ckReplaceSpace.Checked;
             txtReplaceWhiteSpace.Text = Utility.GetSetting("ReplaceSpaceChar", "_");
+
+            ckUseAppNameLang.Text = Resources.strUseAppNameLang;
+            ckUseAppNameLang.Checked = Utility.GetSetting("UseAppNameLanguage", "False") == "True";
+            if (!appLangCulturesLoaded) {
+                combAppNameLang.Items.Add(Resources.strFollowUiLanguage);
+                appLangCultures.Add(null);
+                foreach (CultureInfo cul in Utility.getSupportedLanguages()) {
+                    combAppNameLang.Items.Add(cul.NativeName);
+                    appLangCultures.Add(cul);
+                }
+                appLangCulturesLoaded = true;
+            }
+            string appNameLang = Utility.GetSetting("AppNameLanguage", "");
+            int appNameLangIndex = 0;
+            for (int i = 1; i < appLangCultures.Count; i++) {
+                if (string.Equals(appLangCultures[i].Name, appNameLang, StringComparison.OrdinalIgnoreCase)) {
+                    appNameLangIndex = i;
+                    break;
+                }
+            }
+            combAppNameLang.SelectedIndex = appNameLangIndex;
+            combAppNameLang.Enabled = ckUseAppNameLang.Checked;
             #endregion
 
             #region ToolTip Panel
@@ -345,6 +368,22 @@ namespace ApkShellext2 {
         private void CkAdaptiveIconSupport_CheckedChanged(object sender, EventArgs e) {
             Utility.SaveSetting("SupportAdaptiveIcon", ckAdaptiveIconSupport.Checked);
             needClearThumbnailCache = formLoaded;
+        }
+
+        private readonly List<CultureInfo> appLangCultures = new List<CultureInfo>();
+        private bool appLangCulturesLoaded = false;
+
+        private void CkUseAppNameLang_CheckedChanged(object sender, EventArgs e) {
+            Utility.SaveSetting("UseAppNameLanguage", ckUseAppNameLang.Checked);
+            combAppNameLang.Enabled = ckUseAppNameLang.Checked;
+        }
+
+        private void CombAppNameLang_SelectedIndexChanged(object sender, EventArgs e) {
+            int i = combAppNameLang.SelectedIndex;
+            if (i < 0 || i >= appLangCultures.Count) return;
+            CultureInfo cul = appLangCultures[i];
+            // index 0 == 'follow UI language': empty setting makes requestedNameCulture() use CurrentUICulture
+            Utility.SaveSetting("AppNameLanguage", cul == null ? "" : cul.Name);
         }
 
         private void Label1_Click(object sender, EventArgs e) {

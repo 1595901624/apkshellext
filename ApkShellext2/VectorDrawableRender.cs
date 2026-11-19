@@ -335,11 +335,35 @@ namespace ApkShellext2
 #else
             #region Use SVG lib
             try {
-                // Svg 3.5.0 Parse() takes ReadOnlySpan<char>; the net461 System.Memory
-                // package lacks the implicit string conversion (core3.0+ only).
+                // Svg 3.5.0: segment.AddToPath(GraphicsPath) is obsolete — it passes a null
+                // segment list, which breaks relative commands. Thread the current point through
+                // the new overload exactly like SvgPath.Drawing.cs does, and manage figures
+                // ourselves so GraphicsPath never lineTo's from the implicit (0,0).
                 Svg.Pathing.SvgPathSegmentList l = SvgPathBuilder.Parse(pathdata.ToCharArray());
+                PointF cur = PointF.Empty;
+                bool figureOpen = false;
                 foreach (Svg.Pathing.SvgPathSegment s in l) {
-                    s.AddToPath(path);
+                    if (s is Svg.Pathing.SvgMoveToSegment) {
+                        if (figureOpen)
+                            path.CloseFigure();
+                        path.StartFigure();
+                        figureOpen = true;
+                        cur = s.End;
+                        continue;
+                    }
+                    if (!figureOpen) {
+                        path.StartFigure();
+                        figureOpen = true;
+                        if (s.Start.IsEmpty)
+                            cur = PointF.Empty;
+                    }
+                    if (s is Svg.Pathing.SvgClosePathSegment) {
+                        path.CloseFigure();
+                        figureOpen = false;
+                        cur = (l.Count > 0) ? l[0].End : PointF.Empty;
+                        continue;
+                    }
+                    cur = s.AddToPath(path, cur, l);
                 }
             } catch (Exception e){
                 Utility.Log(null, "VectorDrawable, d=" + pathdata, e.Message);

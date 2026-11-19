@@ -480,10 +480,27 @@ namespace ApkShellext2 {
             }
         }
 
+        // modeless settings window (kkguo/apkshellext: ShowDialog() froze the Explorer window that
+        // opened it — a modal dialog in the shell process blocks that folder view until closed)
+        private static Preferences settingFormInstance = null;
+
         private void showSettings() {
-            Preferences settingForm = new Preferences();
-            settingForm.currentFile = SelectedItemPaths.ElementAt(0);
-            settingForm.ShowDialog();
+            try {
+                if (settingFormInstance == null || settingFormInstance.IsDisposed) {
+                    settingFormInstance = new Preferences();
+                    settingFormInstance.FormClosed += (s, e) => settingFormInstance = null;
+                    settingFormInstance.currentFile = SelectedItemPaths.ElementAt(0);
+                    settingFormInstance.Show();
+                } else {
+                    settingFormInstance.currentFile = SelectedItemPaths.ElementAt(0);
+                    if (settingFormInstance.WindowState == FormWindowState.Minimized)
+                        settingFormInstance.WindowState = FormWindowState.Normal;
+                    settingFormInstance.Activate();
+                    settingFormInstance.BringToFront();
+                }
+            } catch (Exception ex) {
+                Log("showSettings " + ex.Message);
+            }
         }
 
         [CustomRegisterFunction]
