@@ -1,6 +1,6 @@
 # ApkShellext2
 
-[![release](https://img.shields.io/badge/release_3.4.0-blue)](https://github.com/nkh0472/apkshellext/releases)
+[![release](https://img.shields.io/badge/release_3.4.1-blue)](https://github.com/nkh0472/apkshellext/releases)
 [![.NET](https://img.shields.io/badge/.NET_Framework-4.8-512BD4)](#build-from-source)
 [![license](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
@@ -76,6 +76,7 @@ Full bilingual release notes are on the [Releases page](https://github.com/nkh04
 
 | Version | Summary |
 |---------|---------|
+| 3.4.1 | VectorDrawable rendering re-based onto the embedded SVG engine (gradients incl. multi-stop/angle/radial, nested groups, clip paths); indirect color references resolved |
 | 3.4.0 | Split-APK bundles (`.apks`/`.apkm`/`.xapk`); zip-bomb & overflow hardening in all readers; MSIX bundle member-name decoding |
 | 3.3.1 | FacadeResolver — fixes silent vector-icon failure inside Explorer; vector group transforms; adaptive-icon fallback chain |
 | 3.3.0 | Localized app names; SVG/PNG icon regression fixes; modeless Preferences |

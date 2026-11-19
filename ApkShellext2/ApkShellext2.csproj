@@ -357,6 +357,7 @@
     <Compile Include="SharpShell\SharpShell\SharpShell\SharpThumbnailHandler\SharpThumbnailHandler.cs" />
     <Compile Include="SharpShell\SharpShell\SharpShell\ShellExtInitServer.cs" />
     <Compile Include="FacadeResolver.cs" />
+    <Compile Include="VectorDrawableToSvg.cs" />
     <Compile Include="ZipSafety.cs" />
     <Compile Include="SplitApkBundleReader.cs" />
     <Compile Include="VectorDrawableRender.cs" />

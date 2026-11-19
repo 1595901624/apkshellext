@@ -1361,6 +1361,33 @@ namespace ApkQuickReader
         }
 
         private Bitmap parseVectorDrawable(XmlNode node, Size size) {
+            // Preferred path: translate the VectorDrawable to SVG and let the vendored
+            // Svg.NET renderer do the drawing (transforms, gradients, clips are mature
+            // there). The legacy GDI+ walker remains as fallback for anything the
+            // translator refuses.
+            try {
+                XmlElement vec = node as XmlElement;
+                if (vec == null) vec = node.SelectSingleNode("/vector") as XmlElement;
+                if (vec != null) {
+                    string svg = VectorDrawableToSvg.Translate(vec, new Func<string, XmlDocument>(ExtractCompressedXml));
+                    Svg.SvgDocument svgDoc = Svg.SvgDocument.FromSvg<Svg.SvgDocument>(svg);
+                    if (svgDoc != null) {
+                        using (Bitmap rendered = svgDoc.Draw(size.Width, size.Height)) {
+                            if (rendered != null) return new Bitmap(rendered);
+                        }
+                    }
+                }
+            } catch (Exception exSvg) {
+                Log("svg vector render fallback for " + size.Width + "px: " + exSvg.Message);
+            }
+            try {
+                return parseVectorDrawableLegacy(node, size);
+            } catch (Exception ex) {
+                throw new Exception(ex.Message + "\nError happens during parsing vectordrawable: " + node.InnerXml);
+            }
+        }
+
+        private Bitmap parseVectorDrawableLegacy(XmlNode node, Size size) {
             try {
                 XmlElement vector = (XmlElement)node.SelectSingleNode("/vector");
                 float viewportWidth = 0, viewportHeight = 0;
@@ -1445,8 +1472,13 @@ namespace ApkQuickReader
                         Brush fill = null;
                         if (elem.HasAttribute("fillColor")) {
                             string fillcolor = elem.GetAttribute("fillColor");
-                            if (fillcolor.EndsWith(".xml")) {//gradient
-                                fill = parseGradient(fillcolor);
+                            if (fillcolor.EndsWith(".xml")) {//gradient or indirect color resource
+                                try {
+                                    fill = parseGradient(fillcolor);
+                                } catch (Exception exGrad) {
+                                    fill = TryParseColorRef(fillcolor, 0);
+                                    if (fill == null) throw exGrad;
+                                }
                             } else {
                                 fill = new SolidBrush(stringToColor(fillcolor));
                             }
@@ -1550,39 +1582,149 @@ namespace ApkQuickReader
         }
 
         private Brush parseGradient(XmlNode node) {
+            // Android <gradient> drawables come in two flavours: the legacy
+            // startColor/centerColor/endColor attributes and the item-list form
+            // <item color offset/> which modern (Material You / adaptive icon) apps use.
+            // 'type' is optional and defaults to linear; many files carry only 'angle'.
             try {
                 XmlElement gradient = (XmlElement)node.FirstChild;
-                gradientType type = (gradientType)int.Parse(gradient.GetAttribute("type"));
-                if (type == gradientType.linear) {
+                gradientType type = gradientType.linear;
+                if (gradient.HasAttribute("type") && gradient.GetAttribute("type") != "")
+                    type = (gradientType)int.Parse(gradient.GetAttribute("type"));
+
+                // collect color stops
+                List<Color> colors = new List<Color>();
+                List<float> offsets = new List<float>();
+                XmlNodeList points = node.SelectNodes("/gradient/item");
+                if (points != null) {
+                    foreach (XmlElement p in points) {
+                        if (!p.HasAttribute("color")) continue;
+                        float off = 1f;
+                        float.TryParse(p.GetAttribute("offset"), System.Globalization.NumberStyles.Float,
+                            System.Globalization.CultureInfo.InvariantCulture, out off);
+                        colors.Add(stringToColor(p.GetAttribute("color")));
+                        offsets.Add(Math.Max(0f, Math.Min(1f, off)));
+                    }
+                }
+                if (colors.Count == 0) {
+                    // legacy attribute form
                     Color startC = stringToColor(gradient.GetAttribute("startColor"));
                     Color endC = stringToColor(gradient.GetAttribute("endColor"));
-                    float startX = float.Parse(gradient.GetAttribute("startX"));
-                    float startY = float.Parse(gradient.GetAttribute("startY"));
-                    float endX = float.Parse(gradient.GetAttribute("endX"));
-                    float endY = float.Parse(gradient.GetAttribute("endY"));
-                    return new LinearGradientBrush(new PointF(startX, startY), new PointF(endX, endY), startC, endC);
+                    colors.Add(startC); offsets.Add(0f);
+                    if (gradient.HasAttribute("centerColor") && gradient.GetAttribute("centerColor") != "") {
+                        colors.Add(stringToColor(gradient.GetAttribute("centerColor"))); offsets.Add(0.5f);
+                    }
+                    colors.Add(endC); offsets.Add(1f);
+                }
+                // stable order by offset; ColorBlend requires ascending positions
+                for (int i = 1; i < offsets.Count; i++) {
+                    for (int j = i; j > 0 && offsets[j] < offsets[j - 1]; j--) {
+                        float tf = offsets[j]; offsets[j] = offsets[j - 1]; offsets[j - 1] = tf;
+                        Color tc = colors[j]; colors[j] = colors[j - 1]; colors[j - 1] = tc;
+                    }
+                }
+                if (colors.Count == 1) return new SolidBrush(colors[0]);
+
+                // GDI+ ColorBlend rejects position sets not starting at 0 / ending at 1 /
+                // strictly ascending (Steam's adaptive background gradient uses stops
+                // 0.01..0.57 -> the whole path was silently skipped, icon stayed white).
+                // Android holds the edge colors constant outside the stop range, which is
+                // mirrored by duplicating the edge colors onto the bounds.
+                if (offsets[0] > 0f) { colors.Insert(0, colors[0]); offsets.Insert(0, 0f); }
+                if (offsets[offsets.Count - 1] < 1f) { colors.Add(colors[colors.Count - 1]); offsets.Add(1f); }
+                for (int i = 1; i < offsets.Count; i++)
+                    if (offsets[i] <= offsets[i - 1]) offsets[i] = Math.Min(1f, offsets[i - 1] + 1e-4f);
+
+                if (type == gradientType.linear) {
+                    float startX = 0f, startY = 0f, endX = 0f, endY = 0f;
+                    bool haveLine =
+                        float.TryParse(gradient.GetAttribute("startX"), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out startX) &&
+                        float.TryParse(gradient.GetAttribute("startY"), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out startY) &&
+                        float.TryParse(gradient.GetAttribute("endX"), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out endX) &&
+                        float.TryParse(gradient.GetAttribute("endY"), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out endY);
+                    if (!haveLine) {
+                        // 'angle' only (degrees, 0 = left→right, counter-clockwise); without a
+                        // shape bounds the best approximation is a horizontal gradient of unit length
+                        float angle = 0f;
+                        float.TryParse(gradient.GetAttribute("angle"), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out angle);
+                        double rad = angle * Math.PI / 180.0;
+                        // Android's angle is clockwise from +x in screen coords (y down)
+                        endX = (float)Math.Cos(rad); endY = (float)Math.Sin(rad);
+                    }
+                    if (startX == endX && startY == endY) return new SolidBrush(colors[colors.Count - 1]);
+                    LinearGradientBrush lb = new LinearGradientBrush(new PointF(startX, startY), new PointF(endX, endY), colors[0], colors[colors.Count - 1]);
+                    try { lb.WrapMode = System.Drawing.Drawing2D.WrapMode.Clamp; } catch { }
+                    if (colors.Count > 2) {
+                        System.Drawing.Drawing2D.ColorBlend blend = new System.Drawing.Drawing2D.ColorBlend();
+                        blend.Colors = colors.ToArray();
+                        blend.Positions = offsets.ToArray();
+                        lb.InterpolationColors = blend;
+                    }
+                    return lb;
                 } else if (type == gradientType.radial) {
-                    XmlNodeList points = node.SelectNodes("/gradient/item");
-                    int cx = int.Parse(gradient.GetAttribute("centerX"));
-                    int cy = int.Parse(gradient.GetAttribute("centerY"));
-                    float radius = float.Parse(gradient.GetAttribute("gradientRadius"));
-                    List<Color> colors = new List<Color>(points.Count);
-                    List<float> offsets = new List<float>(points.Count);
-                    foreach (XmlElement p in points) {
-                        string fillcolor = p.GetAttribute("color");
-                        colors.Add(stringToColor(p.GetAttribute("color")));
-                        offsets.Add(float.Parse(p.GetAttribute("offset")));
+                    float cx, cy, radius;
+                    if (float.TryParse(gradient.GetAttribute("centerX"), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out cx) &&
+                        float.TryParse(gradient.GetAttribute("centerY"), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out cy) &&
+                        float.TryParse(gradient.GetAttribute("gradientRadius"), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out radius) &&
+                        radius > 0f) {
+                        // circle outline as the focus point set -> radial falloff with full
+                        // multi-stop support through InterpolationColors
+                        RectangleF circle = new RectangleF(cx - radius, cy - radius, radius * 2, radius * 2);
+                        GraphicsPath ring = new GraphicsPath();
+                        ring.AddEllipse(circle);
+                        PathGradientBrush pg = new PathGradientBrush(ring);
+                        ring.Dispose();
+                        pg.CenterColor = colors[0];
+                        pg.SurroundColors = new[] { colors[colors.Count - 1] };
+                        if (colors.Count > 2) {
+                            System.Drawing.Drawing2D.ColorBlend blend = new System.Drawing.Drawing2D.ColorBlend();
+                            blend.Colors = colors.ToArray();
+                            blend.Positions = offsets.ToArray();
+                            pg.InterpolationColors = blend;
+                        }
+                        try { pg.WrapMode = System.Drawing.Drawing2D.WrapMode.Clamp; } catch { }
+                        return pg;
                     }
                     return new SolidBrush(colors[colors.Count - 1]);
-                    //fill = new Media.RadialGradientBrush();
-                } else if (type == gradientType.sweep) {
-                    return null;
-                } else {
-                    throw new Exception("Unknow gradien type when parsing gradient xml");
+                } else { // sweep: GDI+ has no angular brush; nearest reasonable approximation
+                    return new SolidBrush(colors[0]);
                 }
             } catch (Exception ex) {
                 throw new Exception(ex.Message + "\nError happend during parse Gradient " + node.InnerXml);
             }
+        }
+
+        /// <summary>
+        /// Resolves a non-gradient xml color indirection used as a paint:
+        /// &lt;selector&gt;&lt;item color&gt;, &lt;vector&gt; first path fillColor,
+        /// &lt;shape&gt;&lt;solid color&gt; or &lt;color&gt;. Follows nested .xml
+        /// references up to 3 levels; null when nothing resolvable.
+        /// </summary>
+        private Brush TryParseColorRef(string path, int depth) {
+            if (depth > 3 || string.IsNullOrEmpty(path) || !path.EndsWith(".xml", StringComparison.OrdinalIgnoreCase)) return null;
+            XmlDocument doc;
+            try { doc = ExtractCompressedXml(path); } catch { return null; }
+            if (doc == null || doc.DocumentElement == null) return null;
+            XmlElement root = doc.DocumentElement;
+            string colorAttr = null;
+            if (root.Name == "selector") {
+                XmlElement item = root.SelectSingleNode("item") as XmlElement;
+                colorAttr = item != null ? item.GetAttribute("color") : root.GetAttribute("color");
+            } else if (root.Name == "vector") {
+                foreach (XmlNode n in root.SelectNodes(".//path")) {
+                    XmlElement p = n as XmlElement;
+                    string c = p != null ? p.GetAttribute("fillColor") : null;
+                    if (!string.IsNullOrEmpty(c)) { colorAttr = c; break; }
+                }
+            } else if (root.Name == "shape") {
+                XmlElement solid = root.SelectSingleNode("solid") as XmlElement;
+                if (solid != null) colorAttr = solid.GetAttribute("color");
+            } else if (root.Name == "color") {
+                colorAttr = root.HasAttribute("color") ? root.GetAttribute("color") : root.InnerText.Trim();
+            }
+            if (string.IsNullOrEmpty(colorAttr)) return null;
+            if (colorAttr.EndsWith(".xml", StringComparison.OrdinalIgnoreCase)) return TryParseColorRef(colorAttr, depth + 1);
+            try { return new SolidBrush(stringToColor(colorAttr)); } catch { return null; }
         }
 
         private Brush parseGradient(string xml) {
