@@ -1240,15 +1240,41 @@ namespace ApkQuickReader
 
             try {
                 if (path != "") {
-                    return getImage(path, size);
+                    Bitmap extracted = getImage(path, size);
+                    if (extracted != null) {
+                        return extracted;
+                    }
                 }
                 throw new Exception("Cannot found image " + tag + "@" + attr);
             } catch (Exception ex) {
                 Log("Image path : " + path);
                 Log("Error happens during extracting image, " + ex.Message);
+                // adaptive/anydpi drawables may use constructs we cannot render (widget
+                // layouts as drawable, unsupported gradients...). Android itself falls back
+                // to the legacy bitmap density for such apps - do the same instead of
+                // giving up with a null icon: re-resolve the attribute ignoring xml entries.
+                if (path.EndsWith(".xml")) {
+                    try {
+                        _ignoreXmlDensity = true;
+                        string legacy = QuickSearchManifestXml(tag, attr);
+                        if (legacy != "" && legacy != path) {
+                            Bitmap fallbackImg = getImage(legacy, size);
+                            if (fallbackImg != null) {
+                                Log("xml drawable failed, fell back to " + legacy);
+                                return fallbackImg;
+                            }
+                        }
+                    } catch (Exception ex2) {
+                        Log("legacy icon fallback failed, " + ex2.Message.Split('\n')[0]);
+                    } finally {
+                        _ignoreXmlDensity = false;
+                    }
+                }
                 return null;
             }
         }
+
+        private bool _ignoreXmlDensity = false;
 
         /// <summary>
         /// return the bitmap of a image file path located in apk zip
@@ -1371,33 +1397,76 @@ namespace ApkQuickReader
                     }
                     //Not finished yet
                 }
-                Bitmap b = new Bitmap((int)viewportWidth, (int)viewportHeight);
+                Bitmap b = new Bitmap(Math.Max(1, (int)viewportWidth), Math.Max(1, (int)viewportHeight));
                 using (Graphics g = Graphics.FromImage(b)) {
-                    XmlElement group = (XmlElement)vector.SelectSingleNode("group");
-                    XmlNodeList nl = (group != null) ? group.SelectNodes("path") :
-                                                      vector.SelectNodes("path");
-                    foreach (XmlElement elem in nl) {
-                        string pathdata = elem.GetAttribute("pathData");
-                        GraphicsPath gpath = VectorDrawableRender.Convert2Path(pathdata);
-                        Brush fill = null;
-                        if (elem.HasAttribute("fillColor")) {
-                            string fillcolor = elem.GetAttribute("fillColor");
-                            if (fillcolor.EndsWith(".xml")) {//gradien
-                                fill = parseGradient(fillcolor);
-                            } else {
-                                fill = new SolidBrush(stringToColor(elem.GetAttribute("fillColor")));
-                            }
-                        } else {
-                            fill = new SolidBrush(System.Drawing.Color.Black);
-                        }
-                        g.FillPath(fill, gpath);
-                        //g.DrawPath(new Pen(fill, 2), path);                    
-                    }
+                    DrawVectorGroup(g, vector, new System.Drawing.Drawing2D.Matrix());
                 }
                 return Utility.ResizeBitmap(b,size);
             } catch (Exception ex) {
                 throw new Exception(ex.Message + "\nError happens during parsing vectordrawable: " + node.InnerXml);
             }
+        }
+
+        /// <summary>
+        /// Fills paths of a &lt;vector&gt; or nested &lt;group&gt;, honouring the group
+        /// transforms (scale/rotation about pivot, then translation) defined by Android
+        /// VectorDrawable. Older code read only the paths of one first-level group and
+        /// silently ignored every transform, misplacing artwork such as the adaptive
+        /// foreground of 'Light Start' (drawn upper-left instead of centered).
+        /// </summary>
+        private void DrawVectorGroup(Graphics g, XmlElement parent, System.Drawing.Drawing2D.Matrix world) {
+            foreach (XmlNode child in parent.ChildNodes) {
+                XmlElement elem = child as XmlElement;
+                if (elem == null) continue;
+                if (elem.Name == "path") {
+                    try {
+                        string pathdata = elem.GetAttribute("pathData");
+                        if (pathdata == "") continue;
+                        GraphicsPath gpath = VectorDrawableRender.Convert2Path(pathdata);
+                        gpath.Transform(world);
+                        Brush fill = null;
+                        if (elem.HasAttribute("fillColor")) {
+                            string fillcolor = elem.GetAttribute("fillColor");
+                            if (fillcolor.EndsWith(".xml")) {//gradient
+                                fill = parseGradient(fillcolor);
+                            } else {
+                                fill = new SolidBrush(stringToColor(fillcolor));
+                            }
+                        } else {
+                            fill = new SolidBrush(System.Drawing.Color.Black);
+                        }
+                        g.FillPath(fill, gpath);
+                        //g.DrawPath(new Pen(fill, 2), path);
+                    } catch (Exception exPath) {
+                        // one unparseable path (clipped/animated art) must not kill the icon
+                        Log("vector path skipped: " + exPath.Message.Split('\n')[0]);
+                    }
+                } else if (elem.Name == "group") {
+                    System.Drawing.Drawing2D.Matrix m = (System.Drawing.Drawing2D.Matrix)world.Clone();
+                    float pivotX = GetXmlFloat(elem, "pivotX", 0f);
+                    float pivotY = GetXmlFloat(elem, "pivotY", 0f);
+                    float sx = GetXmlFloat(elem, "scaleX", 1f);
+                    float sy = GetXmlFloat(elem, "scaleY", 1f);
+                    float rot = GetXmlFloat(elem, "rotation", 0f);
+                    // Android applies scale then rotation about the pivot, then translation;
+                    // appending mirrors that order for point transformation.
+                    if (sx != 1f || sy != 1f) m.Scale(sx, sy, System.Drawing.Drawing2D.MatrixOrder.Append);
+                    if (pivotX != 0f || pivotY != 0f) m.Translate(-pivotX, -pivotY, System.Drawing.Drawing2D.MatrixOrder.Append);
+                    if (rot != 0f) m.Rotate(rot, System.Drawing.Drawing2D.MatrixOrder.Append);
+                    if (pivotX != 0f || pivotY != 0f) m.Translate(pivotX, pivotY, System.Drawing.Drawing2D.MatrixOrder.Append);
+                    m.Translate(GetXmlFloat(elem, "translateX", 0f), GetXmlFloat(elem, "translateY", 0f), System.Drawing.Drawing2D.MatrixOrder.Append);
+                    DrawVectorGroup(g, elem, m);
+                    m.Dispose();
+                }
+            }
+            world.Dispose();
+        }
+
+        private static float GetXmlFloat(XmlElement elem, string name, float def) {
+            if (!elem.HasAttribute(name)) return def;
+            float v;
+            return float.TryParse(elem.GetAttribute(name), System.Globalization.NumberStyles.Float,
+                System.Globalization.CultureInfo.InvariantCulture, out v) ? v : def;
         }
         
         private Bitmap parseAdaptiveIcon(XmlNode node, Size size) {
@@ -1411,33 +1480,55 @@ namespace ApkQuickReader
             </adaptive-icon>
             */
             try {
-                XmlElement elem = (XmlElement)node.SelectSingleNode("/adaptive-icon/background");
-                Bitmap b = null, f = null;
                 Bitmap bmp = new Bitmap(size.Width, size.Height);
-                Graphics g = Graphics.FromImage(bmp);
-                if (elem.HasAttribute("drawable")) {
-                    b = getImage(elem.GetAttribute("drawable"), size);
-                    if (b != null)
-                        g.DrawImage(b, 0, 0);
-                    else {
-                        Color c = stringToColor(elem.GetAttribute("drawable"));
-                        g.FillRectangle(new SolidBrush(c), 0, 0, bmp.Width, bmp.Height);
+                bool anyFailed = false;
+                using (Graphics g = Graphics.FromImage(bmp)) {
+                    XmlElement elem = (XmlElement)node.SelectSingleNode("/adaptive-icon/background");
+                    if (elem != null && elem.HasAttribute("drawable")) {
+                        anyFailed |= !drawAdaptiveLayer(g, elem.GetAttribute("drawable"), size);
+                    }
+                    elem = (XmlElement)node.SelectSingleNode("/adaptive-icon/foreground");
+                    if (elem != null && elem.HasAttribute("drawable")) {
+                        anyFailed |= !drawAdaptiveLayer(g, elem.GetAttribute("drawable"), size);
                     }
                 }
-                elem = (XmlElement)node.SelectSingleNode("/adaptive-icon/foreground");
-                if (elem.HasAttribute("drawable")) {
-                    f = getImage(elem.GetAttribute("drawable"), size);
-                    if (f != null)
-                        g.DrawImage(f, 0, 0);
-                    else {
-                        Color c = stringToColor(elem.GetAttribute("drawable"));
-                        g.FillRectangle(new SolidBrush(c), 0, 0, bmp.Width, bmp.Height);
-                    }
+                if (anyFailed) {
+                    // a missing/broken layer shows as a solid blob or cut artwork; apps that
+                    // abuse layouts as adaptive layers (e.g. widget XML) are unrenderable by
+                    // design - propagate so the caller falls back to the legacy bitmap entry,
+                    // which is exactly what Android devices use for such apps
+                    throw new Exception("adaptive layer could not be rendered");
                 }
                 return bmp;
             } catch (Exception ex) {
                 throw new Exception(ex.Message + "\nError happening during parse AdaptiveIcon.");
             }
+        }
+
+        /// <summary>
+        /// Draws one adaptive-icon layer: bitmap drawable, or solid color when the layer
+        /// references a color resource. A failing layer is skipped instead of killing the
+        /// whole icon (Android would still show the other layers).
+        /// </summary>
+        private bool drawAdaptiveLayer(Graphics g, string drawableRef, Size size) {
+            try {
+                Bitmap layer = getImage(drawableRef, size);
+                if (layer != null) {
+                    g.DrawImage(layer, 0, 0, size.Width, size.Height);
+                    layer.Dispose();
+                    return true;
+                }
+            } catch (Exception ex) {
+                Log("adaptive layer drawable failed: " + ex.Message.Split('\n')[0]);
+            }
+            try {
+                Color c = stringToColor(drawableRef);
+                g.FillRectangle(new SolidBrush(c), 0, 0, size.Width, size.Height);
+                return true;
+            } catch (Exception exColor) {
+                Log("adaptive layer color failed: " + exColor.Message.Split('\n')[0]);
+            }
+            return false;
         }
 
         private Brush parseGradient(XmlNode node) {
@@ -1993,10 +2084,10 @@ namespace ApkQuickReader
             int best = 0;
             if (getFlag("Density") != null) {
                 int bestDensity = 0;
-                bool supAI = Utility.GetSetting("SupportAdaptiveIcon", "False") == "True";
+                bool supAI = Utility.GetSetting("SupportAdaptiveIcon", "False") == "True" && !_ignoreXmlDensity;
                 for (int i = 0; i < r.configs.Count; i++) {
                     if (!supAI) {
-                        if (r.values[i].ToString().EndsWith(".xml")) break;
+                        if (r.values[i].ToString().EndsWith(".xml")) continue;
                     }
                     byte[] bytes = r.configs[i];
                     int density = bytes[(int)ResourceConfig.Density + 1] * 256 + bytes[(int)ResourceConfig.Density];

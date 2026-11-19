@@ -1,4 +1,4 @@
-﻿using System.Resources;
+using System.Resources;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -34,4 +34,4 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyVersion("0.3.0.0")]
 [assembly: NeutralResourcesLanguage("en-US")]
 //[assembly: AssemblyVersion("0.1.2.*")]
-//[assembly: AssemblyFileVersion("0.1.0")]
+[assembly: AssemblyFileVersion("3.3.1.0")]

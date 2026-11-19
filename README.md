@@ -1,5 +1,5 @@
 # ApkShellext2_hy  
-![](https://img.shields.io/badge/version-v3.3.0-blue.svg?style=flat)
+![](https://img.shields.io/badge/version-v3.3.1-blue.svg?style=flat)
 
 A Windows shell extension supporting icon for files of
 * .apk (android package)
@@ -11,6 +11,12 @@ A Windows shell extension supporting icon for files of
 **This project is based on `ApkShellExt2`, which has not been updated by the original author for two years, and I will continue to maintain this project if I have spare time. In addition, my other project is also based on this project, I hope you support more.**
 
 #### [Change]
+
+* [3.3.1] Vector icons fixed at the root
+  * Root cause: inside explorer.exe our `ApkShellext2.dll.config` is never read — an in-process COM server inherits the *host* application's binding policy, and explorer knows nothing about our NuGet facades. SVG.NET 3.5.0 (compiled into the DLL) requests `System.Runtime.CompilerServices.Unsafe` 4.0.4.1 while we ship 6.0.0, so every `SvgPathBuilder.Parse` threw `FileLoadException` **inside a catch block** — vector drawables silently degraded to their solid-color background ("icon is a flat color with a tiny blob in the corner"). New `FacadeResolver` registers a `ModuleInitializer` + `AppDomain.AssemblyResolve` that loads facade assemblies (Unsafe/Memory/Buffers/Numerics.Vectors) from the extension's own folder, independent of any host config.
+  * Fix: `<group>` transforms (translate/scale/rotation about pivot) in vector drawables are now honoured — recursive group walk with GDI+ `Matrix` in Android's composition order. Light Start's centered lightning bolt renders correctly again.
+  * Fix: adaptive icons whose layers cannot be rendered (e.g. a `FrameLayout` layout XML masquerading as a drawable) no longer blank the whole icon: failing layer falls back through per-layer color fill, then to the best legacy non-XML bitmap (xxhdpi PNG/WebP), matching what Android itself displays on pre-adaptive launchers.
+  * Chore: `AssemblyFileVersion` set to 3.3.1.0 (AssemblyVersion stays 0.3.0.0 — COM identity).
 
 * [3.3.0] Localized app names & icon regressions
   * New: `android:label` localization — *Preferences ▸ Rename* gained "Use app name language" with a language dropdown (default: follow UI language). `{#appname}` in rename patterns and the info-tip now resolve the label's resource configurations with Android-like ranking: exact language+region > language without region > same language other region > locale-less default. Verified against a corpus of 83 APKs (18 with localized labels, e.g. Ice Box 冰箱, SnoreLab いびきラボ/鼾声分析器).
