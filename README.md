@@ -44,7 +44,6 @@ Right-click a package → **ApkShellext2 → Preferences** (modeless, never bloc
 
 ## Known limitations
 
-- Icons work in Windows File Explorer only; third-party file managers host the COM object in-process, which .NET shell extensions do not support.
 - Adaptive icons whose foreground is a widget-layout XML (not a drawable) fall back to the legacy icon, mirroring Android's own behaviour.
 
 ## Build from source
