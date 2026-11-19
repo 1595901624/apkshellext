@@ -83,12 +83,6 @@ Full bilingual release notes are on the [Releases page](https://github.com/nkh04
 | 3.1.0 | Dependency modernization: libwebp 1.6.0 (CVE-2023-4863 et al.), SharpZipLib 1.4.2, QRCoder 1.4.2, SVG.NET 3.5.0 — *had an SVG regression, fixed in 3.3.1* |
 | 3.0.0 | Fixed Chrome/Edge download crash; upgraded to .NET Framework 4.8 |
 
-## Roadmap
-
-- Protobuf metadata support (`.aab` bundle metadata, `toc.pb` details)
-- QR code in info tip for download-to-phone
-- Icon probing inside config splits
-
 ## Thanks
 
 The project stands on these open-source works:
