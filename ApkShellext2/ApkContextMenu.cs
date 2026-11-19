@@ -31,6 +31,9 @@ namespace ApkShellext2 {
     [COMServerAssociation(AssociationType.ClassOfExtension, ".ipa")]
     [COMServerAssociation(AssociationType.ClassOfExtension, ".appxbundle")]
     [COMServerAssociation(AssociationType.ClassOfExtension, ".appx")]
+    [COMServerAssociation(AssociationType.ClassOfExtension, ".apks")]
+    [COMServerAssociation(AssociationType.ClassOfExtension, ".apkm")]
+    [COMServerAssociation(AssociationType.ClassOfExtension, ".xapk")]
     public class ApkContextMenu : SharpContextMenu {
         /// <summary>
         /// Determines whether this instance can a shell context show menu, given the specified selected file list.

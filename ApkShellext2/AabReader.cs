@@ -51,8 +51,9 @@ namespace ApkShellext2
             zip = new ZipFile(stream);
             ZipEntry en = zip.GetEntry(AndroidManifestXML);
             Log("find manifest: " + (en == null).ToString());
-            BinaryReader s = new BinaryReader(zip.GetInputStream(en));
-            manifest = s.ReadBytes((int)en.Size);
+            // bounded read: attacker-declared entry sizes must never drive
+            // (int) casts or buffer allocation in explorer's process
+            manifest = ZipSafety.ReadEntryBounded(zip, en, ZipSafety.MAX_MANIFEST, "AndroidManifest.xml");
         }
 
         public override AppPackageReader.AppType Type
@@ -151,14 +152,14 @@ namespace ApkShellext2
                 {
                     // fully buffer before decoding: GDI+ decodes PNG lazily and renders BLANK pixels when
                     // scaled from SharpZipLib 1.4.2's non-seekable zip streams after they are closed
-                    byte[] imgBytes = new BinaryReader(zip.GetInputStream(iconz)).ReadBytes((int)iconz.Size);
-                    using (MemoryStream ms = new MemoryStream(imgBytes))
+                    byte[] imgBytes = ZipSafety.ReadEntryBounded(zip, iconz, ZipSafety.MAX_ICON, "image " + path);
+                    using (MemoryStream ms = new MemoryStream(imgBytes, 0, imgBytes.Length, false, false))
                         return Utility.ResizeBitmap((Bitmap)Image.FromStream(ms), size);
                 }
                 else if (ext == ".webp")
                 {
                     WebP webp = new WebP();
-                    byte[] bytes = new BinaryReader(zip.GetInputStream(iconz)).ReadBytes((int)iconz.Size);
+                    byte[] bytes = ZipSafety.ReadEntryBounded(zip, iconz, ZipSafety.MAX_ICON, "webp " + path);
                     //webp.Decode(bytes).Save(FileName+".webp");
                     return Utility.ResizeBitmap(webp.Decode(bytes), size);
                 }
@@ -626,7 +627,7 @@ namespace ApkShellext2
             try
             {
                 ZipEntry en = zip.GetEntry(path);
-                byte[] bytes = new BinaryReader(zip.GetInputStream(en)).ReadBytes((int)en.Size);
+                byte[] bytes = ZipSafety.ReadEntryBounded(zip, en, ZipSafety.MAX_XML, "xml " + path);
                 return ExtractCompressedXml(bytes);
             }
             catch (Exception ex)

@@ -1,8 +1,9 @@
 # ApkShellext2_hy  
-![](https://img.shields.io/badge/version-v3.3.1-blue.svg?style=flat)
+![](https://img.shields.io/badge/version-v3.4.0-blue.svg?style=flat)
 
 A Windows shell extension supporting icon for files of
 * .apk (android package)
+* .apks .apkm .xapk (split-APK bundles, new in 3.4.0)
 * .ipa (iOS app package)
 * .appx .appxbundle (Windows phone 8.1/10 app package, .xap is not supported)
 
@@ -12,33 +13,30 @@ A Windows shell extension supporting icon for files of
 
 #### [Change]
 
+* [3.4.0] Split-APK bundles & zip hardening
+  * New: .apks / .apkm / .xapk split-bundle icons and info
+  * Security: bounded, ratio-capped zip reads everywhere (anti zip-bomb / size overflow)
+  * Security: XML drawable recursion depth & canvas size limits
+  * 安全：为全部归档读取路径增设容量与解压比率上限，防御压缩炸弹、长度溢出与递归异常
+
 * [3.3.1] Vector icons fixed at the root
-  * Root cause: inside explorer.exe our `ApkShellext2.dll.config` is never read — an in-process COM server inherits the *host* application's binding policy, and explorer knows nothing about our NuGet facades. SVG.NET 3.5.0 (compiled into the DLL) requests `System.Runtime.CompilerServices.Unsafe` 4.0.4.1 while we ship 6.0.0, so every `SvgPathBuilder.Parse` threw `FileLoadException` **inside a catch block** — vector drawables silently degraded to their solid-color background ("icon is a flat color with a tiny blob in the corner"). New `FacadeResolver` registers a `ModuleInitializer` + `AppDomain.AssemblyResolve` that loads facade assemblies (Unsafe/Memory/Buffers/Numerics.Vectors) from the extension's own folder, independent of any host config.
-  * Fix: `<group>` transforms (translate/scale/rotation about pivot) in vector drawables are now honoured — recursive group walk with GDI+ `Matrix` in Android's composition order. Light Start's centered lightning bolt renders correctly again.
-  * Fix: adaptive icons whose layers cannot be rendered (e.g. a `FrameLayout` layout XML masquerading as a drawable) no longer blank the whole icon: failing layer falls back through per-layer color fill, then to the best legacy non-XML bitmap (xxhdpi PNG/WebP), matching what Android itself displays on pre-adaptive launchers.
-  * Chore: `AssemblyFileVersion` set to 3.3.1.0 (AssemblyVersion stays 0.3.0.0 — COM identity).
+  * Fix: facade assembly resolution inside explorer (vector icons silently blank)
+  * Fix: vector `<group>` transforms honored; adaptive-icon fallback chain
+  * 修复：宿主进程内依赖解析失败导致的矢量图标空白；支持矢量分组变换；完善自适应图标降级处理
 
 * [3.3.0] Localized app names & icon regressions
-  * New: `android:label` localization — *Preferences ▸ Rename* gained "Use app name language" with a language dropdown (default: follow UI language). `{#appname}` in rename patterns and the info-tip now resolve the label's resource configurations with Android-like ranking: exact language+region > language without region > same language other region > locale-less default. Verified against a corpus of 83 APKs (18 with localized labels, e.g. Ice Box 冰箱, SnoreLab いびきラボ/鼾声分析器).
-  * Fix: vector (adaptive/monochrome) icons collapsed to a solid color with SVG.NET 3.5.0 — `Convert2Path` now threads the current path point through `SvgPathSegment.AddToPath` instead of relying on the obsolete one-arg overload (segments' `Start` is no longer filled since 3.x).
-  * Fix: PNG icons could paint blank — entry bytes are fully buffered before `Image.FromStream` (GDI+ defers PNG decoding, which deadlocks against SharpZipLib 1.4.2's non-seekable entry streams); applied to .apk, .aab and .appx logo paths.
-  * Fix: the Preferences window was modal and froze the Explorer window until closed; it is now a modeless singleton.
-  * Build: `System.Runtime.CompilerServices.Unsafe` facade raised to 6.0.0, resolving the MSB3277 conflict introduced by System.Text.Encoding.CodePages 5.0.0 (QRCoder PayloadGenerator).
+  * New: localized `android:label` with language preference in Preferences
+  * Fix: SVG 3.5.0 path regression; PNG blank-icon buffering; modeless Preferences
+  * 新增：应用名称多语言支持；修复：SVG 与 PNG 图标渲染回归；首选项窗口改为非模态
 
 * [3.2.0] Bug fixes (issue triage)
-  * Fix: icon not shown when the archive stores its icon with an uppercase extension (`Icon.PNG`) — extension dispatch in `getImage` is now case-insensitive for .apk and .aab; `.APK`/`.IPA` infotip/context-menu detection likewise. (kkguo/apkshellext#99)
-  * Fix: package file could not be deleted/renamed in Explorer while icon/infotip handlers were alive — all package FileStreams now opened with `FileShare.Delete`. (kkguo/apkshellext#103)
-  * Fix: install.bat/uninstall.bat failed to elevate when invoked by a 32-bit process on Windows 10/11 (WOW64 runas bug); elevation now always runs through a 64-bit cscript and the 64-bit regasm is picked via PROCESSOR_ARCHITECTURE. (kkguo/apkshellext#116)
-  * Fix: post-build batch silently failed on LF-only line endings (cmd GOTO limitation); `.gitattributes` now pins CRLF for `*.bat`/`*.cmd`.
+  * Fix: uppercase icon extensions (#99); FileShare.Delete (#103); WOW64 elevation (#116); CRLF build scripts
+  * 修复：大写扩展名识别、文件占用冲突、64 位提权失败与构建脚本换行问题
 
 * [3.1.0] Dependency modernization (still .NET Framework 4.8)
-  * Security: native libwebp rebuilt from 1.0.3 (2013) to **1.6.0** — fixes CVE-2023-4863, CVE-2023-51294 and a dozen more; x86/x64 built with MSVC static CRT, libsharpyuv statically linked (`ApkShellext2/LibWebP/`, rebuild script in `build/libwebp/`).
-  * WebP-wrapper updated to master: alpha-channel decode (transparent webp icons), x86 crash fix.
-  * SharpZipLib: kkguo fork (0.86-era) → upstream **1.4.2** (fork's only private commit is already upstream). Better zip64 and entry-header lookup.
-  * QRCoder 2018 snapshot → **1.4.2**; SVG.NET 2018 snapshot → **3.5.0** (+ ExCSS 4.2.3). Run `build/svg-pregen/pregen.ps1` once before first build.
-  * Removed unmaintained Ionic.Zlib (PNGDecrush's zlib/CRC now uses SharpZipLib streams); removed dead Google.Protobuf references.
-  * Build: strong-name now from a locally generated `apkshellext2_hy.snk` (`sn.exe -k`, not committed) since the original pfx was lost; Release packaging via `Resources/postbuild.cmd` finds 7-Zip automatically and only warns when absent.
-  * Verified: VS MSBuild full-solution Debug/Rebuild 0 errors, signed main + 15 satellite assemblies, runtime smoke tests (webp lossy/alpha decode, zip, SVG path, QR, PNG zlib/CRC, DTD resource) pass.
+  * Security: libwebp 1.0.3 → 1.6.0 (CVE-2023-4863 etc.), SharpZipLib 1.4.2, QRCoder 1.4.2, SVG.NET 3.5.0, WebP-wrapper master
+  * Removed Ionic.Zlib & dead Google.Protobuf refs; new signing key workflow; postbuild packaging fixes
+  * 依赖库整体升级，修复 libwebp 相关安全漏洞
 
 * [3.0.0]
   * Fix: Crashes Chrome and Edge when downloading an apk/ipa/appx/ file.
@@ -56,7 +54,6 @@ A Windows shell extension supporting icon for files of
 #### [Todo]
  - [X] Adaptive-icon support (Beta)
  - [ ] protobuf support
- - [ ] support .NET 4.0??
  - [ ] QR code to download to phone
  - [x] Hook up adb function with namespace extension.
  - [x] drag-drop to install / uninstall to phone ([Please visit ApkInstaller]([1595901624/ApkInstaller: 一款可以在Windows上双击安装APK的软件 (github.com)](https://github.com/1595901624/ApkInstaller)))
@@ -83,3 +80,5 @@ Thank you to [kkguo](https://github.com/kkguo) for all open source projects.
 | [SVG](https://github.com/vvvv/SVG)                                  | SVG format renderer                            |
 | [WebP-Wrapper](https://github.com/JosePineiro/WebP-wrapper)         | WebP format renderer
 | [Thanasis Georgiou](https://github.com/sakisds)                     | Project web page |
+| [apk-info](https://github.com/delvinru/apk-info)                    | Split-APK (.apks/.apkm/.xapk) container layout, base-selection order & anti-zip-bomb doctrine |
+| [apkspec](https://apkspec.readthedocs.io/)                          | Unofficial .apks / split-APK bundle specification |

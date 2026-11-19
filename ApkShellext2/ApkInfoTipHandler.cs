@@ -20,6 +20,9 @@ namespace ApkShellext2 {
     [COMServerAssociation(AssociationType.ClassOfExtension, ".ipa")]
     [COMServerAssociation(AssociationType.ClassOfExtension, ".appxbundle")]
     [COMServerAssociation(AssociationType.ClassOfExtension, ".appx")]
+    [COMServerAssociation(AssociationType.ClassOfExtension, ".apks")]
+    [COMServerAssociation(AssociationType.ClassOfExtension, ".apkm")]
+    [COMServerAssociation(AssociationType.ClassOfExtension, ".xapk")]
     public class ApkInfoTipHandler : SharpInfoTipHandler {
         /// <summary>
         /// Gets info for the selected item (SelectedItemPath).

@@ -63,6 +63,17 @@ namespace ApkShellext2 {
             }
 
             en = zip.GetEntry(appxFileName);
+            if (en == null) {
+                // newer Store bundles are packed with percent-encoded entry names
+                // ("Bluetooth Audio…" → "Bluetooth%20Audio…") while the manifest keeps raw names
+                string encoded = Uri.EscapeDataString(appxFileName);
+                foreach (ZipEntry cand in zip) {
+                    if (cand.IsFile && (cand.Name == encoded || cand.Name == appxFileName.Replace(" ", "%20"))) {
+                        en = cand;
+                        break;
+                    }
+                }
+            }
             if (en == null)
                 throw new EntryPointNotFoundException("cannot find appx " + appxFileName);
 

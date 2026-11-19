@@ -1161,13 +1161,12 @@ namespace ApkQuickReader
 
         private void openStream(Stream stream) {
             zip = new ZipFile(stream);
-            ZipEntry en = zip.GetEntry(AndroidManifestXML);
-            BinaryReader s = new BinaryReader(zip.GetInputStream(en));
-            manifest = s.ReadBytes((int)en.Size);
-
-            en = zip.GetEntry(Resources_arsc);
-            s = new BinaryReader(zip.GetInputStream(en));
-            resources = s.ReadBytes((int)en.Size);
+            // bounded reads: attacker-declared entry sizes must never drive
+            // (int) casts or buffer allocation in explorer's process
+            manifest = ZipSafety.ReadEntryBounded(zip, zip.GetEntry(AndroidManifestXML),
+                ZipSafety.MAX_MANIFEST, "AndroidManifest.xml");
+            resources = ZipSafety.ReadEntryBounded(zip, zip.GetEntry(Resources_arsc),
+                ZipSafety.MAX_MANIFEST, "resources.arsc");
         }
 
         public override AppPackageReader.AppType Type {
@@ -1291,19 +1290,25 @@ namespace ApkQuickReader
                 if (ext == ".png" || ext == ".jpg" || ext == ".jpeg" ||
                     ext == ".gif" || ext == ".tif" || ext == ".tiff") {
                     // fully buffer before decoding: GDI+ scaled DrawImage silently renders BLANK pixels
-                    // from SharpZipLib 1.4.2's non-seekable decompression streams (0.86's were buffered)
-                    using (Stream raw = zip.GetInputStream(iconz)) {
-                        MemoryStream ms = new MemoryStream((int)Math.Max(iconz.Size, 4096));
-                        raw.CopyTo(ms);
-                        ms.Position = 0;
+                    // from SharpZipLib 1.4.2's non-seekable decompression streams (0.86's were buffered);
+                    // bounded read: attacker-declared Size must never drive allocation or (int) cast
+                    byte[] raw = ZipSafety.ReadEntryBounded(zip, iconz, ZipSafety.MAX_ICON, "image " + path);
+                    using (MemoryStream ms = new MemoryStream(raw, 0, raw.Length, false, false)) {
                         return Utility.ResizeBitmap((Bitmap)Image.FromStream(ms), size);
                     }
                 } else if (ext == ".webp") {
                     WebP webp = new WebP();
-                    byte[] bytes = new BinaryReader(zip.GetInputStream(iconz)).ReadBytes((int)iconz.Size);
+                    byte[] bytes = ZipSafety.ReadEntryBounded(zip, iconz, ZipSafety.MAX_ICON, "webp " + path);
                     //webp.Decode(bytes).Save(FileName+".webp");
                     return Utility.ResizeBitmap(webp.Decode(bytes),size);
                 } else if (ext == ".xml") {
+                    // self/mutually-referencing drawables (adaptive layer -> itself) would
+                    // recurse until StackOverflow (uncatchable, kills explorer) — bound depth
+                    if (++_xmlDepth > 8) {
+                        _xmlDepth--;
+                        throw new Exception("drawable xml reference nesting too deep at " + path);
+                    }
+                    try {
                     XmlDocument doc = ExtractCompressedXml(path);
                     if (doc.FirstChild.Name == "adaptive-icon") {
                         return parseAdaptiveIcon(doc, size);
@@ -1316,10 +1321,16 @@ namespace ApkQuickReader
                     } else {
                         throw new Exception("unsupported image file " + path + " with tag " + doc.FirstChild.Name);
                     }
+                    } finally {
+                        _xmlDepth--;
+                    }
                 }
             }
             return null;
         }
+
+        // recursion guard for xml drawable references (adaptive/layer -> getImage -> xml…)
+        private int _xmlDepth = 0;
 
         private Bitmap parseLayerDrawable(XmlNode node, Size size) {
             try {
@@ -1397,7 +1408,9 @@ namespace ApkQuickReader
                     }
                     //Not finished yet
                 }
-                Bitmap b = new Bitmap(Math.Max(1, (int)viewportWidth), Math.Max(1, (int)viewportHeight));
+                // viewport comes from attacker XML: a huge/NaN value would OOM explorer's
+                // process via the intermediate canvas. Real adaptive vectors are ≤ 108dp.
+                Bitmap b = new Bitmap(ClampCanvas(viewportWidth), ClampCanvas(viewportHeight));
                 using (Graphics g = Graphics.FromImage(b)) {
                     DrawVectorGroup(g, vector, new System.Drawing.Drawing2D.Matrix());
                 }
@@ -1405,6 +1418,11 @@ namespace ApkQuickReader
             } catch (Exception ex) {
                 throw new Exception(ex.Message + "\nError happens during parsing vectordrawable: " + node.InnerXml);
             }
+        }
+
+        private static int ClampCanvas(float v) {
+            if (float.IsNaN(v) || float.IsInfinity(v) || v <= 1f) return 1;
+            return (int)Math.Min(v, 4096f);
         }
 
         /// <summary>
@@ -1721,7 +1739,7 @@ namespace ApkQuickReader
         public XmlDocument ExtractCompressedXml(string path) {
             try {
                 ZipEntry en = zip.GetEntry(path);
-                byte[] bytes = new BinaryReader(zip.GetInputStream(en)).ReadBytes((int)en.Size);
+                byte[] bytes = ZipSafety.ReadEntryBounded(zip, en, ZipSafety.MAX_XML, "xml " + path);
                 return ExtractCompressedXml(bytes);
             } catch (Exception ex) {
                 throw new Exception(ex.Message + "\nError happens during dump " + path);

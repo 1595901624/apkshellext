@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -22,6 +22,10 @@ namespace ApkShellext2 {
         public const string extIPA = ".ipa";
         public const string extAPPX = ".appx";
         public const string extAPPXBUNDLE = ".appxbundle";
+        // multi-split android containers (bundletool / APKMirror / APKPure)
+        public const string extAPKS = ".apks";
+        public const string extAPKM = ".apkm";
+        public const string extXAPK = ".xapk";
 
         public enum AppType {
             AndroidApp,
@@ -112,6 +116,10 @@ namespace ApkShellext2 {
             {
                 return AppType.AndroidAab;
             } 
+            else if (suffix == extAPKS || suffix == extAPKM || suffix == extXAPK)
+            {
+                return AppType.AndroidApp; // split container: identity == its base apk
+            } 
             else 
             {
                 throw new NotSupportedException(suffix + " type is not supported.");
@@ -121,6 +129,9 @@ namespace ApkShellext2 {
         public static AppPackageReader Read(string path) {
             switch (getAppType(path)) {
                 case AppType.AndroidApp:
+                    string ext = Path.GetExtension(path);
+                    if (ext == extAPKS || ext == extAPKM || ext == extXAPK)
+                        return new SplitApkBundleReader(path);
                     return new ApkReader(path);
                 case AppType.iOSApp:
                     return new IpaReader(path);

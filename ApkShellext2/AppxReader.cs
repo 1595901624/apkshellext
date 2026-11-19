@@ -9,6 +9,8 @@ using System.Xml;
 using System.Drawing;
 using System.Text.RegularExpressions;
 
+using ApkQuickReader;
+
 namespace ApkShellext2 {
     /// <summary>
     /// 
@@ -54,12 +56,12 @@ namespace ApkShellext2 {
             ZipEntry en = zip.GetEntry(AppxManifestXml);
             if (en == null)
                 throw new EntryPointNotFoundException("cannot find " + AppxManifestXml);
-            byte[] xmlbytes = new byte[en.Size];
-            zip.GetInputStream(en).Read(xmlbytes, 0, (int)en.Size);
+            // bounded read (also fixes silent partial Stream.Read truncation on big entries)
+            byte[] xmlbytes = ZipSafety.ReadEntryBounded(zip, en, ZipSafety.MAX_MANIFEST, "AppxManifest.xml");
 
             XmlDocument xml = new XmlDocument();
             xml.XmlResolver = null;
-            xml.Load(zip.GetInputStream(en));
+            xml.Load(new MemoryStream(xmlbytes, 0, xmlbytes.Length, false, false));
 
             XmlElement packageNode = xml.DocumentElement;
             XmlElement Identity = packageNode[elemIdentity];
@@ -142,9 +144,8 @@ namespace ApkShellext2 {
                     // buffer fully: a Bitmap over the live zip stream decodes lazily and turns blank once
                     // the reader/stream is disposed (shell draws later); SharpZipLib 1.4.2 streams are
                     // non-seekable so GDI+ cannot recover.
-                    byte[] imageBytes = new byte[logo.Size];
-                    zip.GetInputStream(logo).Read(imageBytes, 0, (int)logo.Size);
-                    return new Bitmap(new MemoryStream(imageBytes));
+                    byte[] imageBytes = ZipSafety.ReadEntryBounded(zip, logo, ZipSafety.MAX_ICON, "logo " + iconPath);
+                    return new Bitmap(new MemoryStream(imageBytes, 0, imageBytes.Length, false, false));
                 } else {
                     throw new EntryPointNotFoundException("Cannot find Logo file: " + iconPath);
                 }

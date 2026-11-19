@@ -17,6 +17,8 @@ using System.Threading.Tasks;
 using ICSharpCode.SharpZipLib.Zip;
 using Microsoft.Win32;
 using System.Text.RegularExpressions;
+using ApkQuickReader;
+
 namespace ApkShellext2
 {
     public class IpaReader : AppPackageReader
@@ -68,8 +70,8 @@ namespace ApkShellext2
                 throw new EntryPointNotFoundException("cannot find info.plist");
             }
 
-            byte[] infoBytes = new byte[infoPlist.Size];
-            zip.GetInputStream(infoPlist).Read(infoBytes, 0, (int)infoPlist.Size);
+            // bounded read (also fixes silent partial Stream.Read truncation)
+            byte[] infoBytes = ZipSafety.ReadEntryBounded(zip, infoPlist, ZipSafety.MAX_METADATA, "info.plist");
 
             infoPlistDic = (Dictionary<string, object>)Plist.readPlist(infoBytes);
         }
@@ -127,8 +129,7 @@ namespace ApkShellext2
             if (image == null) {
                 return null;
             }
-            byte[] imageBytes = new byte[image.Size];
-            zip.GetInputStream(image).Read(imageBytes, 0, (int)image.Size);
+            byte[] imageBytes = ZipSafety.ReadEntryBounded(zip, image, ZipSafety.MAX_ICON, "icon " + name);
             try {
                 MemoryStream imageOut = new MemoryStream();
                 PNGDecrusher.Decrush(new MemoryStream(imageBytes), imageOut);
@@ -232,8 +233,7 @@ namespace ApkShellext2
                     ZipEntry itunesMetadata = zip.GetEntry(iTunesMetadataPath);
                     if (itunesMetadata == null)
                         return "";
-                    byte[] itunesMetadataBytes = new byte[itunesMetadata.Size];
-                    zip.GetInputStream(itunesMetadata).Read(itunesMetadataBytes, 0, (int)itunesMetadata.Size);
+                    byte[] itunesMetadataBytes = ZipSafety.ReadEntryBounded(zip, itunesMetadata, ZipSafety.MAX_METADATA, "iTunesMetadata.plist");
                     itunesMetadataDic = (Dictionary<string, object>)Plist.readPlist(itunesMetadataBytes);
                     return getStrings(itunesMetadataDic, new string[] { flagCopyright })[0];
                 } catch {
@@ -248,8 +248,7 @@ namespace ApkShellext2
                     ZipEntry itunesMetadata = zip.GetEntry(iTunesMetadataPath);
                     if (itunesMetadata == null)
                         return "";
-                    byte[] itunesMetadataBytes = new byte[itunesMetadata.Size];
-                    zip.GetInputStream(itunesMetadata).Read(itunesMetadataBytes, 0, (int)itunesMetadata.Size);
+                    byte[] itunesMetadataBytes = ZipSafety.ReadEntryBounded(zip, itunesMetadata, ZipSafety.MAX_METADATA, "iTunesMetadata.plist");
                     itunesMetadataDic = (Dictionary<string, object>)Plist.readPlist(itunesMetadataBytes);
                     return getStrings(itunesMetadataDic, new string[] { flagAppId })[0];
                 } catch {
