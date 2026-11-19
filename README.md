@@ -1,5 +1,5 @@
 # ApkShellext2_hy  
-![](https://img.shields.io/badge/version-v3.0.0-blue.svg?style=flat)
+![](https://img.shields.io/badge/version-v3.1.0-blue.svg?style=flat)
 
 A Windows shell extension supporting icon for files of
 * .apk (android package)
@@ -11,6 +11,15 @@ A Windows shell extension supporting icon for files of
 **This project is based on `ApkShellExt2`, which has not been updated by the original author for two years, and I will continue to maintain this project if I have spare time. In addition, my other project is also based on this project, I hope you support more.**
 
 #### [Change]
+
+* [3.1.0] Dependency modernization (still .NET Framework 4.8)
+  * Security: native libwebp rebuilt from 1.0.3 (2013) to **1.6.0** — fixes CVE-2023-4863, CVE-2023-51294 and a dozen more; x86/x64 built with MSVC static CRT, libsharpyuv statically linked (`ApkShellext2/LibWebP/`, rebuild script in `build/libwebp/`).
+  * WebP-wrapper updated to master: alpha-channel decode (transparent webp icons), x86 crash fix.
+  * SharpZipLib: kkguo fork (0.86-era) → upstream **1.4.2** (fork's only private commit is already upstream). Better zip64 and entry-header lookup.
+  * QRCoder 2018 snapshot → **1.4.2**; SVG.NET 2018 snapshot → **3.5.0** (+ ExCSS 4.2.3). Run `build/svg-pregen/pregen.ps1` once before first build.
+  * Removed unmaintained Ionic.Zlib (PNGDecrush's zlib/CRC now uses SharpZipLib streams); removed dead Google.Protobuf references.
+  * Build: strong-name now from a locally generated `apkshellext2_hy.snk` (`sn.exe -k`, not committed) since the original pfx was lost; Release packaging via `Resources/postbuild.cmd` finds 7-Zip automatically and only warns when absent.
+  * Verified: VS MSBuild full-solution Debug/Rebuild 0 errors, signed main + 15 satellite assemblies, runtime smoke tests (webp lossy/alpha decode, zip, SVG path, QR, PNG zlib/CRC, DTD resource) pass.
 
 * [3.0.0]
   * Fix: Crashes Chrome and Edge when downloading an apk/ipa/appx/ file.
@@ -50,7 +59,6 @@ Thank you to [kkguo](https://github.com/kkguo) for all open source projects.
 | [Iteedee.ApkReader](https://github.com/hylander0/Iteedee.ApkReader) | the original APK reader, not in use currently  |
 | [PlistCS](https://github.com/animetrics/PlistCS)                    | iOS plist file reader                          |
 | [PNGDecrush](https://github.com/MikeWeller/PNGDecrush)              | PNG decrush lib                                |
-| [Ionic.Zlib](https://github.com/jstedfast/Ionic.Zlib)               | Another Zip implementation, used by PNGDecrush |
 | [QRCoder](https://github.com/codebude/QRCoder)                      | QR code generator                              |
 | [Ultimate Social](https://www.iconfinder.com/iconsets/ultimate-social) | A free icon set for social medias           |
 | [SVG](https://github.com/vvvv/SVG)                                  | SVG format renderer                            |
