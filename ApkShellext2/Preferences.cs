@@ -27,6 +27,7 @@ namespace ApkShellext2 {
 
         private void Preferences_Load(object sender, EventArgs e) {
             Utility.Localize();
+            if (AppsUseDarkTheme()) ApplyDarkTheme(this);
 
             Log("Using setting file from: " + ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal).FilePath);
 
@@ -402,5 +403,75 @@ namespace ApkShellext2 {
         private void Preferences_ResizeBegin(object sender, EventArgs e) {
             
         }
+
+        #region Windows 10/11 dark mode
+        // Follows the per-user "Choose your app mode" (Settings → Personalization → Colors).
+        // HKCU\...\Personalize\AppsUseLightTheme = 0 means the shell runs apps in dark mode;
+        // a light WinForms dialog inside dark Explorer is the classic "forgot the theme" look.
+        private static bool AppsUseDarkTheme() {
+            try {
+                using (var k = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(
+                    @"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize")) {
+                    object v = k == null ? null : k.GetValue("AppsUseLightTheme");
+                    return v is int && (int)v == 0;
+                }
+            } catch { return false; }
+        }
+
+        private static readonly Color DarkBack = Color.FromArgb(32, 32, 32);
+        private static readonly Color DarkField = Color.FromArgb(43, 43, 43);
+        private static readonly Color DarkFore = Color.FromArgb(238, 238, 238);
+        private static readonly Color DarkBorder = Color.FromArgb(70, 70, 70);
+
+        private static void ApplyDarkTheme(Control c) {
+            var tb = c as TextBox;
+            var cb = c as ComboBox;
+            var tv = c as TreeView;
+            var btn = c as Button;
+            if (tb != null) {
+                tb.BackColor = DarkField;
+                tb.ForeColor = DarkFore;
+                tb.BorderStyle = BorderStyle.FixedSingle;
+            } else if (cb != null) {
+                cb.FlatStyle = FlatStyle.Flat;
+                cb.BackColor = DarkField;
+                cb.ForeColor = DarkFore;
+            } else if (tv != null) {
+                tv.BackColor = DarkBack;
+                tv.ForeColor = DarkFore;
+                tv.BorderStyle = BorderStyle.FixedSingle;
+            } else if (btn != null) {
+                btn.FlatStyle = FlatStyle.Flat;
+                btn.BackColor = DarkField;
+                btn.ForeColor = DarkFore;
+                btn.FlatAppearance.BorderColor = DarkBorder;
+                btn.FlatAppearance.MouseOverBackColor = Color.FromArgb(55, 55, 55);
+            } else if (c is Label || c is CheckBox || c is LinkLabel) {
+                c.ForeColor = DarkFore;
+            } else {
+                c.BackColor = DarkBack;
+                c.ForeColor = DarkFore;
+            }
+            foreach (Control child in c.Controls)
+                ApplyDarkTheme(child);
+        }
+
+        private void EnableDarkTitleBar() {
+            // DWMWA_USE_IMMERSIVE_DARK_MODE: 20 on 2004+/Win11, 19 on 1809-1903.
+            try {
+                int on = 1;
+                if (DwmSetWindowAttribute(this.Handle, 20, ref on, sizeof(int)) != 0)
+                    DwmSetWindowAttribute(this.Handle, 19, ref on, sizeof(int));
+            } catch { /* dwmapi missing on ancient builds - stay light */ }
+        }
+
+        [System.Runtime.InteropServices.DllImport("dwmapi.dll", PreserveSig = true)]
+        private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int attrValue, int attrSize);
+
+        protected override void OnHandleCreated(EventArgs e) {
+            base.OnHandleCreated(e);
+            if (AppsUseDarkTheme()) EnableDarkTitleBar();
+        }
+        #endregion
     }
 }

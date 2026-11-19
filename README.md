@@ -1,6 +1,6 @@
 # ApkShellext2
 
-[![release](https://img.shields.io/badge/release_3.4.2-blue)](https://github.com/nkh0472/apkshellext/releases)
+[![release](https://img.shields.io/badge/release_3.4.3-blue)](https://github.com/nkh0472/apkshellext/releases)
 [![.NET](https://img.shields.io/badge/.NET_Framework-4.8-512BD4)](#build-from-source)
 [![license](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
@@ -33,14 +33,14 @@ A Windows shell extension that shows the real app icon, package info tip and a m
 ## Install
 
 1. Download the latest release archive and extract it to a permanent folder (e.g. `C:\Program Files\ApkShellext2\`).
-2. Run `install.bat` **as administrator** — it registers the extension for both 64-bit and 32-bit Explorer hosts.
+2. Run `install.bat` **as administrator** — it registers the extension for both 64-bit and 32-bit Explorer hosts and generates NGEN native images (faster first icons after boot). No admin rights? Run `install_user.bat` instead: per-user registration under `HKCU`, no UAC prompt (remove again with `uninstall_user.bat`). A machine-wide registration always takes precedence over the per-user one.
 3. If icons do not refresh, run `restart_explorer.bat`.
 
 **Uninstall:** run `uninstall.bat` as administrator — it unregisters both 64-bit and 32-bit views, sweeps the registration even if the DLL was already deleted (safe to run from any install folder of this version), and removes the legacy COM entries left by pre-3.4.2 builds. If file icons persist afterwards, the leftover is the Windows icon cache (`IconCache.db` / `thumbcache_*.db`), not the extension; delete it and restart Explorer.
 
 ## Settings
 
-Right-click a package → **ApkShellext2 → Preferences** (modeless, never blocks Explorer). Settings live under `HKCU\SOFTWARE\ApkShellext2`, including `SupportAdaptiveIcon`, `UseAppNameLanguage` / `AppNameLanguage`, and info-tip customization.
+Right-click a package → **ApkShellext2 → Preferences** (modeless, never blocks Explorer). Settings live under `HKCU\SOFTWARE\ApkShellext2`, including `SupportAdaptiveIcon`, `UseAppNameLanguage` / `AppNameLanguage`, `CheckForUpdates` (set to `False` to stop the daily background version check) and info-tip customization.
 
 ## Known limitations
 
@@ -76,6 +76,7 @@ Full bilingual release notes are on the [Releases page](https://github.com/nkh04
 
 | Version | Summary |
 |---------|---------|
+| 3.4.3 | NGEN native images in install/uninstall; optional per-user (HKCU, no admin) install writing the same file-type associations as the machine install; uninstall sweep now removes the real extension-class ShellEx layout and restores the DefaultIcon the icon handler had taken over; Preferences follows the Windows dark app theme; update check opt-out (`CheckForUpdates`); removed dead QR-download menu code |
 | 3.4.2 | Modernized install/uninstall scripts: dual-bitness registration, offline registry sweep, legacy COM-entry cleanup; COM surface restricted to the four shell handlers |
 | 3.4.1 | VectorDrawable rendering re-based onto the embedded SVG engine (gradients incl. multi-stop/angle/radial, nested groups, clip paths); indirect color references resolved |
 | 3.4.0 | Split-APK bundles (`.apks`/`.apkm`/`.xapk`); zip-bomb & overflow hardening in all readers; MSIX bundle member-name decoding |

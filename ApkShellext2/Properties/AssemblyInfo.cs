@@ -38,4 +38,4 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyVersion("0.3.0.0")]
 [assembly: NeutralResourcesLanguage("en-US")]
 //[assembly: AssemblyVersion("0.1.2.*")]
-[assembly: AssemblyFileVersion("3.4.2.0")]
+[assembly: AssemblyFileVersion("3.4.3.0")]

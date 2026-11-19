@@ -11,8 +11,10 @@ set "CONF=%~3"
 if "%CONF%"=="" set "CONF=Debug"
 
 copy /Y "%PDIR%Resources\install.bat"         "%TDIR%"
+copy /Y "%PDIR%Resources\install_user.bat"    "%TDIR%"
 copy /Y "%PDIR%Resources\restart_explorer.bat" "%TDIR%"
 copy /Y "%PDIR%Resources\uninstall.bat"       "%TDIR%"
+copy /Y "%PDIR%Resources\uninstall_user.bat"  "%TDIR%"
 copy /Y "%PDIR%LibWebP\libwebp_x64.dll"       "%TDIR%"
 copy /Y "%PDIR%LibWebP\libwebp_x86.dll"       "%TDIR%"
 

@@ -54,7 +54,7 @@ REM === register with BOTH regasm bitnesses ===
 REM 64-bit view serves explorer.exe; 32-bit view serves 32-bit host processes
 REM (older file dialogs etc). Registering only one view leaves the other hosts
 REM without icons and is a known source of half-uninstalled states.
-ECHO [1/4] Registering shell handlers (64-bit view)...
+ECHO [1/5] Registering shell handlers (64-bit view)...
 "%REGASM64%" /codebase "%~dp0ApkShellext2.dll"
 if not '%errorlevel%' EQU '0' (
     echo ERROR: 64-bit registration failed with code %errorlevel%.
@@ -62,14 +62,29 @@ if not '%errorlevel%' EQU '0' (
     exit /b 1
 )
 if exist "%REGASM32%" (
-    ECHO [1/4] Registering shell handlers (32-bit view)...
+    ECHO [1/5] Registering shell handlers (32-bit view)...
     "%REGASM32%" /codebase "%~dp0ApkShellext2.dll"
     if not '%errorlevel%' EQU '0' echo WARNING: 32-bit registration failed; 64-bit hosts still work.
 )
 
+REM === NGEN precompile: native images remove the JIT cost from every
+REM Explorer start (shell extensions load in-process, first-icon latency is
+REM the user-visible effect). Failures are non-fatal: machines with the
+REM Trusted Platform module service disabled cannot queue images. ===
+set "NGEN64=%windir%\Microsoft.NET\Framework64\v4.0.30319\ngen.exe"
+set "NGEN32=%windir%\Microsoft.NET\Framework\v4.0.30319\ngen.exe"
+ECHO.
+ECHO [2/5] Generating native images (NGEN)...
+"%NGEN64%" install "%~dp0ApkShellext2.dll" /quiet
+if not '%errorlevel%' EQU '0' echo WARNING: 64-bit NGEN failed (service disabled?); icons still work.
+if exist "%NGEN32%" (
+    "%NGEN32%" install "%~dp0ApkShellext2.dll" /quiet
+    if not '%errorlevel%' EQU '0' echo WARNING: 32-bit NGEN failed; 64-bit hosts still work.
+)
+
 REM === show which DLL the shell will actually load (both views) ===
 ECHO.
-ECHO [2/4] Active registration (both views):
+ECHO [3/5] Active registration (both views):
 ECHO     this folder: %~dp0
 for %%V in (
     "HKLM\SOFTWARE\Classes\CLSID\{1F869CEE-4FDA-35D9-896F-43975A87D1F6}\InprocServer32"
@@ -83,7 +98,7 @@ echo     registered - run uninstall.bat from that old folder as well.
 
 REM === notify shell + restart explorer so new handlers load immediately ===
 ECHO.
-ECHO [3/4] Notifying the shell...
+ECHO [4/5] Notifying the shell...
 ie4uinit.exe -show >nul 2>&1
 choice /C YN /M "Restart Explorer now to take effect (recommended)"
 if '%errorlevel%' EQU '2' goto verify
@@ -95,7 +110,7 @@ start "" explorer.exe
 
 REM === verify ===
 ECHO.
-ECHO [4/4] Verifying...
+ECHO [5/5] Verifying...
 reg query "HKLM\SOFTWARE\Classes\CLSID\{1F869CEE-4FDA-35D9-896F-43975A87D1F6}" >nul 2>&1
 if '%errorlevel%' EQU '0' (
     echo Install OK: icon handler registered and pointing at "%~dp0".

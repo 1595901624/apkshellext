@@ -204,47 +204,6 @@ namespace ApkShellext2 {
                 #endregion
             }
 
-            #region Barcode
-            /* Not enabled yet
-            var barcodeMenu = new ToolStripMenuItem();
-            barcodeMenu.Text = Resources.strScanToDownload;
-            barcodeMenu.Image = Utility.ResizeBitmap(Resources.QR_Scan, size);
-            barcodeMenu.Enabled = false;
-            if (SelectedItemPaths.Count() == 1) {
-                barcodeMenu.Enabled = true;
-                var barcode = new ToolStripMenuItem();
-
-                string md5;
-                using (MD5 md5Hash = MD5.Create()) {
-                    md5 = Utility.GetMd5Hash(md5Hash, SelectedItemPaths.First());
-                }
-
-                try {
-                    // Notice service regarding the path
-                    using (var client = new WebClient()) {
-                        var values = new NameValueCollection();
-                        client.QueryString.Add("md5", md5);
-                        client.QueryString.Add("path", SelectedItemPaths.First());
-                        client.BaseAddress = "http://localhost:42728";
-                        client.UploadValues("", values);
-                    }
-
-                    string url = @"http://" + Utility.LocalIPAddress() + @":42728/" + md5;
-                    QRCodeGenerator qrGenerator = new QRCodeGenerator();
-                    QRCodeGenerator.QRCode qrCode = qrGenerator.CreateQrCode(url, QRCodeGenerator.ECCLevel.M);
-                    barcode.Image = qrCode.GetGraphic(5);
-
-                    barcodeMenu.DropDownItems.Add(barcode);
-                    barcode.Click += (sender,args) => gotoDownload();
-                } catch (Exception ex) {
-                    Log(ex.Message);
-                    barcodeMenu.Enabled = false;
-                }
-            }
-            mainMenu.DropDownItems.Add(barcodeMenu);
-            */
-            #endregion
-
             #region Preferences Menu
             var settingsMenu = new ToolStripMenuItem {
                 Text = Resources.menuPreferences,
@@ -288,14 +247,6 @@ namespace ApkShellext2 {
             Utility.CheckUpdate();
             return menu;
         }
-
-        //private void gotoDownload() {
-        //    string md5;
-        //    using (MD5 md5Hash = MD5.Create()) {
-        //        md5 = Utility.GetMd5Hash(md5Hash, SelectedItemPaths.First());
-        //    }
-        //    System.Diagnostics.Process.Start(@"http://" + Utility.LocalIPAddress() + @":42728/" + md5);
-        //}
 
         /// <summary>
         /// get the new filename for renaming function

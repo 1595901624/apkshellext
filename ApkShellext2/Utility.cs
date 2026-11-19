@@ -241,6 +241,9 @@ namespace ApkShellext2 {
         }
 
         public static void CheckUpdate() {
+            // Opt-out: HKCU\SOFTWARE\ApkShellext2 "CheckForUpdates"=dword 0 / "False"
+            // stops the daily background request to GitHub entirely.
+            if (Utility.GetSetting("CheckForUpdates", "True") != "True") return;
             try {
                 checkUpdateMutex.WaitOne();
                 DateTime t = DateTime.Parse(Utility.GetSetting("LastCheckUpdateTime", "0"));
