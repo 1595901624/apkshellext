@@ -49,7 +49,7 @@ Right-click a package → **ApkShellext2 → Preferences** (modeless, never bloc
 ## Build from source
 
 ```
-git clone --recursive -b ApkShellext2_hy https://github.com/nkh0472/apkshellext.git
+git clone --recursive https://github.com/nkh0472/apkshellext.git
 msbuild ApkShellext2.sln /p:Configuration=Release /p:Platform="Any CPU"
 ```
 
