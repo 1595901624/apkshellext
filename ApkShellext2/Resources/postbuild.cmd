@@ -62,6 +62,16 @@ REM for System.Resources.Extensions v4.0.0.0). A Visual Studio (FullFramework)
 REM build uses classic resources and has no such file - package it if present.
 set "SRE="
 if exist "System.Resources.Extensions.dll" set "SRE=System.Resources.Extensions.dll"
-"%Z7%" a ApkShellext2.7z ApkShellext2.dll *.bat libwebp_*.dll ExCSS.dll System.Memory.dll System.Buffers.dll System.Runtime.CompilerServices.Unsafe.dll %SRE%
-for %%L in (ar-SA de-DE el-GR es-ES fa-IR fr-FR he-IL it-IT ja-JP ko-KR my-MM nl-NL pl-PL pt-PT ru-RU tr-TR uk-UA zh-CN zh-TW) do "%Z7%" a %%L.7z %%L
+REM Satellites live in the per-locale subfolders of TargetDir (one
+REM ApkShellext2.resources.dll each). They belong in the main archive: an
+REM install extracted from ApkShellext2.7z alone must show the localized UI,
+REM not silently fall back to English. 7z stores the folder path, so the
+REM locale directories come out of the archive exactly where the GAC-less
+REM probing expects them.
+set "SATS="
+for %%L in (ar-SA de-DE el-GR es-ES fa-IR fr-FR he-IL it-IT ja-JP ko-KR my-MM nl-NL pl-PL pt-PT ru-RU tr-TR uk-UA zh-CN zh-TW) do if exist "%%L\ApkShellext2.resources.dll" set "SATS=!SATS! %%L"
+"%Z7%" a ApkShellext2.7z ApkShellext2.dll *.bat libwebp_*.dll ExCSS.dll System.Memory.dll System.Buffers.dll System.Runtime.CompilerServices.Unsafe.dll %SRE% !SATS!
+REM No per-language archives anymore: the main package carries every locale,
+REM so the old one-7z-per-language split (upstream distribution style) would
+REM only clutter the output folder.
 exit /b 0
