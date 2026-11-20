@@ -311,7 +311,7 @@ NGEN)。`restart_explorer.bat` 重载外壳。卸载用对应的 `uninstall*.bat
    $rm.GetString('btnOK', [cultureinfo]::InvariantCulture)   # → OK     (中性资源,在主 DLL 内)
    ```
 
-4. **`bin\Release` 完整发布布局:** `ApkShellext2.dll(.pdb/.config)`、五个 bat、
+4. **`bin\Release` 完整发布布局:** `ApkShellext2.dll(.pdb)`、五个 bat、
    `libwebp_x86/x64.dll`、copy-local 的 NuGet DLL(`ExCSS`、`System.Memory`、
    `System.Buffers`、`System.Numerics.Vectors`、`System.Runtime.CompilerServices.Unsafe`;
    `System.Resources.Extensions` 仅 dotnet 路线有),以及 —— 找到 7-Zip 时 ——

@@ -338,7 +338,7 @@ official package in the same GAC/registration state.
    $rm.GetString('btnOK', [cultureinfo]::InvariantCulture)   # → OK     (neutral, inside main dll)
    ```
 
-4. **Complete publish layout in `bin\Release`:** `ApkShellext2.dll(.pdb/.config)`, the
+4. **Complete publish layout in `bin\Release`:** `ApkShellext2.dll(.pdb)`, the
    five bats, `libwebp_x86/x64.dll`, copy-local NuGet DLLs (`ExCSS`, `System.Memory`,
    `System.Buffers`, `System.Numerics.Vectors`, `System.Runtime.CompilerServices.Unsafe`;
    `System.Resources.Extensions` only on the dotnet route) and — when 7-Zip was found —
