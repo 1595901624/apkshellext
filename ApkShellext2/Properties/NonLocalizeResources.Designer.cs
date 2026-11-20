@@ -256,7 +256,7 @@ namespace ApkShellext2.Properties {
         }
         
         /// <summary>
-        ///   查找类似 https://kkguo.github.io/apkshellext 的本地化字符串。
+        ///   查找类似 https://github.com/nkh0472/apkshellext 的本地化字符串。
         /// </summary>
         internal static string urlGithubHome {
             get {
@@ -265,7 +265,7 @@ namespace ApkShellext2.Properties {
         }
         
         /// <summary>
-        ///   查找类似 https://kkguo.github.io/apkshellext/latest 的本地化字符串。
+        ///   查找类似 https://raw.githubusercontent.com/nkh0472/apkshellext/main/version.txt 的本地化字符串。
         /// </summary>
         internal static string urlGithubHomeLatest {
             get {
@@ -274,7 +274,7 @@ namespace ApkShellext2.Properties {
         }
         
         /// <summary>
-        ///   查找类似 https://kkguo.github.io/apkshellext/index.html?version={0} 的本地化字符串。
+        ///   查找类似 https://github.com/nkh0472/apkshellext/releases/latest 的本地化字符串。
         /// </summary>
         internal static string urlGithubHomeWithVersion {
             get {
@@ -306,15 +306,6 @@ namespace ApkShellext2.Properties {
         internal static string urlPatternVarWiki {
             get {
                 return ResourceManager.GetString("urlPatternVarWiki", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 https://crowdin.com/project/apkshellext 的本地化字符串。
-        /// </summary>
-        internal static string urlTranslate {
-            get {
-                return ResourceManager.GetString("urlTranslate", resourceCulture);
             }
         }
         

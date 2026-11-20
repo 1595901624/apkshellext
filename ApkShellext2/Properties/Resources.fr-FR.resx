@@ -311,7 +311,7 @@ Si cette case est cochée, le fichier sera renommé en %AppName%_%Version%_%Revi
     <value>Extraire</value>
   </data>
   <data name="strSupportAdaptiveIcon" xml:space="preserve">
-    <value>Support des icônes adaptatives (bêta)</value>
+    <value>Support des icônes adaptatives</value>
   </data>
   <data name="strEnableLog" xml:space="preserve">
     <value>Activer les journaux de débogage</value>
@@ -338,5 +338,8 @@ Si cette case est cochée, le fichier sera renommé en %AppName%_%Version%_%Revi
   </data>
   <data name="strFollowUiLanguage" xml:space="preserve">
     <value>(suivre la langue de l'interface)</value>
+  </data>
+  <data name="strDebugLog" xml:space="preserve">
+    <value>Écrire le journal de débogage (redémarrer l'Explorateur)</value>
   </data>
 </root>

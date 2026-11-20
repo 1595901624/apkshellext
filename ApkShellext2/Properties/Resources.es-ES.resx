@@ -324,7 +324,7 @@ Tildando eso, cambia el nombre del archivo de app a %AppName%_%Version%_%Revisio
     <value>Extraer</value>
   </data>
   <data name="strSupportAdaptiveIcon" xml:space="preserve">
-    <value>Admitir íconos adaptativos (beta)</value>
+    <value>Admitir íconos adaptativos</value>
   </data>
   <data name="strEnableLog" xml:space="preserve">
     <value>Activar registro de depuración</value>
@@ -346,5 +346,8 @@ Tildando eso, cambia el nombre del archivo de app a %AppName%_%Version%_%Revisio
   </data>
   <data name="strFollowUiLanguage" xml:space="preserve">
     <value>(seguir idioma de la interfaz)</value>
+  </data>
+  <data name="strDebugLog" xml:space="preserve">
+    <value>Escribir registro de depuración (reiniciar el Explorador)</value>
   </data>
 </root>

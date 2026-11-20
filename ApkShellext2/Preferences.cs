@@ -64,7 +64,6 @@ namespace ApkShellext2 {
             }
 
             lblLanguage.Text = Resources.strLanguages;
-            //lblHelpTranslate.Text;
             lblCurrentVersion.Text = string.Format(Resources.strCurrVersion, Assembly.GetExecutingAssembly().GetName().Version.ToString());
             if (Utility.NewVersionAvailible()) {
                 lblNewVer.Text = string.Format(Resources.strNewVersionAvailible, Utility.GetSetting("LatestVersion"));
@@ -80,7 +79,8 @@ namespace ApkShellext2 {
             //btnUpdate.Visible = false;
             toolTip1.SetToolTip(btnUpdate, Resources.strGotoProjectSite);
 
-            lblHelpTranslate.Text = Resources.strHelpTranslate;
+            chkDebugLog.Text = Resources.strDebugLog;
+            chkDebugLog.Checked = Utility.GetSetting("DebugLog", "False") == "True";
 
             #endregion
 
@@ -199,6 +199,11 @@ namespace ApkShellext2 {
         private void ckShowIPA_CheckedChanged(object sender, EventArgs e) {
             Utility.SaveSetting("ShowIpaIcon", ckShowIPA.Checked);
             Utility.refreshShell();
+        }
+
+        private void chkDebugLog_CheckedChanged(object sender, EventArgs e) {
+            // Read by the shell hosts at extension load time; takes effect after they reload.
+            Utility.SaveSetting("DebugLog", chkDebugLog.Checked);
         }
 
         private void ckShowAppxIcon_CheckedChanged(object sender, EventArgs e) {
@@ -327,10 +332,6 @@ namespace ApkShellext2 {
         private void ckStretchIcon_CheckedChanged(object sender, EventArgs e) {
             Utility.SaveSetting("StretchThumbnail", ckStretchThumbnail.Checked);
             needClearThumbnailCache = formLoaded;
-        }
-
-        private void lblHelpTranslate_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e) {
-            System.Diagnostics.Process.Start(NonLocalizeResources.urlTranslate);
         }
 
         private void ckEnableThumbnail_CheckedChanged(object sender, EventArgs e) {

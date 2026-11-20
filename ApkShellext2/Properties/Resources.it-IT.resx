@@ -324,7 +324,7 @@ Per impostazione predefinita il Menu verrà mostrato quando si seleziona solo un
     <value>Estrai</value>
   </data>
   <data name="strSupportAdaptiveIcon" xml:space="preserve">
-    <value>Supporto icone adaptive (beta)</value>
+    <value>Supporto icone adaptive</value>
   </data>
   <data name="strEnableLog" xml:space="preserve">
     <value>Abilita log di debug</value>
@@ -346,5 +346,8 @@ Per impostazione predefinita il Menu verrà mostrato quando si seleziona solo un
   </data>
   <data name="strFollowUiLanguage" xml:space="preserve">
     <value>(segui lingua interfaccia)</value>
+  </data>
+  <data name="strDebugLog" xml:space="preserve">
+    <value>Scrivi log di debug (riavvia Esplora risorse)</value>
   </data>
 </root>

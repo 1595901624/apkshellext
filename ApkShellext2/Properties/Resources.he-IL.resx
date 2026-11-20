@@ -376,7 +376,7 @@
     <value>ייצוא</value>
   </data>
   <data name="strSupportAdaptiveIcon" xml:space="preserve">
-    <value>תמיכה בסמלים מסתגלים (בטא)</value>
+    <value>תמיכה בסמלים מסתגלים</value>
   </data>
   <data name="strEnableLog" xml:space="preserve">
     <value>אפשר רישום יומן אבחון</value>
@@ -398,5 +398,8 @@
   </data>
   <data name="strFollowUiLanguage" xml:space="preserve">
     <value>(לפי שפת הממשק)</value>
+  </data>
+  <data name="strDebugLog" xml:space="preserve">
+    <value>כתיבת יומן ניפוי באגים (הפעל מחדש את סייר Windows)</value>
   </data>
 </root>

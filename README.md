@@ -1,8 +1,10 @@
 # ApkShellext2
 
-[![release](https://img.shields.io/badge/release_3.4.5-blue)](https://github.com/nkh0472/apkshellext/releases)
+[![release](https://img.shields.io/badge/release_3.5.0-blue)](https://github.com/nkh0472/apkshellext/releases)
 [![.NET](https://img.shields.io/badge/.NET_Framework-4.8-512BD4)](#build-from-source)
 [![license](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+
+**English** | [简体中文](README.zh-CN.md)
 
 A Windows shell extension that shows the real app icon, package info tip and a management context menu for mobile app packages in File Explorer.
 
@@ -23,11 +25,12 @@ A Windows shell extension that shows the real app icon, package info tip and a m
 ## Features
 
 - Real package icons at every Explorer zoom level, with Android adaptive-icon rendering and automatic fallback to the legacy icon when a variant cannot be drawn
+- Modern rendering pipeline: VectorDrawable → SVG rasterization (linear/radial gradients, nested groups, clip paths), adaptive icons with Android's 1.5x center-crop zoom, framework color references — pixel-consistent with Android's own output
 - Localized app names: labels follow your UI language, or a language you pick in Preferences (since 3.3.0)
 - Info tip with version, package name, size, target platform and other parsed metadata
 - Context menu: batch rename with custom patterns, open the app's store page
 - Overlay badges distinguishing app types
-- Localized UI — translations are managed on [Crowdin](https://crowdin.com/project/apkshellext)
+- Localized UI in 19 languages — translation pull requests welcome
 - Hardened archive parsing: decompression-ratio and size caps on every read path (since 3.4.0), libwebp 1.6.0 (since 3.1.0)
 
 ## Install
@@ -42,25 +45,18 @@ A Windows shell extension that shows the real app icon, package info tip and a m
 
 Right-click a package → **ApkShellext2 → Preferences** (modeless, never blocks Explorer). Settings live under `HKCU\SOFTWARE\ApkShellext2`, including `SupportAdaptiveIcon`, `UseAppNameLanguage` / `AppNameLanguage`, `CheckForUpdates` (set to `False` to stop the daily background version check) and info-tip customization.
 
-## Known limitations
-
-- Adaptive icons whose foreground is a widget-layout XML (not a drawable) fall back to the legacy icon, mirroring Android's own behaviour.
-
 ## Build from source
 
-```
-git clone --recursive https://github.com/nkh0472/apkshellext.git
-msbuild ApkShellext2.sln /p:Configuration=Release /p:Platform="Any CPU"
-```
+The full build & deploy guide — toolchain choice (VS vs dotnet CLI and why only one produces deployable binaries), packaging, libwebp rebuild, common pitfalls — is [compile_guidance.md](compile_guidance.md) ([简体中文](compile_guidance.zh-CN.md)).
 
-Requires Visual Studio 2019+ (MSBuild + Roslyn) and the .NET Framework 4.8 targeting pack. Release builds sign with `ApkShellext2\apkshellext2_hy.snk` — generate your own key with `sn -k` (the key file is not committed). The bundled `libwebp` 1.6.0 binaries can be rebuilt with the scripts in `build/libwebp/`.
+Quick version: clone with `--recursive`, then `msbuild ApkShellext2.sln /p:Configuration=Release /p:Platform="Any CPU"`. Requires Visual Studio 2019+ and the .NET Framework 4.8 targeting pack; release builds sign with your own `sn -k` key.
 
 ## Project history & maintainers
 
 | Period | Maintainer | Contribution |
 |--------|-----------|--------------|
-| 2009 – | [kkguo (Jingang Guo)](https://github.com/kkguo) | Original author of ApkShellext2 |
-| – 2023 | [1595901624 (luhaoyu)](https://github.com/1595901624) | Maintained v3.x, created the `ApkShellext2_hy` branch (.aab support and more) |
+| 2009 – | [kkguo](https://github.com/kkguo) | Original author of ApkShellext2 |
+| – 2023 | [1595901624](https://github.com/1595901624) | Maintained v3.x, created the `ApkShellext2_hy` branch (.aab support and more) |
 | 2026 – | [nkh0472](https://github.com/nkh0472) | Current maintainer: dependency modernization (libwebp 1.6.0), Windows 11 icon fixes, localized labels, split-APK bundles, archive hardening |
 
 ## Changelog
@@ -69,9 +65,10 @@ Full bilingual release notes are on the [Releases page](https://github.com/nkh04
 
 | Version | Summary |
 |---------|---------|
-| 3.4.5 | Fixed the NGEN steps in the setup scripts: `/quiet` is not a valid ngen.exe flag, so native images were never actually generated; install now uses `/nologo /NoDependencies` (the dependency chain cannot be precompiled without a host binding policy), uninstall removes images under both the legacy 0.3.0.0 and current assembly identities |
-| 3.4.4 | Security/perf audit hardening: parsers survive malformed packages (no hangs/OOM/crashes/SVG SSRF), installer ACL guard + randomized temp files, dead service project and QRCoder removed, shared icon cache, lazy `.xapk` extraction, lighter context menu; all 19 locales completed (my-MM/nl-NL/pl-PL/uk-UA ship for the first time); AssemblyVersion finally tracks the release, so the update check stops nagging |
-| 3.4.3 | NGEN native images in install/uninstall; optional per-user (HKCU, no admin) install writing the same file-type associations as the machine install; uninstall sweep now removes the real extension-class ShellEx layout and restores the DefaultIcon the icon handler had taken over; Preferences follows the Windows dark app theme; update check opt-out (`CheckForUpdates`); removed dead QR-download menu code |
+| 3.5.0 | Adaptive icons out of beta: Android-exact 1.5x zoom, framework color references, case-exact zip entries, DPI-independent vector rendering; `<bitmap>` support |
+| 3.4.5 | Fixed the scripts' NGEN steps (`/quiet` is not an ngen.exe flag — native images were never being generated) |
+| 3.4.4 | Security/perf audit hardening; all 19 locales completed; AssemblyVersion finally tracks the release |
+| 3.4.3 | NGEN native images; optional per-user (no-admin) install; dark-theme Preferences; update check opt-out |
 | 3.4.2 | Modernized install/uninstall scripts: dual-bitness registration, offline registry sweep, legacy COM-entry cleanup; COM surface restricted to the four shell handlers |
 | 3.4.1 | VectorDrawable rendering re-based onto the embedded SVG engine (gradients incl. multi-stop/angle/radial, nested groups, clip paths); indirect color references resolved |
 | 3.4.0 | Split-APK bundles (`.apks`/`.apkm`/`.xapk`); zip-bomb & overflow hardening in all readers; MSIX bundle member-name decoding |
@@ -92,7 +89,6 @@ The project stands on these open-source works:
 | [WebP-wrapper](https://github.com/JosePineiro/WebP-wrapper) | WebP C# bindings |
 | [SharpZipLib](https://github.com/icsharpcode/SharpZipLib) | Zip archive access |
 | [SVG](https://github.com/vvvv/SVG) | SVG / vector-drawable rendering |
-| [QRCoder](https://github.com/codebude/QRCoder) | QR code generation |
 | [PlistCS](https://github.com/animetrics/PlistCS) | iOS plist reader |
 | [PNGDecrush](https://github.com/MikeWeller/PNGDecrush) | PNG zlib re-encoding |
 | [apk-info](https://github.com/delvinru/apk-info) | Split-APK container layout & anti-zip-bomb doctrine |
@@ -101,4 +97,4 @@ The project stands on these open-source works:
 
 ## License
 
-[MIT](LICENSE) — Copyright (c) 2015 Jingang Guo, KK.
+[MIT](LICENSE) — Copyright (c) 2015 Jingang Guo, KK; Copyright (c) 2023 1595901624; Copyright (c) 2026 nkh0472.

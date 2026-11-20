@@ -324,7 +324,7 @@ Bu seçenek işaretlendiğinde uygulama dosyası %AppName%_%Version%_%Revision% 
     <value>Dök</value>
   </data>
   <data name="strSupportAdaptiveIcon" xml:space="preserve">
-    <value>Uyarlanabilir simge desteği (beta)</value>
+    <value>Uyarlanabilir simge desteği</value>
   </data>
   <data name="strEnableLog" xml:space="preserve">
     <value>Hata ayıklama günlüğünü etkinleştir</value>
@@ -346,5 +346,8 @@ Bu seçenek işaretlendiğinde uygulama dosyası %AppName%_%Version%_%Revision% 
   </data>
   <data name="strFollowUiLanguage" xml:space="preserve">
     <value>(arayüz dilini takip et)</value>
+  </data>
+  <data name="strDebugLog" xml:space="preserve">
+    <value>Hata ayıklama günlüğü yaz (Gezgin'i yeniden başlatın)</value>
   </data>
 </root>

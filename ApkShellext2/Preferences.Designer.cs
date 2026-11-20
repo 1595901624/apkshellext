@@ -48,11 +48,11 @@ namespace ApkShellext2 {
             this.ckAdaptiveIconSupport = new System.Windows.Forms.CheckBox();
             this.btnClearCache = new System.Windows.Forms.Button();
             this.pnlGeneral = new System.Windows.Forms.TableLayoutPanel();
+            this.chkDebugLog = new System.Windows.Forms.CheckBox();
             this.lblCurrentVersion = new System.Windows.Forms.Label();
             this.lblNewVer = new System.Windows.Forms.Label();
             this.lblLanguage = new System.Windows.Forms.Label();
             this.combLanguage = new System.Windows.Forms.ComboBox();
-            this.lblHelpTranslate = new System.Windows.Forms.LinkLabel();
             this.btnUpdate = new System.Windows.Forms.Button();
             this.ckAlwaysShowStore = new System.Windows.Forms.CheckBox();
             this.ckShowMenuIcon = new System.Windows.Forms.CheckBox();
@@ -401,9 +401,9 @@ namespace ApkShellext2 {
             this.pnlGeneral.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
             this.pnlGeneral.Controls.Add(this.lblCurrentVersion, 0, 4);
             this.pnlGeneral.Controls.Add(this.lblNewVer, 0, 3);
+            this.pnlGeneral.Controls.Add(this.chkDebugLog, 0, 2);
             this.pnlGeneral.Controls.Add(this.lblLanguage, 0, 0);
             this.pnlGeneral.Controls.Add(this.combLanguage, 0, 1);
-            this.pnlGeneral.Controls.Add(this.lblHelpTranslate, 0, 2);
             this.pnlGeneral.Dock = System.Windows.Forms.DockStyle.Fill;
             this.pnlGeneral.Location = new System.Drawing.Point(0, 90);
             this.pnlGeneral.Margin = new System.Windows.Forms.Padding(0);
@@ -416,7 +416,19 @@ namespace ApkShellext2 {
             this.pnlGeneral.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.pnlGeneral.Size = new System.Drawing.Size(490, 79);
             this.pnlGeneral.TabIndex = 21;
-            // 
+            //
+            // chkDebugLog
+            //
+            this.chkDebugLog.AutoSize = true;
+            this.chkDebugLog.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.chkDebugLog.Location = new System.Drawing.Point(3, 40);
+            this.chkDebugLog.Name = "chkDebugLog";
+            this.chkDebugLog.Size = new System.Drawing.Size(484, 17);
+            this.chkDebugLog.TabIndex = 25;
+            this.chkDebugLog.Text = "Write debug log";
+            this.chkDebugLog.UseVisualStyleBackColor = true;
+            this.chkDebugLog.CheckedChanged += new System.EventHandler(this.chkDebugLog_CheckedChanged);
+            //
             // lblCurrentVersion
             // 
             this.lblCurrentVersion.AutoSize = true;
@@ -458,18 +470,7 @@ namespace ApkShellext2 {
             this.combLanguage.Size = new System.Drawing.Size(484, 21);
             this.combLanguage.TabIndex = 8;
             this.combLanguage.SelectedIndexChanged += new System.EventHandler(this.combLanguage_SelectedIndexChanged);
-            // 
-            // lblHelpTranslate
-            // 
-            this.lblHelpTranslate.AutoSize = true;
-            this.lblHelpTranslate.Location = new System.Drawing.Point(3, 40);
-            this.lblHelpTranslate.Name = "lblHelpTranslate";
-            this.lblHelpTranslate.Size = new System.Drawing.Size(73, 13);
-            this.lblHelpTranslate.TabIndex = 12;
-            this.lblHelpTranslate.TabStop = true;
-            this.lblHelpTranslate.Text = "HelpTranslate";
-            this.lblHelpTranslate.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.lblHelpTranslate_LinkClicked);
-            // 
+            //
             // btnUpdate
             // 
             this.btnUpdate.AutoSize = true;
@@ -827,7 +828,6 @@ namespace ApkShellext2 {
         private System.Windows.Forms.LinkLabel llbInfoTipPattVar;
         private System.Windows.Forms.CheckBox ckShowNewVersionInfo;
         private System.Windows.Forms.CheckBox ckStretchThumbnail;
-        private System.Windows.Forms.LinkLabel lblHelpTranslate;
         private System.Windows.Forms.CheckBox ckEnableThumbnail;
         private System.Windows.Forms.Button btnClearCache;
         private System.Windows.Forms.CheckBox ckAdaptiveIconSupport;
@@ -837,5 +837,6 @@ namespace ApkShellext2 {
         private System.Windows.Forms.CheckBox ckUseAppNameLang;
         private System.Windows.Forms.ComboBox combAppNameLang;
         private System.Windows.Forms.TextBox txtReplaceWhiteSpace;
+        private System.Windows.Forms.CheckBox chkDebugLog;
     }
 }

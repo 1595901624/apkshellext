@@ -323,7 +323,7 @@ Standaard, toon het menu alleen met één geselecteerd bestand</value>
     <value>Exporteren</value>
   </data>
   <data name="strSupportAdaptiveIcon" xml:space="preserve">
-    <value>Ondersteuning voor Adaptive Icon (bèta)</value>
+    <value>Ondersteuning voor Adaptive Icon</value>
   </data>
   <data name="strEnableLog" xml:space="preserve">
     <value>Foutlogboek inschakelen</value>
@@ -345,5 +345,8 @@ Standaard, toon het menu alleen met één geselecteerd bestand</value>
   </data>
   <data name="strFollowUiLanguage" xml:space="preserve">
     <value>(taal van interface volgen)</value>
+  </data>
+  <data name="strDebugLog" xml:space="preserve">
+    <value>Foutlogboek schrijven (Verkenner opnieuw opstarten)</value>
   </data>
 </root>

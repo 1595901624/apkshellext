@@ -324,7 +324,7 @@
     <value>Дамп</value>
   </data>
   <data name="strSupportAdaptiveIcon" xml:space="preserve">
-    <value>Поддержка адаптивных значков (бета)</value>
+    <value>Поддержка адаптивных значков</value>
   </data>
   <data name="strEnableLog" xml:space="preserve">
     <value>Включить журнал отладки</value>
@@ -346,5 +346,8 @@
   </data>
   <data name="strFollowUiLanguage" xml:space="preserve">
     <value>(язык интерфейса)</value>
+  </data>
+  <data name="strDebugLog" xml:space="preserve">
+    <value>Записывать журнал отладки (перезапустите Проводник)</value>
   </data>
 </root>

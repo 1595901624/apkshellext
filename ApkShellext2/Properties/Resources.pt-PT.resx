@@ -324,7 +324,7 @@ Verificando isso, renomeie o arquivo app como %AppName%_%Version%_%Revision%, ca
     <value>Extrair</value>
   </data>
   <data name="strSupportAdaptiveIcon" xml:space="preserve">
-    <value>Suportar ícones adaptativos (beta)</value>
+    <value>Suportar ícones adaptativos</value>
   </data>
   <data name="strEnableLog" xml:space="preserve">
     <value>Ativar registo de depuração</value>
@@ -346,5 +346,8 @@ Verificando isso, renomeie o arquivo app como %AppName%_%Version%_%Revision%, ca
   </data>
   <data name="strFollowUiLanguage" xml:space="preserve">
     <value>(seguir idioma da interface)</value>
+  </data>
+  <data name="strDebugLog" xml:space="preserve">
+    <value>Escrever registo de depuração (reiniciar o Explorador)</value>
   </data>
 </root>

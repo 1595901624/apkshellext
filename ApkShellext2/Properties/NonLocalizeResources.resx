@@ -137,13 +137,13 @@
     <value>https://itunes.apple.com/app/id{0}</value>
   </data>
   <data name="urlGithubHome" xml:space="preserve">
-    <value>https://kkguo.github.io/apkshellext</value>
+    <value>https://github.com/nkh0472/apkshellext</value>
   </data>
   <data name="urlGithubHomeLatest" xml:space="preserve">
-    <value>https://kkguo.github.io/apkshellext/latest</value>
+    <value>https://raw.githubusercontent.com/nkh0472/apkshellext/main/version.txt</value>
   </data>
   <data name="urlGithubHomeWithVersion" xml:space="preserve">
-    <value>https://kkguo.github.io/apkshellext/index.html?version={0}</value>
+    <value>https://github.com/nkh0472/apkshellext/releases/latest</value>
   </data>
   <data name="urlGooglePlay" xml:space="preserve">
     <value>https://play.google.com/store/search?q={0}&amp;c=apps</value>
@@ -153,9 +153,6 @@
   </data>
   <data name="urlPatternVarWiki" xml:space="preserve">
     <value>https://github.com/kkguo/apkshellext/wiki/Package-information-Pattern-variables</value>
-  </data>
-  <data name="urlTranslate" xml:space="preserve">
-    <value>https://crowdin.com/project/apkshellext</value>
   </data>
   <data name="varAppid" xml:space="preserve">
     <value>AppID</value>

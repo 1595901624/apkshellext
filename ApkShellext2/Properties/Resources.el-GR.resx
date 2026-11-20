@@ -372,7 +372,7 @@
     <value>Εξαγωγή</value>
   </data>
   <data name="strSupportAdaptiveIcon" xml:space="preserve">
-    <value>Υποστήριξη προσαρμοστικών εικονιδίων (beta)</value>
+    <value>Υποστήριξη προσαρμοστικών εικονιδίων</value>
   </data>
   <data name="strEnableLog" xml:space="preserve">
     <value>Ενεργοποίηση καταγραφής εντοπισμού σφαλμάτων</value>
@@ -394,5 +394,8 @@
   </data>
   <data name="strFollowUiLanguage" xml:space="preserve">
     <value>(ακολούθηση γλώσσας διεπαφής)</value>
+  </data>
+  <data name="strDebugLog" xml:space="preserve">
+    <value>Εγγραφή αρχείου εντοπισμού σφαλμάτων (Επανεκκίνηση Εξερεύνησης)</value>
   </data>
 </root>

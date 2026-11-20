@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -313,7 +313,7 @@ By checking this, rename app file as %AppName%_%Version%_%Revision%, otherwise, 
     <value>Dump</value>
   </data>
   <data name="strSupportAdaptiveIcon" xml:space="preserve">
-    <value>Support Adaptive Icon (beta)</value>
+    <value>Support Adaptive Icon</value>
   </data>
   <data name="strEnableLog" xml:space="preserve">
     <value>Enable debug logging</value>
@@ -336,5 +336,8 @@ By checking this, rename app file as %AppName%_%Version%_%Revision%, otherwise, 
   </data>
   <data name="strFollowUiLanguage" xml:space="preserve">
     <value>(follow UI language)</value>
+  </data>
+  <data name="strDebugLog" xml:space="preserve">
+    <value>Write debug log (restart Explorer to apply)</value>
   </data>
 </root>

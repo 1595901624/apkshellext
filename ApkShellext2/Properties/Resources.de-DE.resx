@@ -310,7 +310,7 @@ Standardmäßig wird das Menü nur angezeigt, wenn eine Datei ausgewählt ist</v
     <value>Dump</value>
   </data>
   <data name="strSupportAdaptiveIcon" xml:space="preserve">
-    <value>Unterstütze Adaptive Icon (Beta)</value>
+    <value>Unterstütze Adaptive Icon</value>
   </data>
   <data name="strEnableLog" xml:space="preserve">
     <value>Debug-Protokoll aktivieren</value>
@@ -337,5 +337,8 @@ Standardmäßig wird das Menü nur angezeigt, wenn eine Datei ausgewählt ist</v
   </data>
   <data name="strFollowUiLanguage" xml:space="preserve">
     <value>(UI-Sprache folgen)</value>
+  </data>
+  <data name="strDebugLog" xml:space="preserve">
+    <value>Debug-Protokoll schreiben (Explorer neu starten)</value>
   </data>
 </root>

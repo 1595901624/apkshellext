@@ -383,7 +383,7 @@
     <value>ထုတ်ယူရန်</value>
   </data>
   <data name="strSupportAdaptiveIcon" xml:space="preserve">
-    <value>Adaptive Icon ကို ပံ့ပိုးပါ (စမ်းသပ်)</value>
+    <value>Adaptive Icon ကို ပံ့ပိုးပါ</value>
   </data>
   <data name="strEnableLog" xml:space="preserve">
     <value>debug မှတ်တမ်း ဖွင့်ရန်</value>
@@ -405,5 +405,8 @@
   </data>
   <data name="strFollowUiLanguage" xml:space="preserve">
     <value>(UI ဘာသာစကားကို လိုက်နာပါ)</value>
+  </data>
+  <data name="strDebugLog" xml:space="preserve">
+    <value>debug မှတျတမ်းရေးရန် (Explorer ကိုပွနျစရနျ)</value>
   </data>
 </root>

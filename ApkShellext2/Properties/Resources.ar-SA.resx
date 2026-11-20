@@ -324,7 +324,7 @@
     <value>استخراج</value>
   </data>
   <data name="strSupportAdaptiveIcon" xml:space="preserve">
-    <value>دعم الأيقونات التكيفية (تجريبي)</value>
+    <value>دعم الأيقونات التكيفية</value>
   </data>
   <data name="strEnableLog" xml:space="preserve">
     <value>تفعيل سجل التصحيح</value>
@@ -346,5 +346,8 @@
   </data>
   <data name="strFollowUiLanguage" xml:space="preserve">
     <value>(حسب لغة الواجهة)</value>
+  </data>
+  <data name="strDebugLog" xml:space="preserve">
+    <value>كتابة سجل التصحيح (أعد تشغيل مستكشف الملفات)</value>
   </data>
 </root>

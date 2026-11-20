@@ -324,7 +324,7 @@
     <value>استخراج</value>
   </data>
   <data name="strSupportAdaptiveIcon" xml:space="preserve">
-    <value>پشتیبانی از آیکن تطبیقی (بتا)</value>
+    <value>پشتیبانی از آیکن تطبیقی</value>
   </data>
   <data name="strEnableLog" xml:space="preserve">
     <value>فعال کردن گزارش اشکال زدایی</value>
@@ -346,5 +346,8 @@
   </data>
   <data name="strFollowUiLanguage" xml:space="preserve">
     <value>(هماهنگ با زبان رابط)</value>
+  </data>
+  <data name="strDebugLog" xml:space="preserve">
+    <value>نوشتن گزارش اشکال‌زدایی (اکسپلورر را دوباره راه‌اندازی کنید)</value>
   </data>
 </root>

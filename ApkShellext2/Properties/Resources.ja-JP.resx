@@ -340,7 +340,7 @@
     <value>ダンプ</value>
   </data>
   <data name="strSupportAdaptiveIcon" xml:space="preserve">
-    <value>アダプティブ アイコンに対応 (ベータ)</value>
+    <value>アダプティブ アイコンに対応</value>
   </data>
   <data name="strEnableLog" xml:space="preserve">
     <value>デバッグログを有効にする</value>
@@ -362,5 +362,8 @@
   </data>
   <data name="strFollowUiLanguage" xml:space="preserve">
     <value>(UI の言語に合わせる)</value>
+  </data>
+  <data name="strDebugLog" xml:space="preserve">
+    <value>デバッグログを記録（エクスプローラーの再起動後に有効）</value>
   </data>
 </root>

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -314,7 +314,7 @@
     <value>提取文件</value>
   </data>
   <data name="strSupportAdaptiveIcon" xml:space="preserve">
-    <value>支持自适应图标 (试用)</value>
+    <value>支持自适应图标</value>
   </data>
   <data name="strEnableLog" xml:space="preserve">
     <value>启用调试日志</value>
@@ -337,5 +337,8 @@
   </data>
   <data name="strFollowUiLanguage" xml:space="preserve">
     <value>(跟随界面语言)</value>
+  </data>
+  <data name="strDebugLog" xml:space="preserve">
+    <value>写入调试日志（重启资源管理器后生效）</value>
   </data>
 </root>

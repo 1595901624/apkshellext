@@ -342,7 +342,7 @@
     <value>내보내기</value>
   </data>
   <data name="strSupportAdaptiveIcon" xml:space="preserve">
-    <value>적응형 아이콘 지원 (베타)</value>
+    <value>적응형 아이콘 지원</value>
   </data>
   <data name="strEnableLog" xml:space="preserve">
     <value>디버그 로그 활성화</value>
@@ -364,5 +364,8 @@
   </data>
   <data name="strFollowUiLanguage" xml:space="preserve">
     <value>(UI 언어 따르기)</value>
+  </data>
+  <data name="strDebugLog" xml:space="preserve">
+    <value>디버그 로그 기록(Explorer 다시 시작 후 적용)</value>
   </data>
 </root>

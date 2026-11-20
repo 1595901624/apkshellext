@@ -649,7 +649,16 @@ namespace ApkShellext2.Properties {
         }
         
         /// <summary>
-        ///   Localizes "(follow UI language)" / (跟随界面语言).
+        ///   Localizes &quot;Write debug log (restart Explorer to apply)&quot; / 写入调试日志（重启资源管理器后生效）.
+        /// </summary>
+        internal static string strDebugLog {
+            get {
+                return ResourceManager.GetString("strDebugLog", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Localizes &quot;(follow UI language)&quot; / (跟随界面语言).
         /// </summary>
         internal static string strFollowUiLanguage {
             get {

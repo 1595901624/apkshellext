@@ -326,7 +326,7 @@
     <value>Дамп</value>
   </data>
   <data name="strSupportAdaptiveIcon" xml:space="preserve">
-    <value>Підтримка адаптивних значків (бета)</value>
+    <value>Підтримка адаптивних значків</value>
   </data>
   <data name="strEnableLog" xml:space="preserve">
     <value>Увімкнути журнал налагодження</value>
@@ -348,5 +348,8 @@
   </data>
   <data name="strFollowUiLanguage" xml:space="preserve">
     <value>(мова інтерфейсу)</value>
+  </data>
+  <data name="strDebugLog" xml:space="preserve">
+    <value>Записувати журнал налагодження (перезапустіть Провідник)</value>
   </data>
 </root>

@@ -11,7 +11,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Haoyu Cloris")]
 [assembly: AssemblyProduct("ApkShellext2")]
-[assembly: AssemblyCopyright("Copyright © Haoyu Cloris 2023")]
+[assembly: AssemblyCopyright("Copyright © 2015 Jingang Guo, KK; © 2023 1595901624; © 2026 nkh0472")]
 [assembly: AssemblyTrademark("ApkShellExt")]
 
 // 将 ComVisible 设置为 false 使此程序集中的类型
@@ -35,7 +35,7 @@ using System.Runtime.InteropServices;
 //
 // 可以指定所有这些值，也可以使用“生成号”和“修订号”的默认值，
 // 方法是按如下所示使用“*”: 
-[assembly: AssemblyVersion("3.4.6.0")]
+[assembly: AssemblyVersion("3.5.0.0")]
 [assembly: NeutralResourcesLanguage("en-US")]
 //[assembly: AssemblyVersion("0.1.2.*")]
-[assembly: AssemblyFileVersion("3.4.6.0")]
+[assembly: AssemblyFileVersion("3.5.0.0")]

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -331,7 +331,7 @@
     <value>提取檔案</value>
   </data>
   <data name="strSupportAdaptiveIcon" xml:space="preserve">
-    <value>支持自適應圖示 (試用)</value>
+    <value>支持自適應圖示</value>
   </data>
   <data name="strEnableLog" xml:space="preserve">
     <value>啟用除錯日誌</value>
@@ -347,5 +347,8 @@
   </data>
   <data name="strDumpXMLPrompt" xml:space="preserve">
     <value>XML 路徑,例如: res\drawable\icon.xml</value>
+  </data>
+  <data name="strDebugLog" xml:space="preserve">
+    <value>寫入偵錯記錄（重新啟動資源管理器後生效）</value>
   </data>
 </root>
