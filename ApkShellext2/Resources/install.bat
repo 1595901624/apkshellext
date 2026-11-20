@@ -85,7 +85,7 @@ if not '%errorlevel%' EQU '0' (
     exit /b 1
 )
 if exist "%REGASM32%" (
-    ECHO [1/5] Registering shell handlers (32-bit view)...
+    ECHO [1/5] Registering shell handlers ^(32-bit view^)...
     "%REGASM32%" /codebase "%~dp0ApkShellext2.dll"
     if not '%errorlevel%' EQU '0' echo WARNING: 32-bit registration failed; 64-bit hosts still work.
 )
