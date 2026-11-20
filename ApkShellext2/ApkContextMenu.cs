@@ -1,7 +1,6 @@
 using ApkQuickReader;
 using ApkShellext2.Properties;
 using Microsoft.Win32;
-using QRCoder;
 using SharpShell.Attributes;
 using SharpShell.Diagnostics;
 using SharpShell.Extensions;

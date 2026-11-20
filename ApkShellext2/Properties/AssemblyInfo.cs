@@ -17,7 +17,7 @@ using System.Runtime.InteropServices;
 // 将 ComVisible 设置为 false 使此程序集中的类型
 // 对 COM 组件不可见。  如果需要从 COM 访问此程序集中的类型，
 // 则将该类型上的 ComVisible 特性设置为 true。
-// 注意：本程序集以源码方式内嵌了 Svg/SharpZipLib/SharpShell/QRCoder 等依赖，
+// 注意：本程序集以源码方式内嵌了 Svg/SharpZipLib/SharpShell 等依赖，
 // 程序集级 true 会让 regasm 把内嵌依赖的每个公共类型都注册成 COM 组件
 // （HKCR 下数百个 Svg.* / SharpShell.* / Record\{...} 键），卸载难以清除。
 // 仅 4 个 Shell 处理器类带 [ComVisible(true)]，保持程序集级 false。

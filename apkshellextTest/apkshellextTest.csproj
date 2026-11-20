@@ -64,6 +64,11 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <!-- dev-tooling source, lives with the main project but is compiled
+         only into this harness (removed from the shell dll in 3.4.4) -->
+    <Compile Include="..\ApkShellext2\ApkChunk.cs">
+      <Link>ApkChunk.cs</Link>
+    </Compile>
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
     </EmbeddedResource>

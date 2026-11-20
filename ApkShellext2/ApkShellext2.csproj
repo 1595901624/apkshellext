@@ -81,7 +81,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AabReader.cs" />
-    <Compile Include="ApkChunk.cs" />
+    <!-- ApkChunk.cs is dev tooling only (used by apkshellextTest); it is
+         linked into that project instead of shipping inside the shell dll. -->
+
     <Compile Include="ApkQuickReader.cs" />
     <Compile Include="ApkIconHandler.cs" />
     <Compile Include="ApkInfoTipHandler.cs" />
@@ -456,7 +458,7 @@
   </Target>
   -->
   <PropertyGroup>
-    <!-- Svg 3.5.0 / QRCoder 1.4.2 source-embedded: language + framework symbols -->
+    <!-- Svg 3.5.0 source-embedded: language + framework symbols -->
     <LangVersion>10.0</LangVersion>
     <DefineConstants>$(DefineConstants);NETFULL;NETFRAMEWORK;NET48;NET462_OR_GREATER</DefineConstants>
   </PropertyGroup>
@@ -468,18 +470,8 @@
       <LogicalName>Svg.Resources.svg11.dtd</LogicalName>
     </EmbeddedResource>
   </ItemGroup>
-  <ItemGroup>
-    <!-- QRCoder 1.4.2 (v1.4.2 tag, source-embedded) -->
-    <Compile Include="QRCoder\QRCoder\**\*.cs" />
-    <Compile Remove="QRCoder\QRCoder\Properties\**\*.cs" />
-    <!-- PayloadGenerator.cs kept in compile: QRCodeGenerator.cs:44/56/96/108 public overloads
-         reference PayloadGenerator.Payload. Its Encoding.RegisterProvider calls (net48-active
-         guards at :2497/:2534) are satisfied by System.Text.Encoding.CodePages ref below. -->
-    <Reference Include="System.Text.Encoding.CodePages">
-      <HintPath>..\packages\System.Text.Encoding.CodePages.5.0.0\lib\net461\System.Text.Encoding.CodePages.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-  </ItemGroup>
+  <!-- QRCoder (and with it System.Text.Encoding.CodePages) was removed after
+       3.4.3 dropped the QR-code menu entry; nothing references it any more. -->
   <ItemGroup>
     <Reference Include="ExCSS">
       <HintPath>..\packages\ExCSS.4.2.3\lib\net48\ExCSS.dll</HintPath>
