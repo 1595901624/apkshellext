@@ -93,15 +93,19 @@ if exist "%REGASM32%" (
 REM === NGEN precompile: native images remove the JIT cost from every
 REM Explorer start (shell extensions load in-process, first-icon latency is
 REM the user-visible effect). Failures are non-fatal: machines with the
-REM Trusted Platform module service disabled cannot queue images. ===
+REM Trusted Platform module service disabled cannot queue images.
+REM /NoDependencies is REQUIRED: compiling the dependency chain fails inside
+REM the NGEN service (no host binding policy for the Unsafe 4.0.4.1->6.0.0.0
+REM redirect; FacadeResolver is runtime-only), which aborts the whole install.
+REM Precompiling this assembly alone succeeds cleanly. ===
 set "NGEN64=%windir%\Microsoft.NET\Framework64\v4.0.30319\ngen.exe"
 set "NGEN32=%windir%\Microsoft.NET\Framework\v4.0.30319\ngen.exe"
 ECHO.
 ECHO [2/5] Generating native images (NGEN)...
-"%NGEN64%" install "%~dp0ApkShellext2.dll" /quiet
+"%NGEN64%" install "%~dp0ApkShellext2.dll" /nologo /NoDependencies
 if not '%errorlevel%' EQU '0' echo WARNING: 64-bit NGEN failed (service disabled?); icons still work.
 if exist "%NGEN32%" (
-    "%NGEN32%" install "%~dp0ApkShellext2.dll" /quiet
+    "%NGEN32%" install "%~dp0ApkShellext2.dll" /nologo /NoDependencies
     if not '%errorlevel%' EQU '0' echo WARNING: 32-bit NGEN failed; 64-bit hosts still work.
 )
 

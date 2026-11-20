@@ -1,6 +1,6 @@
 # ApkShellext2
 
-[![release](https://img.shields.io/badge/release_3.4.4-blue)](https://github.com/nkh0472/apkshellext/releases)
+[![release](https://img.shields.io/badge/release_3.4.5-blue)](https://github.com/nkh0472/apkshellext/releases)
 [![.NET](https://img.shields.io/badge/.NET_Framework-4.8-512BD4)](#build-from-source)
 [![license](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
@@ -76,6 +76,7 @@ Full bilingual release notes are on the [Releases page](https://github.com/nkh04
 
 | Version | Summary |
 |---------|---------|
+| 3.4.5 | Fixed the NGEN steps in the setup scripts: `/quiet` is not a valid ngen.exe flag, so native images were never actually generated; install now uses `/nologo /NoDependencies` (the dependency chain cannot be precompiled without a host binding policy), uninstall removes images under both the legacy 0.3.0.0 and current assembly identities |
 | 3.4.4 | Security/perf audit hardening: parsers survive malformed packages (no hangs/OOM/crashes/SVG SSRF), installer ACL guard + randomized temp files, dead service project and QRCoder removed, shared icon cache, lazy `.xapk` extraction, lighter context menu; all 19 locales completed (my-MM/nl-NL/pl-PL/uk-UA ship for the first time); AssemblyVersion finally tracks the release, so the update check stops nagging |
 | 3.4.3 | NGEN native images in install/uninstall; optional per-user (HKCU, no admin) install writing the same file-type associations as the machine install; uninstall sweep now removes the real extension-class ShellEx layout and restores the DefaultIcon the icon handler had taken over; Preferences follows the Windows dark app theme; update check opt-out (`CheckForUpdates`); removed dead QR-download menu code |
 | 3.4.2 | Modernized install/uninstall scripts: dual-bitness registration, offline registry sweep, legacy COM-entry cleanup; COM surface restricted to the four shell handlers |

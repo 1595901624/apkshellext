@@ -45,8 +45,14 @@ if not exist "%~dp0ApkShellext2.dll" (
     echo       Skipping regasm /unregister; performing full registry sweep instead.
     echo       ^(This also cleans copies registered from OTHER folders - same CLSIDs.^)
     REM NGEN images can still be dropped by assembly identity without the file.
-    "%NGEN64%" uninstall "ApkShellext2, Version=0.3.0.0, Culture=neutral, PublicKeyToken=fca4c8ef6b263859" /quiet >nul 2>&1
-    if exist "%NGEN32%" "%NGEN32%" uninstall "ApkShellext2, Version=0.3.0.0, Culture=neutral, PublicKeyToken=fca4c8ef6b263859" /quiet >nul 2>&1
+    REM Versions before 3.4.4 used assembly version 0.3.0.0; newer ones match the
+REM release number. Try both identities so images from any past install die.
+"%NGEN64%" uninstall "ApkShellext2, Version=0.3.0.0, Culture=neutral, PublicKeyToken=fca4c8ef6b263859" /nologo >nul 2>&1
+"%NGEN64%" uninstall "ApkShellext2, Version=3.4.4.0, Culture=neutral, PublicKeyToken=fca4c8ef6b263859" /nologo >nul 2>&1
+"%NGEN64%" uninstall "ApkShellext2, Version=3.4.5.0, Culture=neutral, PublicKeyToken=fca4c8ef6b263859" /nologo >nul 2>&1
+    if exist "%NGEN32%" "%NGEN32%" uninstall "ApkShellext2, Version=0.3.0.0, Culture=neutral, PublicKeyToken=fca4c8ef6b263859" /nologo >nul 2>&1
+if exist "%NGEN32%" "%NGEN32%" uninstall "ApkShellext2, Version=3.4.4.0, Culture=neutral, PublicKeyToken=fca4c8ef6b263859" /nologo >nul 2>&1
+if exist "%NGEN32%" "%NGEN32%" uninstall "ApkShellext2, Version=3.4.5.0, Culture=neutral, PublicKeyToken=fca4c8ef6b263859" /nologo >nul 2>&1
     goto sweep
 )
 ECHO [1/6] Unregistering shell handlers (64-bit view)...
@@ -59,8 +65,8 @@ if exist "%REGASM32%" (
 REM === step 2: drop the NGEN native images (installed by install.bat step 2) ===
 ECHO.
 ECHO [2/6] Removing native images (NGEN)...
-"%NGEN64%" uninstall "%~dp0ApkShellext2.dll" /quiet
-if exist "%NGEN32%" "%NGEN32%" uninstall "%~dp0ApkShellext2.dll" /quiet
+"%NGEN64%" uninstall "%~dp0ApkShellext2.dll" /nologo
+if exist "%NGEN32%" "%NGEN32%" uninstall "%~dp0ApkShellext2.dll" /nologo
 
 :sweep
 REM === step 3: full registry sweep in BOTH views ===
