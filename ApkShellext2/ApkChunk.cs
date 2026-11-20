@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -1076,7 +1076,7 @@ namespace ApkShellext2.ApkChunk
         }
 
         /// <summary>
-        /// strart of parsing chunk file
+        /// start of parsing chunk file
         /// </summary>
         /// <param name="bytes">stream read from apk zip</param>
         /// <returns>The top chunk, either a xml chunk or a resource table chunk</returns>

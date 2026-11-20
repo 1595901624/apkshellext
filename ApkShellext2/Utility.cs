@@ -50,7 +50,7 @@ namespace ApkShellext2 {
         /// <summary>
         /// resize a rectangle bitmap
         /// </summary>
-        /// <param name="orignial"></param>
+        /// <param name="original"></param>
         /// <param name="width"></param>
         /// <returns></returns>
         public static Bitmap ResizeBitmap(Bitmap original, int width) {
@@ -164,10 +164,10 @@ namespace ApkShellext2 {
         /// <summary>
         /// This hook up is trying to resolve the resource dll which is including inside 
         /// the main assembly.
-        /// The purpose is for keeping a singal dll release including language resource.
-        /// The language resource dll will be generated once resouce file get updated,
+        /// The purpose is for keeping a single dll release including language resource.
+        /// The language resource dll will be generated once resource file get updated,
         /// and will copied into Resources folder after first time build.
-        /// So once any language resouce get changed, need 2 times build to get the new 
+        /// So once any language resource get changed, need 2 times build to get the new 
         /// resource dll included.
         /// </summary>
         public static void HookResolveResourceDll() {
@@ -364,13 +364,13 @@ namespace ApkShellext2 {
         }
 
         // Overlay icon
-        public static Bitmap CombineBitmap(Bitmap backgroud, Bitmap foreground, Rectangle backgroundPos, Rectangle foregroundPos, Size outputSize) {
+        public static Bitmap CombineBitmap(Bitmap background, Bitmap foreground, Rectangle backgroundPos, Rectangle foregroundPos, Size outputSize) {
             Bitmap b = new Bitmap(outputSize.Width, outputSize.Height);
             using (Graphics g = Graphics.FromImage(b)) {
                 g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
                 g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
                 g.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.HighQuality;
-                g.DrawImage(backgroud, backgroundPos);
+                g.DrawImage(background, backgroundPos);
                 g.DrawImage(foreground, foregroundPos);
                 return b;
             }

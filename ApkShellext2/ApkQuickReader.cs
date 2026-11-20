@@ -1709,7 +1709,7 @@ namespace ApkQuickReader
                     return new SolidBrush(colors[0]);
                 }
             } catch (Exception ex) {
-                throw new Exception(ex.Message + "\nError happend during parse Gradient " + node.InnerXml);
+                throw new Exception(ex.Message + "\nError happened during parse Gradient " + node.InnerXml);
             }
         }
 
@@ -1810,7 +1810,7 @@ namespace ApkQuickReader
                 b.Dispose(); // native-size shape canvas is dead once resized
                 return shapeResized;
             } catch (Exception ex) {
-                throw new Exception(ex.Message + "\nError happending during parsing shape:" + shapeNode.InnerXml);
+                throw new Exception(ex.Message + "\nError happening during parsing shape:" + shapeNode.InnerXml);
             }
         }
 
@@ -2266,7 +2266,7 @@ namespace ApkQuickReader
                                             continue;
                                         }
                                         res.Add(QuickSearchResource((UInt32)data));
-                                    } else { // I would like to expect we only will recieve TYPE_STRING/TYPE_REFERENCE/any integer type, complex is not considering here,yet
+                                    } else { // I would like to expect we only will receive TYPE_STRING/TYPE_REFERENCE/any integer type, complex is not considering here,yet
                                         res.Add(conf, data.ToString());
                                     }
                                 }

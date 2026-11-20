@@ -43,7 +43,7 @@ namespace ApkShellext2 {
                     return ApkContextMenu.ReplaceVariables(TipPattern, reader);
                 }
             } catch (Exception ex) {
-                Log("Error happend during GetInfo : " + ex.Message);
+                Log("Error happened during GetInfo : " + ex.Message);
                 return Properties.Resources.strReadFileFailed;
             }
         }

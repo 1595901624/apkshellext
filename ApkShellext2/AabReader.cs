@@ -416,12 +416,12 @@ namespace ApkShellext2
                 }
                 else
                 {
-                    throw new Exception("Unknow gradien type when parsing gradient xml");
+                    throw new Exception("Unknown gradient type when parsing gradient xml");
                 }
             }
             catch (Exception ex)
             {
-                throw new Exception(ex.Message + "\nError happend during parse Gradient " + node.InnerXml);
+                throw new Exception(ex.Message + "\nError happened during parse Gradient " + node.InnerXml);
             }
         }
 
@@ -511,7 +511,7 @@ namespace ApkShellext2
             }
             catch (Exception ex)
             {
-                throw new Exception(ex.Message + "\nError happending during parsing shape:" + shapeNode.InnerXml);
+                throw new Exception(ex.Message + "\nError happening during parsing shape:" + shapeNode.InnerXml);
             }
         }
 
@@ -1029,7 +1029,7 @@ namespace ApkShellext2
         //                                res.Add(QuickSearchResource((UInt32)data));
         //                            }
         //                            else
-        //                            { // I would like to expect we only will recieve TYPE_STRING/TYPE_REFERENCE/any integer type, complex is not considering here,yet
+        //                            { // I would like to expect we only will receive TYPE_STRING/TYPE_REFERENCE/any integer type, complex is not considering here,yet
         //                                res.Add(conf, data.ToString());
         //                            }
         //                        }

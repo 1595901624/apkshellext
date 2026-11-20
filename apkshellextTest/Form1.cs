@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -35,7 +35,7 @@ namespace apkshellextTest
 
         private void Button2_Click(object sender, EventArgs e) {
 
-            //string TipPattern = @"Magisk Manager\r\ncom.topjohnwu.magisk\r\nVersion: 7.2.0 213\r\n%Attr(manifest/uses-sdk,minSdkVersion)%";// @"%Attr(mainifest/application,icon)%";
+            //string TipPattern = @"Magisk Manager\r\ncom.topjohnwu.magisk\r\nVersion: 7.2.0 213\r\n%Attr(manifest/uses-sdk,minSdkVersion)%";// @"%Attr(manifest/application,icon)%";
             //textBox1.Text = TipPattern;
             string TipPattern = textBox1.Text;
             Regex rx = new Regex(textBox3.Text);
