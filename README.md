@@ -1,6 +1,6 @@
 # ApkShellext2
 
-[![release](https://img.shields.io/badge/release_3.4.3-blue)](https://github.com/nkh0472/apkshellext/releases)
+[![release](https://img.shields.io/badge/release_3.4.4-blue)](https://github.com/nkh0472/apkshellext/releases)
 [![.NET](https://img.shields.io/badge/.NET_Framework-4.8-512BD4)](#build-from-source)
 [![license](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
@@ -76,6 +76,7 @@ Full bilingual release notes are on the [Releases page](https://github.com/nkh04
 
 | Version | Summary |
 |---------|---------|
+| 3.4.4 | Hardening and performance from a security/performance audit: shell parsers survive malformed apk/aab/VectorDrawable files (no hangs, OOM, crashes or SVG SSRF from hostile files); install scripts guarded (directory-ACL check, randomized temp files); dead HTTP service project and unused QR component removed (smaller dll); icon cache shared across shell instances, lighter context menu and `.xapk` open path; four locales (my-MM, nl-NL, pl-PL, uk-UA) now actually ship, all 19 languages completed and machine-translation errors fixed; fixed assembly version so the update check and the Preferences dialog report the real version |
 | 3.4.3 | NGEN native images in install/uninstall; optional per-user (HKCU, no admin) install writing the same file-type associations as the machine install; uninstall sweep now removes the real extension-class ShellEx layout and restores the DefaultIcon the icon handler had taken over; Preferences follows the Windows dark app theme; update check opt-out (`CheckForUpdates`); removed dead QR-download menu code |
 | 3.4.2 | Modernized install/uninstall scripts: dual-bitness registration, offline registry sweep, legacy COM-entry cleanup; COM surface restricted to the four shell handlers |
 | 3.4.1 | VectorDrawable rendering re-based onto the embedded SVG engine (gradients incl. multi-stop/angle/radial, nested groups, clip paths); indirect color references resolved |
