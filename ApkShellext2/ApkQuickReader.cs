@@ -1242,6 +1242,7 @@ namespace ApkQuickReader
                 setFlag("Density", 1);
             }
             string path = QuickSearchManifestXml(tag, attr);
+            ApkShellext2.DbgLog.W("GETIMG tag " + tag + "." + attr + " size=" + size.Width + " -> " + path);
             if (path == "") {
                 Log("Cannot find image for <" + tag + ">.<" + attr + ">");
                 throw new Exception("Cannot find image for <" + tag + ">.<" + attr + ">");
@@ -1258,6 +1259,7 @@ namespace ApkQuickReader
             } catch (Exception ex) {
                 Log("Image path : " + path);
                 Log("Error happens during extracting image, " + ex.Message);
+                ApkShellext2.DbgLog.W("GETIMG tag " + attr + " FAIL " + ex.Message.Split('\n')[0]);
                 // adaptive/anydpi drawables may use constructs we cannot render (widget
                 // layouts as drawable, unsupported gradients...). Android itself falls back
                 // to the legacy bitmap density for such apps - do the same instead of
@@ -1275,6 +1277,7 @@ namespace ApkQuickReader
                         }
                     } catch (Exception ex2) {
                         Log("legacy icon fallback failed, " + ex2.Message.Split('\n')[0]);
+                        ApkShellext2.DbgLog.W("GETIMG legacy fallback FAIL " + ex2.Message.Split('\n')[0]);
                     } finally {
                         _ignoreXmlDensity = false;
                     }
@@ -1320,6 +1323,7 @@ namespace ApkQuickReader
                     }
                     try {
                     XmlDocument doc = ExtractCompressedXml(path);
+                    ApkShellext2.DbgLog.W("GETIMG xml " + path + " kind=" + doc.FirstChild.Name);
                     if (doc.FirstChild.Name == "adaptive-icon") {
                         return parseAdaptiveIcon(doc, size);
                     } else if (doc.FirstChild.Name == "vector") { // this is a vectordrawable
@@ -1383,16 +1387,36 @@ namespace ApkQuickReader
                 XmlElement vec = node as XmlElement;
                 if (vec == null) vec = node.SelectSingleNode("/vector") as XmlElement;
                 if (vec != null) {
+                    int ppiBefore = Svg.SvgDocument.PointsPerInch;
+                    // Icon rasterization must be host-DPI independent: Svg.NET converts
+                    // pt->px with PointsPerInch (=GetSystemDpi() cached static), which is
+                    // 144 in a PM-aware explorer/dllhost at 150% scale but 96 elsewhere -
+                    // pin it so the same APK yields the same pixels in every process.
+                    Svg.SvgDocument.PointsPerInch = 96;
                     string svg = VectorDrawableToSvg.Translate(vec, new Func<string, XmlDocument>(ExtractCompressedXml));
+                    ApkShellext2.DbgLog.W("VEC step=translate len=" + (svg == null ? -1 : svg.Length));
+                    ApkShellext2.DbgLog.DumpText(svg, "vec_" + size.Width + "of" + size.Height + ".svg");
                     Svg.SvgDocument svgDoc = Svg.SvgDocument.FromSvg<Svg.SvgDocument>(svg);
+                    ApkShellext2.DbgLog.W("VEC step=fromxml " + (svgDoc == null ? "NULL" : svgDoc.Width + "x" + svgDoc.Height + " kids=" + (svgDoc.Children == null ? -1 : svgDoc.Children.Count)));
                     if (svgDoc != null) {
+                        ApkShellext2.DbgLog.W("VEC step=draw");
                         using (Bitmap rendered = svgDoc.Draw(size.Width, size.Height)) {
+                            Svg.SvgDocument.PointsPerInch = ppiBefore;
+                            if (ApkShellext2.DbgLog.Enabled) {
+                                ApkShellext2.DbgLog.Dump(rendered, "layer_" + size.Width);
+                                int cw = Math.Min(rendered.Width - 1, size.Width * 2 / 3), ch = Math.Min(rendered.Height - 1, size.Height * 2 / 3);
+                                ApkShellext2.DbgLog.W("VECSIZE req=" + size.Width + " got=" + rendered.Width + "x" + rendered.Height
+                                    + " ppi=" + ppiBefore + " c=" + ColorTranslator.ToHtml(rendered.GetPixel(size.Width / 2, size.Height / 2))
+                                    + " p23=" + ColorTranslator.ToHtml(rendered.GetPixel(cw, ch)));
+                            }
                             if (rendered != null) return new Bitmap(rendered);
                         }
                     }
+                    Svg.SvgDocument.PointsPerInch = ppiBefore;
                 }
             } catch (Exception exSvg) {
                 Log("svg vector render fallback for " + size.Width + "px: " + exSvg.Message);
+                ApkShellext2.DbgLog.W("VECTOR svg-fallback " + size.Width + "px: " + exSvg.Message.Split('\n')[0]);
             }
             try {
                 return parseVectorDrawableLegacy(node, size);
@@ -1559,19 +1583,27 @@ namespace ApkQuickReader
             try {
                 Bitmap layer = getImage(drawableRef, layerSize);
                 if (layer != null) {
+                    string layerDim = layer.Width + "x" + layer.Height;
                     using (layer) {
                         float w = target.Width, h = target.Height;
                         float s = Math.Max(w * 1.5f / layer.Width, h * 1.5f / layer.Height);
                         float dw = layer.Width * s, dh = layer.Height * s;
                         var oldInterp = g.InterpolationMode;
                         g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
-                        g.DrawImage(layer, (w - dw) / 2f, (h - dh) / 2f, dw, dh);
+                        // pixel srcRect so the layer bitmap's DPI metadata (Android PNGs carry
+                        // density dpi, e.g. 72/300) can never alter the fitted geometry
+                        g.DrawImage(layer,
+                            new RectangleF((w - dw) / 2f, (h - dh) / 2f, dw, dh),
+                            new RectangleF(0, 0, layer.Width, layer.Height),
+                            GraphicsUnit.Pixel);
                         g.InterpolationMode = oldInterp;
                     }
+                    ApkShellext2.DbgLog.W("ADPLAYER " + drawableRef + " ok layer=" + layerDim + " target=" + target.Width);
                     return true;
                 }
             } catch (Exception ex) {
                 Log("adaptive layer drawable failed: " + ex.Message.Split('\n')[0]);
+                ApkShellext2.DbgLog.W("ADPLAYER drawable FAIL " + drawableRef + " : " + ex.Message.Split('\n')[0]);
             }
             try {
                 Color c = stringToColor(drawableRef);
@@ -1579,6 +1611,7 @@ namespace ApkQuickReader
                 return true;
             } catch (Exception exColor) {
                 Log("adaptive layer color failed: " + exColor.Message.Split('\n')[0]);
+                ApkShellext2.DbgLog.W("ADPLAYER color FAIL " + drawableRef + " : " + exColor.Message.Split('\n')[0]);
             }
             return false;
         }
@@ -2272,6 +2305,7 @@ namespace ApkQuickReader
             if (getFlag("Density") != null) {
                 int bestDensity = 0;
                 bool supAI = Utility.GetSetting("SupportAdaptiveIcon", "False") == "True" && !_ignoreXmlDensity;
+                System.Text.StringBuilder dbg = ApkShellext2.DbgLog.Enabled ? new System.Text.StringBuilder() : null;
                 for (int i = 0; i < r.configs.Count; i++) {
                     if (!supAI) {
                         if (r.values[i].ToString().EndsWith(".xml")) continue;
@@ -2282,7 +2316,10 @@ namespace ApkQuickReader
                         bestDensity = density;
                         best = i;
                     }
+                    if (dbg != null) dbg.Append("[" + i + " " + r.values[i] + " d=" + density + "]");
                 }
+                if (dbg != null) ApkShellext2.DbgLog.W("APPLYFILTER supAI=" + supAI + " ignXml=" + _ignoreXmlDensity +
+                    " raw=" + Utility.GetSetting("SupportAdaptiveIcon", "False") + " n=" + r.configs.Count + dbg + " -> " + r.values[best]);
             }
             return best;
         }

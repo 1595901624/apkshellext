@@ -19,7 +19,7 @@
 | 原生依赖 | `ApkShellext2\LibWebP\libwebp_x86.dll` + `libwebp_x64.dll` —— 预编译 libwebp 1.6.0,已入库;重建为可选项(§4.5) |
 | 路线 A | 独立 .NET SDK **10.0.404**:`dotnet build ApkShellext2\ApkShellext2.csproj -c Release` —— 一行命令,零参数 |
 | 路线 B | 装了*.NET 桌面开发*负载的 Visual Studio 2022/2026:`msbuild -t:restore` + `msbuild -p:Configuration=Release` —— 同样零参数 |
-| 关键坑 | ① 签名密钥 `apkshellext2_hy.snk` 不在仓库里,要自己生成(§4.2);② 机器可能**一个 NuGet 源都没配**,restore 直接 NU1100(§4.1);③ dotnet CLI 编出的产物要额外带 `System.Resources.Extensions.dll`(其预序列化资源的运行时依赖,postbuild 已自动打进包,§8) |
+| 关键坑 | ① 签名密钥 `apkshellext2_hy.snk` 不在仓库里,要自己生成(§4.2);② 机器可能**一个 NuGet 源都没配**,restore 直接 NU1100(§4.1);③ dotnet CLI 产物用的是预序列化资源,**被 explorer 承载时静默失败**(右键菜单消失)—— 凡装进 shell 的必须是 VS 路线产物(§8);打包清单在两条路线上都排除 `System.Resources.Extensions.dll` |
 
 ## 1. 环境与两条编译路线
 
@@ -34,8 +34,9 @@
   VS 2022(17.x)皆适用。.NET Framework 4.8 目标包有帮助,但并非每台机器都严格
   必需(见 §4.4)。
 
-两条路线产物功能一致;唯一可测差异(资源序列化模式 → 输出目录是否多一个
-`System.Resources.Extensions.dll`)在 §8 说明。
+两条路线编译出的 IL 相同,但资源序列化格式因路线而异,这不是表面差异:只有 VS
+路线的产物才能安全装进 Explorer。出货用路线 B,路线 A 只用于开发 —— 两条路线的
+打包最终收敛为同一个 32 文件的包(§8)。
 
 下文示例路径的参考环境(按你的机器调整):Windows x64;仓库在
 `E:\src\apkshellext`,工具链在 `E:\src\apkshellext-dep`;7-Zip 装在非标准路径
@@ -267,7 +268,7 @@ csproj 重写为 **SDK 式**,从根上消掉这三件事 —— 这就是 §6–
 
 ## 6. 编译主工程
 
-### 路线 A —— dotnet CLI
+### 路线 A —— dotnet CLI(仅开发产物 —— 不要把该产物装进 Explorer,§8)
 
 ```powershell
 Set-Location E:\src\apkshellext
@@ -330,26 +331,35 @@ E:\src\apkshellext-dep\dotnet-sdk-10\dotnet.exe build apkshellextTest\apkshellex
   宏在**求值期**展开,那时 `$(ProjectDir)`/`$(TargetDir)` 还没有值,老一行式会被烤成
   `call "Resources\postbuild.cmd" "" ""`(坑 4)。
 - **`Resources\postbuild.cmd`**(仅 Release 干活;Debug 直接退出):删残留 `debug.bat`,
-  定位 `7z.exe`(§4.3),删残留 `*.7z`,然后打 `ApkShellext2.7z` = `ApkShellext2.dll` +
-  `*.bat` + `libwebp_*.dll` + `ExCSS.dll` + `System.Memory.dll` + `System.Buffers.dll` +
-  `System.Runtime.CompilerServices.Unsafe.dll`,**外加(若存在)`System.Resources.Extensions.dll`**
-  —— 见下 —— **再加磁盘上存在的全部语言目录**(`ar-SA` … `zh-TW`,各含一份
-  `ApkShellext2.resources.dll`)。主包就是完整安装包:不再有按语言分包(旧方案把
-  `<locale>.7z` 单独发,只装主包就会静默变英文界面)。没有 7-Zip ⇒ WARNING + 跳过,
-  编译照样成功。
+  定位 `7z.exe`(§4.3),删残留 `*.7z`,然后按**显式清单**打 `ApkShellext2.7z` —— 13 个
+  根文件(`ApkShellext2.dll`、五个 bat、两个 `libwebp_*` 二进制、`ExCSS.dll`、
+  `System.Memory.dll`、`System.Buffers.dll`、`System.Runtime.CompilerServices.Unsafe.dll`、
+  `System.Numerics.Vectors.dll`)加上磁盘上存在的全部语言目录(`ar-SA` … `zh-TW`)。
+  清单条目缺失会**让编译失败**,短包不可能静默出货。
+  `System.Numerics.Vectors.dll` 是**必须随包发布**的 app-local 依赖,不是工具链残留:
+  COM 宿主(explorer/dllhost)里 Fusion 的 Load 上下文只探测宿主 app base(`C:\Windows`),
+  `TypeDescriptor` 要绑定 Svg.NET 的数值类型转换器,只有该文件躺在 `ApkShellext2.dll`
+  旁边才加载得到 —— 缺失时每个数值 SVG 属性(渐变坐标、offset……)都抛
+  `FileNotFoundException`,自适应图标静默渲染成空白/碎片(2026-11-21 图标损坏报告的
+  根因)。只有一个 dll 被注为*排除项*,无论输出目录里躺着什么都不打包:
+  `System.Resources.Extensions.dll`(见下)。主包就是完整安装包:不再有
+  按语言分包(旧方案把 `<locale>.7z` 单独发,只装主包就会静默变英文界面)。没有
+  7-Zip ⇒ WARNING + 跳过,编译照样成功。
 
-**两条路线唯一差异 —— `System.Resources.Extensions.dll`。** coreclr MSBuild(dotnet CLI)
-下 csproj 启用预序列化资源生成;生成的 `.resources` blob 内嵌该程序集的类型,所以
-**dotnet CLI 编出的产物运行时需要 `ApkShellext2.dll` 旁边放着
-`System.Resources.Extensions.dll`**(实测:不放它,第一次触碰非字符串资源 —— 比如读
-带图标的 `NonLocalizeResources` —— 就抛
-`FileNotFoundException: System.Resources.Extensions, Version=4.0.0.0, Pkt=cc7b13ffcd2ddd51`;
-而 `btnOK` 这类字符串取值依然正常,所以此坑很容易被漏掉)。Visual Studio(FullFramework)
-编译走经典资源序列化,根本不引用该包,也不产生这个文件 —— 与上游发布完全一致。
-`postbuild.cmd` 自动适配(文件在就打进去),所以各路线的 `.7z` 自洽:dotnet 路线
-**32 个文件**(包根 13 + 19 份卫星资源),VS 路线 **31 个**。不要手动把
-`System.Resources.Extensions.dll` 塞进
-VS 路线的输出目录 —— 那里用不到。
+**为什么 VS 路线是出货路线 —— 预序列化资源。** coreclr MSBuild(dotnet CLI)下
+csproj 启用预序列化资源生成,把对象资源内嵌成经 `System.Resources.Extensions`
+编码的 blob。独立进程里这没问题(测试 exe 能正常解析该 dll),但 **explorer
+这样的外壳扩展宿主**只在自己的模块目录和 GAC 里探测程序集依赖 —— 而
+`System.Resources.Extensions` 两者都不是,于是解析失败,而且是*静默*失败:
+右键菜单处理器在获取自身条目图标时死掉,explorer 照画菜单其余部分,扩展的条目
+消失。把 dotnet CLI 产物装进外壳后实测到的失败特征:**自定义文件类型图标照常
+工作(图标处理器从不触碰 resx 里的对象资源),右键菜单则整个消失** —— 对两种
+产物都复现过,且用 VS 路线编译的同一程序集原位替换即修复(同路径、同强名,
+无需重新注册)。Visual Studio(FullFramework)编译走经典 BinaryFormatter 风格
+资源,从不引用该包,与上游发布包完全一致。因此:**出货用 VS 路线程序集;
+dotnet CLI 产物只留作开发。** `postbuild.cmd` 把该包 dll 列为注名排除项,
+两条路线的包都夹带不了它 —— 也别手工把它拷进部署目录,在宿主进程里它救不了
+预序列化产物。
 
 部署(目标机,以要用这个外壳扩展的用户身份):解压 `ApkShellext2.7z`(语言目录已在
 包内、与 DLL 同级),跑 `install.bat`(管理员,全机)或
@@ -383,13 +393,14 @@ NGEN)。`restart_explorer.bat` 重载外壳。卸载用对应的 `uninstall*.bat
    $rm.GetString('btnOK', [cultureinfo]::InvariantCulture)   # → OK     (中性资源,在主 DLL 内)
    ```
 
-4. **`bin\Release` 完整发布布局:** `ApkShellext2.dll(.pdb)`、五个 bat、
-   `libwebp_x86/x64.dll`、copy-local 的 NuGet DLL(`ExCSS`、`System.Memory`、
-   `System.Buffers`、`System.Numerics.Vectors`、`System.Runtime.CompilerServices.Unsafe`;
-   `System.Resources.Extensions` 仅 dotnet 路线有),以及 —— 找到 7-Zip 时 ——
-   `ApkShellext2.7z`(约 1 MB)。`7z l` 必须共列出 **32 个文件(dotnet 路线)或
-   31 个(VS 路线)**:包根 12–13 个 + 19 条 `xx-XX\ApkShellext2.resources.dll`
-   卫星条目;且 `bin\Release` 里不得有
+4. **`bin\Release` 完整发布布局:** 13 个清单项 —— `ApkShellext2.dll(.pdb)`、五个 bat、
+   `libwebp_x86/x64.dll`、
+   `ExCSS/System.Memory/System.Buffers/System.Runtime.CompilerServices.Unsafe/System.Numerics.Vectors`,
+   再加上 19 个语言目录,以及 —— 找到 7-Zip 时 —— `ApkShellext2.7z`(约 1 MB)。
+   `7z l` 必须在**两条路线上都恰好共 32 个文件**:13 个根条目(没有
+   `System.Resources.Extensions.dll` —— 即便 dotnet CLI 编译把它留在了目录里,
+   打包也照常排除),外加 19 条
+   `xx-XX\ApkShellext2.resources.dll` 卫星条目;且 `bin\Release` 里不得有
    `Resources\`/`LibWebP\` 子目录。
 5. **Debug 布局:** `bin\Debug` 根有 `debug.bat` + bat + libwebp,且**没有 `.7z`**。
 
@@ -408,11 +419,12 @@ NGEN)。`restart_explorer.bat` 重载外壳。卸载用对应的 `uninstall*.bat
    展开(那时 `$(TargetDir)` 等还是空),脚本会静默收到 `"" ""`。保持
    `AfterBuild` 式的 `Exec` target。
 5. **`Content` + `CopyToOutputDirectory` 会在输出里重建源子目录**,除非每项都写
-   `TargetPath=<裸文件名>`;并且 7z 步骤的 `*.bat` 通配符对**零匹配静默忽略** ——
-   包照样生成但里面没有 bat,也不报错。动过布局项就查 `7z l` 和输出树。
-6. **路线相关的运行时文件**:dotnet CLI 编出的产物运行时需要
-   `System.Resources.Extensions.dll`(§8)。postbuild 自动打包;别从 dotnet 路线的包里
-   删它,也别往 VS 路线的部署里加它。
+   `TargetPath=<裸文件名>`;并且 7z 通配符对**零匹配静默忽略** —— 历史上的 `*.bat`
+   bug 就打出过没有 bat 的包还退出 0。这正是打包步骤现在改用显式文件清单、缺条目
+   即失败(§8)的原因:别再引入通配符,且动过布局项后仍要查 `7z l`。
+6. **绝不要把 dotnet CLI 产物装进 Explorer**:其预序列化对象资源在宿主进程里
+   静默失败 —— 自定义文件类型图标照常工作,右键菜单整个消失。出货用 VS 路线
+   产物;两条路线的打包都排除 `System.Resources.Extensions.dll`(§8)。
 7. **snk**:被 gitignore;本地生成(§4.2)。公钥 ≠ 官方构建。
 8. **老残留是有意的**:`packages\` 目录现已不再使用;NativeBridge 原生 DLL 在上游
    `4f30b7c` 里就是有意删除的,引用它们的死代码已从仓库删除(§5.1)。两者都不要"修"。
@@ -480,9 +492,11 @@ Set-Location $R
 & $msb ApkShellext2.sln -t:restore            -p:Configuration=Release -nologo -v:m; if ($LASTEXITCODE) { throw 'restore 失败' }
 & $msb ApkShellext2.sln -p:Configuration=Release              -nologo -v:m; if ($LASTEXITCODE) { throw '编译失败' }
 
-# 验证 VS 路线特有项:输出里没有 System.Resources.Extensions.dll,包为 31 文件
+# 验证 VS 路线特有项:输出里没有 System.Resources.Extensions.dll;包应为 32 文件
+# (13 根文件(含 System.Numerics.Vectors.dll) + 19 条卫星资源),不含
+#  System.Resources.Extensions.dll(§8 打包清单排除)
 Test-Path "$R\ApkShellext2\bin\Release\System.Resources.Extensions.dll"   # 应为 False
-& 'D:\Software\7-Zip\7z.exe' l "$R\ApkShellext2\bin\Release\ApkShellext2.7z"   # 应为 12 个文件(7z 路径按机器调整)
+& 'D:\Software\7-Zip\7z.exe' l "$R\ApkShellext2\bin\Release\ApkShellext2.7z"   # 应为 32 文件(7z 路径按机器调整)
 ```
 
 ---

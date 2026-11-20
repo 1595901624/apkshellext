@@ -74,6 +74,7 @@ namespace ApkShellext2 {
 
         private Bitmap m_icon = null;
         protected override Icon GetIcon(bool smallIcon, uint iconSize) {
+            DbgLog.W("ICON enter " + Path.GetFileName(SelectedItemPath) + " small=" + smallIcon + " size=" + iconSize);
             if (m_icon == null) {
                 string key = IconCacheKey(SelectedItemPath, iconSize);
                 m_icon = LookupIcon(key);
@@ -95,6 +96,7 @@ namespace ApkShellext2 {
                         StoreIcon(key, m_icon);
                     } catch (Exception ex) {
                         Log("Error in reading icon for " + Path.GetFileName(SelectedItemPath) + ", draw default : " + ex.Message);
+                        DbgLog.W("ICON default for " + Path.GetFileName(SelectedItemPath) + " : " + ex.Message.Split('\n')[0]);
                         // read error, draw the default icon
                         m_icon = Utility.AppTypeIcon(AppPackageReader.getAppType(SelectedItemPath));
                     }
@@ -114,6 +116,7 @@ namespace ApkShellext2 {
 
             // ResizeBitmap always returns a fresh bitmap (null only if the
             // source is null, which cannot happen here); dispose the temp
+            DbgLog.W("ICON result " + Path.GetFileName(SelectedItemPath) + " -> " + DbgLog.Sample(m_icon));
             using (Bitmap resized = Utility.ResizeBitmap(m_icon, new Size((int)iconSize, (int)iconSize)))
                 return Icon.FromHandle(resized.GetHicon());
         }

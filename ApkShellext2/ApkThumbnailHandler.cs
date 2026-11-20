@@ -33,11 +33,17 @@ namespace ApkShellext2 {
 
             try {
                 int outputSize = (int) width;
+                DbgLog.W("THUMB enter w=" + width + " stream=" + (SelectedItemStream == null ? "null" :
+                    SelectedItemStream.Length + "B seek=" + SelectedItemStream.CanSeek + " pos=" + SelectedItemStream.Position));
+                string appName = "?";
                 using (AppPackageReader reader = new ApkReader(SelectedItemStream)) {
                     Log("Reading stream from " + reader.AppName);
+                    appName = reader.AppName;
+                    DbgLog.W("THUMB reader ok app=" + reader.AppName);
                     // render at the requested size; the Icon property is fixed
                     // 64px and looked blurry upscaled in the preview pane
                     m_icon = reader.getIcon(new Size(outputSize, outputSize));
+                    DbgLog.W("THUMB getIcon -> " + DbgLog.Sample(m_icon));
                 }
 
                 if (m_icon == null)
@@ -62,6 +68,8 @@ namespace ApkShellext2 {
                 }
                 m_icon.Dispose();
                 m_icon = composed;
+                DbgLog.W("THUMB composed -> " + DbgLog.Sample(m_icon));
+                DbgLog.Dump(m_icon, "thumb_" + appName);
 #if DEBUG
                 string p = Path.GetTempFileName();
                 m_icon.Save(p);
@@ -71,6 +79,7 @@ namespace ApkShellext2 {
             } catch (Exception ex){
                 Log("Error in reading icon from stream, draw default");
                 Log(ex.Message);
+                DbgLog.W("THUMB FAIL " + ex.GetType().Name + ": " + ex.Message.Split('\n')[0]);
                 // read error, draw the default icon
                 //m_icon = Utility.AppTypeIcon(AppPackageReader.AppType.AndroidApp);
                 return null;

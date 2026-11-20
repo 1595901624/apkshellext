@@ -22,7 +22,7 @@
 | Native deps | `ApkShellext2\LibWebP\libwebp_x86.dll` + `libwebp_x64.dll` — prebuilt libwebp 1.6.0, committed in-repo; rebuilding is optional (§4.5) |
 | Route A | .NET SDK **10.0.404** standalone: `dotnet build ApkShellext2\ApkShellext2.csproj -c Release` — one line, no flags |
 | Route B | Visual Studio 2022/2026 with *.NET desktop development*: `msbuild -t:restore` + `msbuild -p:Configuration=Release` — no flags either |
-| Key gotchas | ① signing key `apkshellext2_hy.snk` is not in the repo — generate one (§4.2); ② a machine can have **zero NuGet sources** configured and restore fails with NU1100 (§4.1); ③ outputs built with the dotnet CLI additionally ship `System.Resources.Extensions.dll` (runtime dependency of their preserialized resources — postbuild packs it automatically, §8) |
+| Key gotchas | ① signing key `apkshellext2_hy.snk` is not in the repo — generate one (§4.2); ② a machine can have **zero NuGet sources** configured and restore fails with NU1100 (§4.1); ③ dotnet-CLI output uses preserialized resources that **fail silently when hosted by explorer** (context menu vanishes) — anything installed into the shell must be a VS-route build (§8); the packaging manifest excludes `System.Resources.Extensions.dll` on both routes |
 
 ## 1. Environment and the two build routes
 
@@ -38,9 +38,10 @@ Consequence: any reasonably modern MSBuild can build them — no Visual Studio r
   The .NET Framework 4.8 targeting pack helps but is not strictly required on
   every machine (see §4.4).
 
-Both routes produce a functionally identical binary; the one measurable difference
-(resource serialization mode → `System.Resources.Extensions.dll` in the output) is
-explained in §8.
+The compiled IL is the same, but the resource serialization format differs by route and
+that is not cosmetic: only the VS-route output is safe to install into Explorer.
+Ship from Route B, use Route A for development — packaging converges to one identical
+31-file archive either way (§8).
 
 Reference environment for the example paths below (adjust to your machine):
 Windows x64, repo at `E:\src\apkshellext`, toolchain at `E:\src\apkshellext-dep`,
@@ -297,7 +298,7 @@ routes now build with `0 warnings / 0 errors`:
 
 ## 6. Build the main project
 
-### Route A — dotnet CLI
+### Route A — dotnet CLI (development output only — do not install this output into Explorer, §8)
 
 ```powershell
 Set-Location E:\src\apkshellext
@@ -365,30 +366,42 @@ identically (`-c Debug` / `-p:Configuration=Debug`); the Debug output additional
   when `$(ProjectDir)`/`$(TargetDir)` are still undefined, so the old one-liner bakes
   into `call "Resources\postbuild.cmd" "" ""` (gotcha 4).
 - **`Resources\postbuild.cmd`** (Release-only; Debug exits immediately): deletes a stale
-  `debug.bat`, locates `7z.exe` (§4.3), deletes stale `*.7z`, then packs
-  `ApkShellext2.7z` = `ApkShellext2.dll` + `*.bat` + `libwebp_*.dll` + `ExCSS.dll` +
-  `System.Memory.dll` + `System.Buffers.dll` + `System.Runtime.CompilerServices.Unsafe.dll`
-  **plus `System.Resources.Extensions.dll` if present** — see below — **plus every
-  locale folder that exists** (`ar-SA` … `zh-TW`, each holding its
-  `ApkShellext2.resources.dll`). The main archive is a complete install set: there are
-  no per-language archives (an earlier split shipped `<locale>.7z` separately; that
-  made an install from the main archive alone silently English). No 7-Zip ⇒ WARNING +
-  skip, build still succeeds.
+  `debug.bat`, locates `7z.exe` (§4.3), deletes stale `*.7z`, then packs `ApkShellext2.7z`
+  from an **explicit manifest** — the thirteen root files (`ApkShellext2.dll`, the five
+  bats, two `libwebp_*` binaries, `ExCSS.dll`, `System.Memory.dll`, `System.Buffers.dll`,
+  `System.Runtime.CompilerServices.Unsafe.dll`, `System.Numerics.Vectors.dll`) plus every
+  locale folder that exists (`ar-SA` … `zh-TW`). A missing manifest entry **fails the
+  build**, so a short archive cannot ship silently. `System.Numerics.Vectors.dll` is a
+  required app-local dependency, not a toolchain artifact: inside COM hosts the Fusion
+  Load context probes the host app base (`C:\Windows`), so `TypeDescriptor` cannot bind
+  Svg.NET's numeric converters unless the file sits next to `ApkShellext2.dll` — without
+  it every numeric SVG attribute (gradient coords, offsets, …) fails with
+  `FileNotFoundException` and adaptive icons silently render as blank/fragmented tiles
+  (root cause of the 2026-11-21 broken-icon report). One dll is an annotated *exclusion*,
+  never packed whatever sits in the output folder: `System.Resources.Extensions.dll`
+  (see below). The main archive is a complete install set: there are no per-language
+  archives (an earlier split shipped `<locale>.7z` separately; that made an install from
+  the main archive alone silently English). No 7-Zip ⇒ WARNING + skip, build still
+  succeeds.
 
-**The one route difference — `System.Resources.Extensions.dll`.** Under coreclr MSBuild
-(dotnet CLI) the csproj enables preserialized resource generation; the resulting
-`.resources` blobs embed types from that assembly, so a **dotnet-CLI build needs
-`System.Resources.Extensions.dll` next to `ApkShellext2.dll` at runtime** (verified:
-without it, reading the icon-bearing `NonLocalizeResources` throws
-`FileNotFoundException: System.Resources.Extensions, Version=4.0.0.0, Pkt=cc7b13ffcd2ddd51`
-the first time a non-string resource is touched — string lookups like `btnOK` still
-work, which makes the fault easy to miss). A Visual Studio (FullFramework) build uses
-classic BinaryFormatter-style resources, never references the package, and produces no
-such file — matching upstream packages exactly. `postbuild.cmd` adapts automatically
-(package it if present), so each route's `.7z` is self-consistent: **32 files** (13 at
-the root + 19 satellite resources) from the dotnet route, **31** from the VS route. Do
-not hand-copy `System.Resources.Extensions.dll` into a VS-route output folder — it is
-not needed there.
+**Why the VS route is the shipping route — preserialized resources.** Under coreclr
+MSBuild (dotnet CLI) the csproj enables preserialized resource generation, embedding
+object resources as `System.Resources.Extensions`-encoded blobs. In a standalone
+process that works (the test exe resolves the dll normally), but a **shell-extension
+host like explorer** probes assembly dependencies only in its own module directory and
+the GAC — and `System.Resources.Extensions` is neither, so resolution fails and it
+fails *silently*: the context-menu handler dies while fetching its item icons, and
+explorer draws the rest of the menu without the extension's items. Observed failure
+signature of a dotnet-CLI build installed into the shell: **custom file-type icons keep
+working (the icon handler never touches resx object resources) while the context menu
+disappears entirely** — reproduced against both builds, and fixed by swapping the
+identical assembly built on the VS route (same path, same strong name, no
+re-registration needed). A Visual Studio (FullFramework) build uses classic
+BinaryFormatter-style resources, never references the package, and matches upstream
+packages exactly. Therefore: **ship VS-route assemblies; keep dotnet-CLI output for
+development.** `postbuild.cmd` lists the package dll as an annotated exclusion so
+neither archive can smuggle it in — and do not hand-copy it into a deployment folder,
+it cannot rescue a preserialized build inside a host process.
 
 Deployment (on the target machine, as the user who owns the shell extension): extract
 `ApkShellext2.7z` — it already carries the culture folders next to the DLL — then run
@@ -425,14 +438,16 @@ official package in the same GAC/registration state.
    $rm.GetString('btnOK', [cultureinfo]::InvariantCulture)   # → OK     (neutral, inside main dll)
    ```
 
-4. **Complete publish layout in `bin\Release`:** `ApkShellext2.dll(.pdb)`, the
-   five bats, `libwebp_x86/x64.dll`, copy-local NuGet DLLs (`ExCSS`, `System.Memory`,
-   `System.Buffers`, `System.Numerics.Vectors`, `System.Runtime.CompilerServices.Unsafe`;
-   `System.Resources.Extensions` only on the dotnet route) and — when 7-Zip was found —
-   `ApkShellext2.7z` (~1 MB). `7z l` must list
-   **32 files (dotnet route) or 31 (VS route)** — 12–13 at the archive root plus 19
-   `xx-XX\ApkShellext2.resources.dll` satellite entries — and no
-   `Resources\`/`LibWebP\` subfolders may exist in `bin\Release`.
+4. **Complete publish layout in `bin\Release`:** the thirteen manifest files —
+   `ApkShellext2.dll(.pdb)`, the five bats, `libwebp_x86/x64.dll`,
+   `ExCSS/System.Memory/System.Buffers/System.Runtime.CompilerServices.Unsafe/System.Numerics.Vectors` —
+   plus the nineteen culture folders and — when 7-Zip was found —
+   `ApkShellext2.7z` (~1 MB). `7z l` must list **exactly 32 files on both routes**:
+   the 13 root entries (no `System.Resources.Extensions.dll` — packaging
+   exclusion even when a dotnet-CLI build left it in the folder) plus 19
+   `xx-XX\ApkShellext2.resources.dll`
+   satellite entries; no `Resources\`/`LibWebP\` subfolders may exist in
+   `bin\Release`.
 5. **Debug layout:** `bin\Debug` root has `debug.bat` + bats + libwebp and **no `.7z`**.
 
 ## 10. Gotchas checklist
@@ -451,12 +466,15 @@ official package in the same GAC/registration state.
    SDK-style projects its macros expand at evaluation time (empty `$(TargetDir)` etc.)
    and the script silently receives `"" ""`. Keep the `AfterBuild`-style `Exec` target.
 5. **`Content` + `CopyToOutputDirectory` recreates source subfolders** unless every item
-   sets `TargetPath=<bare filename>`; and the 7z step's `*.bat` wildcard *silently
-   ignores* a pattern matching nothing — the archive builds without bats and nothing
-   errors. After touching layout items, check `7z l` and the output tree.
-6. **Route-dependent runtime file**: dotnet-CLI-built outputs need
-   `System.Resources.Extensions.dll` at runtime (§8). postbuild packs it automatically;
-   never strip it from a dotnet-route archive, never add it to a VS-route deploy.
+   sets `TargetPath=<bare filename>`; and the 7z wildcard *silently ignores* a pattern
+   matching nothing — the historical `*.bat` bug built an archive without bats and
+   exited 0. That is why the pack step now uses an explicit file manifest and fails on
+   a missing entry (§8): do not reintroduce wildcards, and still verify `7z l` after
+   touching layout items.
+6. **Never install dotnet-CLI output into Explorer**: its preserialized object
+   resources fail to load inside shell host processes (file-type icons keep working,
+   the context menu disappears silently). Ship and deploy VS-route builds only;
+   packaging excludes `System.Resources.Extensions.dll` on both routes (§8).
 7. **snk**: gitignored; generate locally (§4.2). Public key ≠ official builds.
 8. **Legacy leftovers are intentional**: the `packages\` folder is unused now; the
    NativeBridge native DLLs are missing upstream by design (`4f30b7c`) and their dead
@@ -528,9 +546,10 @@ Set-Location $R
 & $msb ApkShellext2.sln -t:restore            -p:Configuration=Release -nologo -v:m; if ($LASTEXITCODE) { throw 'restore failed' }
 & $msb ApkShellext2.sln -p:Configuration=Release              -nologo -v:m; if ($LASTEXITCODE) { throw 'build failed' }
 
-# verify the VS-route specifics: NO System.Resources.Extensions.dll in the output, 12-file archive
+# verify the VS-route specifics: NO System.Resources.Extensions.dll in the output,
+# archive = 32 files (13 manifest items + 19 satellites)
 Test-Path "$R\ApkShellext2\bin\Release\System.Resources.Extensions.dll"   # expect False
-& 'D:\Software\7-Zip\7z.exe' l "$R\ApkShellext2\bin\Release\ApkShellext2.7z"   # expect 31 files (adjust 7z path)
+& 'D:\Software\7-Zip\7z.exe' l "$R\ApkShellext2\bin\Release\ApkShellext2.7z"   # expect 32 files (adjust 7z path)
 ```
 
 ---

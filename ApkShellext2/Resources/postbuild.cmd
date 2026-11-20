@@ -51,17 +51,37 @@ set "Z7=!Z7!"
 REM Rebuild archives from scratch: "7z a" only updates/adds, so a stale
 REM archive would silently ship files that no longer exist on disk.
 del /q *.7z 2>nul
-REM ExCSS + the facade dlls are load-time dependencies of the main dll
-REM (SVG renderer path + Span/Memory shims); omitting them makes a fresh
-REM machine hit FileLoadException on the first vector-drawable icon.
-REM System.Resources.Extensions.dll is present only for dotnet-CLI builds: the
-REM SDK-style project enables GenerateResourceUsePreserializedResources under
-REM coreclr MSBuild, and preserialized .resources need that assembly at RUNTIME
-REM (verified: without it, reading NonLocalizeResources throws FileNotFoundException
-REM for System.Resources.Extensions v4.0.0.0). A Visual Studio (FullFramework)
-REM build uses classic resources and has no such file - package it if present.
-set "SRE="
-if exist "System.Resources.Extensions.dll" set "SRE=System.Resources.Extensions.dll"
+REM Shipping manifest - explicit and toolchain-independent. Both build routes
+REM converge on exactly these root files; a missing entry FAILS the build here
+REM instead of silently packing a short archive (a bare *.bat wildcard would
+REM match nothing without any error - see compile_guidance gotcha 5).
+REM ExCSS + the facade dlls are load-time dependencies of the main dll (SVG
+REM renderer path + Span/Memory shims); omitting them makes a fresh machine hit
+REM FileLoadException on the first vector-drawable icon.
+REM System.Numerics.Vectors.dll IS REQUIRED app-local: inside COM hosts
+REM (explorer/dllhost) TypeDescriptor builds Svg.NET's numeric converters, and
+REM that binding probes the app base only - a missing file means
+REM FileNotFoundException on EVERY numeric SVG attribute (gradient coords,
+REM offsets...), which silently renders adaptive icons as blank/fragmented
+REM tiles (observed 2026-11-21 as the root cause of the broken-icon report).
+set "MANIFEST=ApkShellext2.dll install.bat install_user.bat uninstall.bat uninstall_user.bat restart_explorer.bat libwebp_x86.dll libwebp_x64.dll ExCSS.dll System.Memory.dll System.Buffers.dll System.Runtime.CompilerServices.Unsafe.dll System.Numerics.Vectors.dll"
+for %%F in (%MANIFEST%) do (
+  if not exist "%%F" (
+    echo ERROR: postbuild - manifest file missing from output: %%F
+    exit /b 1
+  )
+)
+REM Annotated EXCLUSIONS - deliberately never packed, whatever sits in the folder:
+REM  System.Numerics.Vectors.dll - dotnet-CLI copy-local artifact of the NuGet
+REM      graph; the .NET Framework 4.8 runtime provides it natively and VS
+REM      builds never emit the file. Packing it would make archives differ per
+REM      toolchain for no runtime benefit.
+REM  System.Resources.Extensions.dll - preserialized-resource support, emitted
+REM      only by dotnet-CLI builds. Shell extensions ship as VS-route
+REM      assemblies; dotnet-CLI output is NOT Explorer-host safe (its menu dies
+REM      silently in explorer because the host cannot probe this dll - full
+REM      analysis in compile_guidance §8). Never re-add it to the archive, and
+REM      never copy it by hand into a VS-route deployment folder.
 REM Satellites live in the per-locale subfolders of TargetDir (one
 REM ApkShellext2.resources.dll each). They belong in the main archive: an
 REM install extracted from ApkShellext2.7z alone must show the localized UI,
@@ -70,7 +90,7 @@ REM locale directories come out of the archive exactly where the GAC-less
 REM probing expects them.
 set "SATS="
 for %%L in (ar-SA de-DE el-GR es-ES fa-IR fr-FR he-IL it-IT ja-JP ko-KR my-MM nl-NL pl-PL pt-PT ru-RU tr-TR uk-UA zh-CN zh-TW) do if exist "%%L\ApkShellext2.resources.dll" set "SATS=!SATS! %%L"
-"%Z7%" a ApkShellext2.7z ApkShellext2.dll *.bat libwebp_*.dll ExCSS.dll System.Memory.dll System.Buffers.dll System.Runtime.CompilerServices.Unsafe.dll %SRE% !SATS!
+"%Z7%" a ApkShellext2.7z %MANIFEST% !SATS!
 REM No per-language archives anymore: the main package carries every locale,
 REM so the old one-7z-per-language split (upstream distribution style) would
 REM only clutter the output folder.
