@@ -18,7 +18,7 @@
 | Main artifact | `ApkShellext2\bin\Release\ApkShellext2.dll` (3.4.5.0, strong-named `Pkt=fb82661d1c53098c`, local key) |
 | Satellites | `bin\Release\{ar-SA,…,zh-CN,zh-TW}\ApkShellext2.resources.dll` × 19 |
 | Test app | `apkshellextTest\bin\Release\apkshellextTest.exe` |
-| Packages | `bin\Release\ApkShellext2.7z` + 19 × `<locale>.7z` (needs 7-Zip; postbuild packs automatically) |
+| Packages | `bin\Release\ApkShellext2.7z` — complete install set incl. all 19 language folders (needs 7-Zip; postbuild packs automatically) |
 | Native deps | `ApkShellext2\LibWebP\libwebp_x86.dll` + `libwebp_x64.dll` — prebuilt libwebp 1.6.0, committed in-repo; rebuilding is optional (§4.5) |
 | Route A | .NET SDK **10.0.404** standalone: `dotnet build ApkShellext2\ApkShellext2.csproj -c Release` — one line, no flags |
 | Route B | Visual Studio 2022/2026 with *.NET desktop development*: `msbuild -t:restore` + `msbuild -p:Configuration=Release` — no flags either |
@@ -368,8 +368,12 @@ identically (`-c Debug` / `-p:Configuration=Debug`); the Debug output additional
   `debug.bat`, locates `7z.exe` (§4.3), deletes stale `*.7z`, then packs
   `ApkShellext2.7z` = `ApkShellext2.dll` + `*.bat` + `libwebp_*.dll` + `ExCSS.dll` +
   `System.Memory.dll` + `System.Buffers.dll` + `System.Runtime.CompilerServices.Unsafe.dll`
-  **plus `System.Resources.Extensions.dll` if present** — see below — and one
-  `<locale>.7z` per language folder. No 7-Zip ⇒ WARNING + skip, build still succeeds.
+  **plus `System.Resources.Extensions.dll` if present** — see below — **plus every
+  locale folder that exists** (`ar-SA` … `zh-TW`, each holding its
+  `ApkShellext2.resources.dll`). The main archive is a complete install set: there are
+  no per-language archives (an earlier split shipped `<locale>.7z` separately; that
+  made an install from the main archive alone silently English). No 7-Zip ⇒ WARNING +
+  skip, build still succeeds.
 
 **The one route difference — `System.Resources.Extensions.dll`.** Under coreclr MSBuild
 (dotnet CLI) the csproj enables preserialized resource generation; the resulting
@@ -381,13 +385,14 @@ the first time a non-string resource is touched — string lookups like `btnOK` 
 work, which makes the fault easy to miss). A Visual Studio (FullFramework) build uses
 classic BinaryFormatter-style resources, never references the package, and produces no
 such file — matching upstream packages exactly. `postbuild.cmd` adapts automatically
-(package it if present), so each route's `.7z` is self-consistent: **13 files** from
-the dotnet route, **12** from the VS route. Do not hand-copy `System.Resources.Extensions.dll`
-into a VS-route output folder — it is not needed there.
+(package it if present), so each route's `.7z` is self-consistent: **32 files** (13 at
+the root + 19 satellite resources) from the dotnet route, **31** from the VS route. Do
+not hand-copy `System.Resources.Extensions.dll` into a VS-route output folder — it is
+not needed there.
 
 Deployment (on the target machine, as the user who owns the shell extension): extract
-`ApkShellext2.7z` (+ the wanted `<locale>.7z` so the culture folder sits next to the
-DLL), then run `install.bat` (elevated, machine-wide) or `install_user.bat` (per-user;
+`ApkShellext2.7z` — it already carries the culture folders next to the DLL — then run
+`install.bat` (elevated, machine-wide) or `install_user.bat` (per-user;
 both register via regasm and NGEN the assembly — 3.4.5 fixed NGEN in these scripts).
 `restart_explorer.bat` reloads the shell. Uninstall with the matching `uninstall*.bat`.
 Because the local snk differs from upstream's, never mix DLLs from a local build with an
@@ -424,8 +429,9 @@ official package in the same GAC/registration state.
    five bats, `libwebp_x86/x64.dll`, copy-local NuGet DLLs (`ExCSS`, `System.Memory`,
    `System.Buffers`, `System.Numerics.Vectors`, `System.Runtime.CompilerServices.Unsafe`;
    `System.Resources.Extensions` only on the dotnet route) and — when 7-Zip was found —
-   `ApkShellext2.7z` (~959 KB) + 19 × `<locale>.7z` (~5 KB each). `7z l` must list
-   **exactly 13 files (dotnet route) or 12 (VS route)** at the archive root, and no
+   `ApkShellext2.7z` (~1 MB). `7z l` must list
+   **32 files (dotnet route) or 31 (VS route)** — 12–13 at the archive root plus 19
+   `xx-XX\ApkShellext2.resources.dll` satellite entries — and no
    `Resources\`/`LibWebP\` subfolders may exist in `bin\Release`.
 5. **Debug layout:** `bin\Debug` root has `debug.bat` + bats + libwebp and **no `.7z`**.
 
@@ -524,7 +530,7 @@ Set-Location $R
 
 # verify the VS-route specifics: NO System.Resources.Extensions.dll in the output, 12-file archive
 Test-Path "$R\ApkShellext2\bin\Release\System.Resources.Extensions.dll"   # expect False
-& 'D:\Software\7-Zip\7z.exe' l "$R\ApkShellext2\bin\Release\ApkShellext2.7z"   # expect 12 files (adjust 7z path)
+& 'D:\Software\7-Zip\7z.exe' l "$R\ApkShellext2\bin\Release\ApkShellext2.7z"   # expect 31 files (adjust 7z path)
 ```
 
 ---

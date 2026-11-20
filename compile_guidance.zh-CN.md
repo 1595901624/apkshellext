@@ -15,7 +15,7 @@
 | 主产物 | `ApkShellext2\bin\Release\ApkShellext2.dll`(3.4.5.0,强名 `Pkt=fb82661d1c53098c`,本地密钥) |
 | 卫星程序集 | `bin\Release\{ar-SA,…,zh-CN,zh-TW}\ApkShellext2.resources.dll` × 19 |
 | 测试程序 | `apkshellextTest\bin\Release\apkshellextTest.exe` |
-| 分发包 | `bin\Release\ApkShellext2.7z` + 19 × `<locale>.7z`(需 7-Zip;postbuild 自动打包) |
+| 分发包 | `bin\Release\ApkShellext2.7z` —— 完整安装包,内含全部 19 个语言目录(需 7-Zip;postbuild 自动打包) |
 | 原生依赖 | `ApkShellext2\LibWebP\libwebp_x86.dll` + `libwebp_x64.dll` —— 预编译 libwebp 1.6.0,已入库;重建为可选项(§4.5) |
 | 路线 A | 独立 .NET SDK **10.0.404**:`dotnet build ApkShellext2\ApkShellext2.csproj -c Release` —— 一行命令,零参数 |
 | 路线 B | 装了*.NET 桌面开发*负载的 Visual Studio 2022/2026:`msbuild -t:restore` + `msbuild -p:Configuration=Release` —— 同样零参数 |
@@ -333,7 +333,9 @@ E:\src\apkshellext-dep\dotnet-sdk-10\dotnet.exe build apkshellextTest\apkshellex
   定位 `7z.exe`(§4.3),删残留 `*.7z`,然后打 `ApkShellext2.7z` = `ApkShellext2.dll` +
   `*.bat` + `libwebp_*.dll` + `ExCSS.dll` + `System.Memory.dll` + `System.Buffers.dll` +
   `System.Runtime.CompilerServices.Unsafe.dll`,**外加(若存在)`System.Resources.Extensions.dll`**
-  —— 见下 —— 再为每个语言目录各打一个 `<locale>.7z`。没有 7-Zip ⇒ WARNING + 跳过,
+  —— 见下 —— **再加磁盘上存在的全部语言目录**(`ar-SA` … `zh-TW`,各含一份
+  `ApkShellext2.resources.dll`)。主包就是完整安装包:不再有按语言分包(旧方案把
+  `<locale>.7z` 单独发,只装主包就会静默变英文界面)。没有 7-Zip ⇒ WARNING + 跳过,
   编译照样成功。
 
 **两条路线唯一差异 —— `System.Resources.Extensions.dll`。** coreclr MSBuild(dotnet CLI)
@@ -345,11 +347,12 @@ E:\src\apkshellext-dep\dotnet-sdk-10\dotnet.exe build apkshellextTest\apkshellex
 而 `btnOK` 这类字符串取值依然正常,所以此坑很容易被漏掉)。Visual Studio(FullFramework)
 编译走经典资源序列化,根本不引用该包,也不产生这个文件 —— 与上游发布完全一致。
 `postbuild.cmd` 自动适配(文件在就打进去),所以各路线的 `.7z` 自洽:dotnet 路线
-**13 个文件**,VS 路线 **12 个**。不要手动把 `System.Resources.Extensions.dll` 塞进
+**32 个文件**(包根 13 + 19 份卫星资源),VS 路线 **31 个**。不要手动把
+`System.Resources.Extensions.dll` 塞进
 VS 路线的输出目录 —— 那里用不到。
 
-部署(目标机,以要用这个外壳扩展的用户身份):解压 `ApkShellext2.7z`(+需要的
-`<locale>.7z`,让语言目录和 DLL 同级),跑 `install.bat`(管理员,全机)或
+部署(目标机,以要用这个外壳扩展的用户身份):解压 `ApkShellext2.7z`(语言目录已在
+包内、与 DLL 同级),跑 `install.bat`(管理员,全机)或
 `install_user.bat`(按用户;两者都 regasm 注册并 NGEN 预编译 —— 3.4.5 修好了脚本里的
 NGEN)。`restart_explorer.bat` 重载外壳。卸载用对应的 `uninstall*.bat`。本地 snk 与
 上游不同,别把本地编译的 DLL 和官方包混在同一注册/GAC 状态里。
@@ -384,8 +387,9 @@ NGEN)。`restart_explorer.bat` 重载外壳。卸载用对应的 `uninstall*.bat
    `libwebp_x86/x64.dll`、copy-local 的 NuGet DLL(`ExCSS`、`System.Memory`、
    `System.Buffers`、`System.Numerics.Vectors`、`System.Runtime.CompilerServices.Unsafe`;
    `System.Resources.Extensions` 仅 dotnet 路线有),以及 —— 找到 7-Zip 时 ——
-   `ApkShellext2.7z`(约 959 KB)+ 19 × `<locale>.7z`(各约 5 KB)。`7z l` 必须在包根
-   **恰好列出 13 个文件(dotnet 路线)或 12 个(VS 路线)**,且 `bin\Release` 里不得有
+   `ApkShellext2.7z`(约 1 MB)。`7z l` 必须共列出 **32 个文件(dotnet 路线)或
+   31 个(VS 路线)**:包根 12–13 个 + 19 条 `xx-XX\ApkShellext2.resources.dll`
+   卫星条目;且 `bin\Release` 里不得有
    `Resources\`/`LibWebP\` 子目录。
 5. **Debug 布局:** `bin\Debug` 根有 `debug.bat` + bat + libwebp,且**没有 `.7z`**。
 
@@ -476,7 +480,7 @@ Set-Location $R
 & $msb ApkShellext2.sln -t:restore            -p:Configuration=Release -nologo -v:m; if ($LASTEXITCODE) { throw 'restore 失败' }
 & $msb ApkShellext2.sln -p:Configuration=Release              -nologo -v:m; if ($LASTEXITCODE) { throw '编译失败' }
 
-# 验证 VS 路线特有项:输出里没有 System.Resources.Extensions.dll,包为 12 文件
+# 验证 VS 路线特有项:输出里没有 System.Resources.Extensions.dll,包为 31 文件
 Test-Path "$R\ApkShellext2\bin\Release\System.Resources.Extensions.dll"   # 应为 False
 & 'D:\Software\7-Zip\7z.exe' l "$R\ApkShellext2\bin\Release\ApkShellext2.7z"   # 应为 12 个文件(7z 路径按机器调整)
 ```
