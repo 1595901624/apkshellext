@@ -341,12 +341,6 @@
   <data name="strDumpXMLPrompt" xml:space="preserve">
     <value>مسیر XML، مثال: res\drawable\icon.xml</value>
   </data>
-  <data name="strPatreonBtn" xml:space="preserve">
-    <value>از من حمایت کنید!</value>
-  </data>
-  <data name="strPatreonTip" xml:space="preserve">
-    <value>حمایت از من در Patreon</value>
-  </data>
   <data name="strUseAppNameLang" xml:space="preserve">
     <value>زبان نام برنامه:</value>
   </data>

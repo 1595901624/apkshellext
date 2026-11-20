@@ -341,12 +341,6 @@ Zaznaczając to, w przypadku gdy numer subwersji będzie się różnił, wykorzy
   <data name="strDumpXMLPrompt" xml:space="preserve">
     <value>Ścieżka do pliku XML, np.: res\drawable\icon.xml</value>
   </data>
-  <data name="strPatreonBtn" xml:space="preserve">
-    <value>Wesprzyj mnie!</value>
-  </data>
-  <data name="strPatreonTip" xml:space="preserve">
-    <value>Wesprzyj mnie na Patreon</value>
-  </data>
   <data name="strUseAppNameLang" xml:space="preserve">
     <value>Język nazwy aplikacji:</value>
   </data>

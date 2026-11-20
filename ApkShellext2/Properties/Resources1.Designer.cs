@@ -432,29 +432,11 @@ namespace ApkShellext2.Properties {
         }
         
         /// <summary>
-        ///   查找类似 New version {0} is availible 的本地化字符串。
+        ///   查找类似 New version {0} is available 的本地化字符串。
         /// </summary>
         internal static string strNewVersionAvailible {
             get {
                 return ResourceManager.GetString("strNewVersionAvailible", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 Support me! 的本地化字符串。
-        /// </summary>
-        internal static string strPatreonBtn {
-            get {
-                return ResourceManager.GetString("strPatreonBtn", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 Support me on Patreon 的本地化字符串。
-        /// </summary>
-        internal static string strPatreonTip {
-            get {
-                return ResourceManager.GetString("strPatreonTip", resourceCulture);
             }
         }
         
@@ -613,7 +595,7 @@ namespace ApkShellext2.Properties {
         }
         
         /// <summary>
-        ///   查找类似 Notice me when new version is availible 的本地化字符串。
+        ///   查找类似 Notice me when new version is available 的本地化字符串。
         /// </summary>
         internal static string strShowNewVerInfo {
             get {

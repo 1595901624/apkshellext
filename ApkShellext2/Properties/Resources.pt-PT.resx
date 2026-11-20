@@ -341,12 +341,6 @@ Verificando isso, renomeie o arquivo app como %AppName%_%Version%_%Revision%, ca
   <data name="strDumpXMLPrompt" xml:space="preserve">
     <value>Caminho para o XML, ex.: res\drawable\icon.xml</value>
   </data>
-  <data name="strPatreonBtn" xml:space="preserve">
-    <value>Apoie-me!</value>
-  </data>
-  <data name="strPatreonTip" xml:space="preserve">
-    <value>Apoie-me no Patreon</value>
-  </data>
   <data name="strUseAppNameLang" xml:space="preserve">
     <value>Idioma do nome da aplicação:</value>
   </data>

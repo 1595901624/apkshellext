@@ -341,12 +341,6 @@ Tildando eso, cambia el nombre del archivo de app a %AppName%_%Version%_%Revisio
   <data name="strDumpXMLPrompt" xml:space="preserve">
     <value>Ruta al XML, ej.: res\drawable\icon.xml</value>
   </data>
-  <data name="strPatreonBtn" xml:space="preserve">
-    <value>¡Apóyame!</value>
-  </data>
-  <data name="strPatreonTip" xml:space="preserve">
-    <value>Apóyame en Patreon</value>
-  </data>
   <data name="strUseAppNameLang" xml:space="preserve">
     <value>Idioma del nombre de la app:</value>
   </data>

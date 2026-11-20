@@ -389,12 +389,6 @@
   <data name="strDumpXMLPrompt" xml:space="preserve">
     <value>Διαδρομή προς XML, π.χ.: res\drawable\icon.xml</value>
   </data>
-  <data name="strPatreonBtn" xml:space="preserve">
-    <value>Υποστηρίξτε με!</value>
-  </data>
-  <data name="strPatreonTip" xml:space="preserve">
-    <value>Υποστηρίξτε με στο Patreon</value>
-  </data>
   <data name="strUseAppNameLang" xml:space="preserve">
     <value>Γλώσσα ονόματος εφαρμογής:</value>
   </data>

@@ -357,12 +357,6 @@
   <data name="strDumpXMLPrompt" xml:space="preserve">
     <value>XML のパス (例: res\drawable\icon.xml)</value>
   </data>
-  <data name="strPatreonBtn" xml:space="preserve">
-    <value>支援してください!</value>
-  </data>
-  <data name="strPatreonTip" xml:space="preserve">
-    <value>Patreon で支援する</value>
-  </data>
   <data name="strUseAppNameLang" xml:space="preserve">
     <value>アプリ名に使用する言語:</value>
   </data>

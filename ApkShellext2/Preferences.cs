@@ -82,10 +82,6 @@ namespace ApkShellext2 {
 
             lblHelpTranslate.Text = Resources.strHelpTranslate;
 
-            btnPatreon.Text = Resources.strPatreonBtn;
-            btnPatreon.Image = Utility.ResizeBitmap(NonLocalizeResources.Patreon, 16);
-            toolTip1.SetToolTip(btnPatreon, Resources.strPatreonTip);
-
             #endregion
 
             #region Icon Panel
@@ -396,10 +392,6 @@ namespace ApkShellext2 {
         private bool txtReplaceWhiteSpaceDirty = false;
         private void TxtReplaceWhiteSpace_TextChanged(object sender, EventArgs e) {
             txtReplaceWhiteSpaceDirty = formLoaded;
-        }
-
-        private void BtnPatreon_Click(object sender, EventArgs e) {
-            System.Diagnostics.Process.Start(Properties.NonLocalizeResources.urlPatreon);
         }
 
         private void Preferences_ResizeBegin(object sender, EventArgs e) {

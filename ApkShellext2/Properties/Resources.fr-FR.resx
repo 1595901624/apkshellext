@@ -333,12 +333,6 @@ Si cette case est cochée, le fichier sera renommé en %AppName%_%Version%_%Revi
   <data name="strReplaceSpaceWith_" xml:space="preserve">
     <value>Remplacer les espaces par :</value>
   </data>
-  <data name="strPatreonBtn" xml:space="preserve">
-    <value>Soutenez-moi !</value>
-  </data>
-  <data name="strPatreonTip" xml:space="preserve">
-    <value>Soutenez-moi sur Patreon</value>
-  </data>
   <data name="strUseAppNameLang" xml:space="preserve">
     <value>Langue du nom de l'application :</value>
   </data>

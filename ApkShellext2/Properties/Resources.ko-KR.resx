@@ -359,12 +359,6 @@
   <data name="strDumpXMLPrompt" xml:space="preserve">
     <value>XML 경로, 예: res\drawable\icon.xml</value>
   </data>
-  <data name="strPatreonBtn" xml:space="preserve">
-    <value>후원하기!</value>
-  </data>
-  <data name="strPatreonTip" xml:space="preserve">
-    <value>Patreon에서 후원하기</value>
-  </data>
   <data name="strUseAppNameLang" xml:space="preserve">
     <value>앱 이름에 사용할 언어:</value>
   </data>

@@ -341,12 +341,6 @@ Bu seçenek işaretlendiğinde uygulama dosyası %AppName%_%Version%_%Revision% 
   <data name="strDumpXMLPrompt" xml:space="preserve">
     <value>XML yolu, örn.: res\drawable\icon.xml</value>
   </data>
-  <data name="strPatreonBtn" xml:space="preserve">
-    <value>Bana destek ol!</value>
-  </data>
-  <data name="strPatreonTip" xml:space="preserve">
-    <value>Patreon'da bana destek ol</value>
-  </data>
   <data name="strUseAppNameLang" xml:space="preserve">
     <value>Uygulama adı dili:</value>
   </data>

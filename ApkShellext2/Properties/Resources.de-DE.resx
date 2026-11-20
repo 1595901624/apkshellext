@@ -332,12 +332,6 @@ Standardmäßig wird das Menü nur angezeigt, wenn eine Datei ausgewählt ist</v
   <data name="strReplaceSpaceWith_" xml:space="preserve">
     <value>Leerzeichen ersetzen durch:</value>
   </data>
-  <data name="strPatreonBtn" xml:space="preserve">
-    <value>Unterstütze mich!</value>
-  </data>
-  <data name="strPatreonTip" xml:space="preserve">
-    <value>Unterstütze mich auf Patreon</value>
-  </data>
   <data name="strUseAppNameLang" xml:space="preserve">
     <value>Sprache des App-Namens:</value>
   </data>

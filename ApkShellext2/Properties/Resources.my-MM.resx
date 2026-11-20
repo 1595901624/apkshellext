@@ -400,12 +400,6 @@
   <data name="strDumpXMLPrompt" xml:space="preserve">
     <value>XML လိပ်စာ၊ ဥပမာ: res\drawable\icon.xml</value>
   </data>
-  <data name="strPatreonBtn" xml:space="preserve">
-    <value>ကျွန်ုပ်ကို ပံ့ပိုးပါ!</value>
-  </data>
-  <data name="strPatreonTip" xml:space="preserve">
-    <value>Patreon တွင် ကျွန်ုပ်ကို ပံ့ပိုးပါ</value>
-  </data>
   <data name="strUseAppNameLang" xml:space="preserve">
     <value>app အမည် ဘာသာစကား:</value>
   </data>

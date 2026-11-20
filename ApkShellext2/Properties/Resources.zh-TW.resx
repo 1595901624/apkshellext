@@ -348,10 +348,4 @@
   <data name="strDumpXMLPrompt" xml:space="preserve">
     <value>XML 路徑,例如: res\drawable\icon.xml</value>
   </data>
-  <data name="strPatreonBtn" xml:space="preserve">
-    <value>支持我!</value>
-  </data>
-  <data name="strPatreonTip" xml:space="preserve">
-    <value>在 Patreon 上支持我</value>
-  </data>
 </root>

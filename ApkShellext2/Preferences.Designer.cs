@@ -60,7 +60,6 @@ namespace ApkShellext2 {
             this.pnlButtons = new System.Windows.Forms.FlowLayoutPanel();
             this.btnOK = new System.Windows.Forms.Button();
             this.btnResetInfoTipPattern = new System.Windows.Forms.Button();
-            this.btnPatreon = new System.Windows.Forms.Button();
             this.pnlContextMenu = new System.Windows.Forms.TableLayoutPanel();
             this.ckShowGoogle = new System.Windows.Forms.CheckBox();
             this.ckShowAmazon = new System.Windows.Forms.CheckBox();
@@ -544,7 +543,6 @@ namespace ApkShellext2 {
             this.pnlButtons.Controls.Add(this.btnUpdate);
             this.pnlButtons.Controls.Add(this.btnResetRenamePattern);
             this.pnlButtons.Controls.Add(this.btnResetInfoTipPattern);
-            this.pnlButtons.Controls.Add(this.btnPatreon);
             this.pnlButtons.Dock = System.Windows.Forms.DockStyle.Fill;
             this.pnlButtons.FlowDirection = System.Windows.Forms.FlowDirection.RightToLeft;
             this.pnlButtons.Location = new System.Drawing.Point(3, 657);
@@ -574,17 +572,6 @@ namespace ApkShellext2 {
             this.btnResetInfoTipPattern.Text = "ResetInfoTipPattern";
             this.btnResetInfoTipPattern.UseVisualStyleBackColor = true;
             this.btnResetInfoTipPattern.Click += new System.EventHandler(this.btnResetTooltipPattern_Click);
-            // 
-            // btnPatreon
-            // 
-            this.btnPatreon.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.btnPatreon.Location = new System.Drawing.Point(361, 34);
-            this.btnPatreon.Name = "btnPatreon";
-            this.btnPatreon.Size = new System.Drawing.Size(120, 25);
-            this.btnPatreon.TabIndex = 25;
-            this.btnPatreon.Text = "Support on Patron";
-            this.btnPatreon.UseVisualStyleBackColor = true;
-            this.btnPatreon.Click += new System.EventHandler(this.BtnPatreon_Click);
             // 
             // pnlContextMenu
             // 
@@ -850,6 +837,5 @@ namespace ApkShellext2 {
         private System.Windows.Forms.CheckBox ckUseAppNameLang;
         private System.Windows.Forms.ComboBox combAppNameLang;
         private System.Windows.Forms.TextBox txtReplaceWhiteSpace;
-        private System.Windows.Forms.Button btnPatreon;
     }
 }

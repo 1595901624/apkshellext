@@ -63,13 +63,6 @@ Requires Visual Studio 2019+ (MSBuild + Roslyn) and the .NET Framework 4.8 targe
 | – 2023 | [1595901624 (luhaoyu)](https://github.com/1595901624) | Maintained v3.x, created the `ApkShellext2_hy` branch (.aab support and more) |
 | 2026 – | [nkh0472](https://github.com/nkh0472) | Current maintainer: dependency modernization (libwebp 1.6.0), Windows 11 icon fixes, localized labels, split-APK bundles, archive hardening |
 
-## Funding
-
-The PayPal / Alipay channels below are the **previous maintainer's** (1595901624) and are kept only as historical attribution from the original README. The current maintainer publishes no donation channel.
-
-- PayPal (1595901624): [PayPal.Me/haoyu94](https://PayPal.Me/haoyu94)
-- AliPay (1595901624): 1595901624@qq.com
-
 ## Changelog
 
 Full bilingual release notes are on the [Releases page](https://github.com/nkh0472/apkshellext/releases).

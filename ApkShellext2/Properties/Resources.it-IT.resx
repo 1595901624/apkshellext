@@ -341,12 +341,6 @@ Per impostazione predefinita il Menu verrà mostrato quando si seleziona solo un
   <data name="strDumpXMLPrompt" xml:space="preserve">
     <value>Percorso del file XML, es.: res\drawable\icon.xml</value>
   </data>
-  <data name="strPatreonBtn" xml:space="preserve">
-    <value>Sostienimi!</value>
-  </data>
-  <data name="strPatreonTip" xml:space="preserve">
-    <value>Sostienimi su Patreon</value>
-  </data>
   <data name="strUseAppNameLang" xml:space="preserve">
     <value>Lingua del nome app:</value>
   </data>

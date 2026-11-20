@@ -393,12 +393,6 @@
   <data name="strDumpXMLPrompt" xml:space="preserve">
     <value>נתיב ל-XML, למשל: res\drawable\icon.xml</value>
   </data>
-  <data name="strPatreonBtn" xml:space="preserve">
-    <value>תמכו בי!</value>
-  </data>
-  <data name="strPatreonTip" xml:space="preserve">
-    <value>תמכו בי ב-Patreon</value>
-  </data>
   <data name="strUseAppNameLang" xml:space="preserve">
     <value>שפת שם האפליקציה:</value>
   </data>

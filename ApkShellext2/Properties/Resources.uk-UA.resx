@@ -343,12 +343,6 @@
   <data name="strDumpXMLPrompt" xml:space="preserve">
     <value>Шлях до XML, напр.: res\drawable\icon.xml</value>
   </data>
-  <data name="strPatreonBtn" xml:space="preserve">
-    <value>Підтримати мене!</value>
-  </data>
-  <data name="strPatreonTip" xml:space="preserve">
-    <value>Підтримати мене на Patreon</value>
-  </data>
   <data name="strUseAppNameLang" xml:space="preserve">
     <value>Мова назви програми:</value>
   </data>

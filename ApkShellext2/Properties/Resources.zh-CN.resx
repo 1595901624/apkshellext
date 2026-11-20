@@ -331,12 +331,6 @@
   <data name="strDumpXMLPrompt" xml:space="preserve">
     <value>XML 路径，例如：res\placle\cotion.xml</value>
   </data>
-  <data name="strPatreonBtn" xml:space="preserve">
-    <value>给我钱!</value>
-  </data>
-  <data name="strPatreonTip" xml:space="preserve">
-    <value>在 Patreon 上支持我</value>
-  </data>
 
   <data name="strUseAppNameLang" xml:space="preserve">
     <value>应用名称使用指定语言:</value>
