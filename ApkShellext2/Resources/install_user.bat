@@ -31,8 +31,11 @@ if not exist "%REGASM64%" (
 )
 
 ECHO [1/5] Generating registration file...
-del "%TEMP%\apksext_user.reg" "%TEMP%\apksext_user_hkcu.reg" >nul 2>&1
-"%REGASM64%" /codebase /regfile:"%TEMP%\apksext_user.reg" "%~dp0ApkShellext2.dll"
+REM random names: fixed %TEMP% file names can be pre-created by another
+REM same-user process before we write/import them
+set "REGF=%TEMP%\apksext_user_%RANDOM%.reg"
+set "REGFH=%TEMP%\apksext_user_hkcu_%RANDOM%.reg"
+"%REGASM64%" /codebase /regfile:"%REGF%" "%~dp0ApkShellext2.dll"
 if not '%errorlevel%' EQU '0' (
     echo ERROR: regasm /regfile failed with code %errorlevel%.
     pause
@@ -40,19 +43,19 @@ if not '%errorlevel%' EQU '0' (
 )
 
 ECHO [2/5] Redirecting HKCR to HKCU\Software\Classes and importing...
-powershell -NoProfile -ExecutionPolicy Bypass -Command "(Get-Content -LiteralPath '%TEMP%\apksext_user.reg' -Raw) -replace 'HKEY_CLASSES_ROOT','HKEY_CURRENT_USER\Software\Classes' | Set-Content -LiteralPath '%TEMP%\apksext_user_hkcu.reg' -Encoding Unicode"
-if not exist "%TEMP%\apksext_user_hkcu.reg" (
+powershell -NoProfile -ExecutionPolicy Bypass -Command "(Get-Content -LiteralPath '%REGF%' -Raw) -replace 'HKEY_CLASSES_ROOT','HKEY_CURRENT_USER\Software\Classes' | Set-Content -LiteralPath '%REGFH%' -Encoding Unicode"
+if not exist "%REGFH%" (
     echo ERROR: PowerShell retarget step failed ^(is powershell.exe available?^).
     pause
     exit /b 1
 )
-reg import "%TEMP%\apksext_user_hkcu.reg"
+reg import "%REGFH%"
 if not '%errorlevel%' EQU '0' (
     echo ERROR: reg import failed with code %errorlevel%.
     pause
     exit /b 1
 )
-del "%TEMP%\apksext_user.reg" "%TEMP%\apksext_user_hkcu.reg" >nul 2>&1
+del "%REGF%" "%REGFH%" >nul 2>&1
 
 REM regasm /regfile cannot carry the file-type associations (SharpShell writes
 REM them during its installer phase, which /regfile skips), and HKCU imports

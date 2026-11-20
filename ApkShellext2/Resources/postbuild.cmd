@@ -37,7 +37,10 @@ if not exist "%Z7%" (
   exit /b 0
 )
 
-"%Z7%" a ApkShellext2.7z ApkShellext2.dll *.bat libwebp_*.dll
+REM ExCSS + the facade dlls are load-time dependencies of the main dll
+REM (SVG renderer path + Span/Memory shims); omitting them makes a fresh
+REM machine hit FileLoadException on the first vector-drawable icon.
+"%Z7%" a ApkShellext2.7z ApkShellext2.dll *.bat libwebp_*.dll ExCSS.dll System.Memory.dll System.Buffers.dll System.Runtime.CompilerServices.Unsafe.dll
 for %%L in (ar-SA de-DE el-GR es-ES fa-IR fr-FR he-IL it-IT ja-JP ko-KR pt-PT ru-RU tr-TR zh-CN zh-TW) do "%Z7%" a %%L.7z %%L
 exit /b 0
 

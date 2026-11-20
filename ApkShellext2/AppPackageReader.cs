@@ -95,7 +95,9 @@ namespace ApkShellext2 {
         }
 
         public static AppType getAppType(string path) {
-            string suffix = Path.GetExtension(path);
+            // case-insensitive: FOO.APK is still an apk (extension is compared
+            // against lowercase constants below)
+            string suffix = Path.GetExtension(path).ToLowerInvariant();
             if (suffix == extAPK)
             {
                 return AppType.AndroidApp;
@@ -129,7 +131,7 @@ namespace ApkShellext2 {
         public static AppPackageReader Read(string path) {
             switch (getAppType(path)) {
                 case AppType.AndroidApp:
-                    string ext = Path.GetExtension(path);
+                    string ext = Path.GetExtension(path).ToLowerInvariant();
                     if (ext == extAPKS || ext == extAPKM || ext == extXAPK)
                         return new SplitApkBundleReader(path);
                     return new ApkReader(path);

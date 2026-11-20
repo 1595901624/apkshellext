@@ -294,7 +294,13 @@ namespace ApkShellext2 {
         }
 
         private void dumpXML(string apk, string xml) {
-            using (ApkReader reader = (ApkReader)AppPackageReader.Read(apk)) {
+            using (ApkReader reader = AppPackageReader.Read(apk) as ApkReader) {
+                if (reader == null) {
+                    // mixed selection contained a non-apk (ipa/appx):
+                    // dump only works on android binary xml, skip quietly
+                    Log("Not an apk, skipping dump: " + apk);
+                    return;
+                }
                 try {
                     XmlDocument doc = reader.ExtractCompressedXml(xml);
                     string filepath = apk + "." + Regex.Replace(xml, @"[\/:*?""<>|-]+", "_"); // remove invalid chars

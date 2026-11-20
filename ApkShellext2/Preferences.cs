@@ -353,7 +353,9 @@ namespace ApkShellext2 {
                     MessageBoxButtons.YesNo,
                     MessageBoxIcon.Exclamation) == DialogResult.Yes) {
                 Process process = new Process();
-                string path = Path.GetTempPath() + "\\clearcache.bat";
+                // random file name: a fixed %TEMP%\clearcache.bat lets another
+                // same-user process rewrite it between our write and Start()
+                string path = Path.Combine(Path.GetTempPath(), "clearcache" + Path.GetRandomFileName() + ".bat");
                 File.WriteAllText(path, NonLocalizeResources.cmdClearCache);
                 process.StartInfo.FileName = path;
                 process.StartInfo.UseShellExecute = true;

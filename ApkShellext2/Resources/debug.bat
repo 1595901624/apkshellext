@@ -62,5 +62,3 @@ ECHO \-------------------------------------------------------------------/
   REM pause
   START %WINDIR%\explorer.exe
 @ECHO ON
-
-start C:\Users\guojin\Desktop\project\apk

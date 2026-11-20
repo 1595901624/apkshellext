@@ -25,9 +25,12 @@ if '%~1' EQU '1' (
     echo Requesting administrative privileges...
     set "CSCRIPT=%SystemRoot%\System32\cscript.exe"
     if exist "%SystemRoot%\Sysnative\cscript.exe" set "CSCRIPT=%SystemRoot%\Sysnative\cscript.exe"
-    echo CreateObject("Shell.Application").ShellExecute "%~f0", "1", "", "runas" > "%temp%\apkshellext_elev.vbs"
-    "%CSCRIPT%" //nologo "%temp%\apkshellext_elev.vbs"
-    del "%temp%\apkshellext_elev.vbs" 2>nul
+    REM random name: fixed %temp%\*.vbs / *.reg names in a world-writable dir
+    REM can be pre-created/rewritten by another process before we run them
+    set "ELEV_VBS=%temp%\apkshellext_elev_%RANDOM%.vbs"
+    echo CreateObject("Shell.Application").ShellExecute "%~f0", "1", "", "runas" > "%ELEV_VBS%"
+    "%CSCRIPT%" //nologo "%ELEV_VBS%"
+    del "%ELEV_VBS%" 2>nul
     exit /b
 
 :gotAdmin
@@ -37,6 +40,26 @@ ECHO.
 if not exist "%~dp0ApkShellext2.dll" (
     echo ERROR: ApkShellext2.dll not found next to this script.
     echo Extract the whole archive to the final folder first, then run install.bat again.
+    pause
+    exit /b 1
+)
+
+REM === refuse to register a user-writable folder machine-wide ============
+REM /codebase puts this folder's DLL path into HKLM, so EVERY user's explorer
+REM loads it. If the folder is writable by unprivileged users (typical when
+REM the zip was extracted to Downloads/Desktop), any standard user can later
+REM replace the DLL and run code as the other users, admins included.
+REM Precise test: ACL grants Write/Modify/Full to Everyone / Authenticated
+REM Users / Built-in Users? (named-user-only ownership is not a cross-user risk)
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$bad=$false; foreach($a in (Get-Acl -LiteralPath '%~dp0.').Access){ if($a.AccessControlType -ne 'Allow'){continue}; try{$sid=$a.IdentityReference.Translate([Security.Principal.SecurityIdentifier]).Value}catch{continue}; if($sid -in 'S-1-1-0','S-1-5-11','S-1-5-32-545'){ if([string]$a.FileSystemRights -match 'Write|Modify|FullControl'){$bad=$true} } }; if($bad){exit 2}"
+REM exit 2 = risky ACE found (exit 1 = powershell itself failed: do not block install on that)
+if '%errorlevel%' EQU '2' (
+    echo ERROR: this install folder grants write access to ordinary users.
+    echo A machine-wide install loads this DLL into every user's explorer, so
+    echo the folder must be protected against replacement.
+    echo Move the extracted folder to a protected location, e.g.
+    echo     "%ProgramFiles%\ApkShellext2"
+    echo or install per-user without admin rights using install_user.bat instead.
     pause
     exit /b 1
 )
