@@ -304,9 +304,59 @@ namespace ApkQuickReader
             return id;
         }
 
+        /// <summary>
+        /// Framework colors (package 0x0106) live in android.jar, not in the APK, so
+        /// the resource decoder falls back to the raw-id form "(0x0106000b)". The
+        /// public android.R.color ids are frozen constants (verified against AOSP
+        /// core/res/res/values/public.xml + Mono.Android bindings); the entries with
+        /// literal hex values in the platform color resources are tabled here so a
+        /// vector fill like @android:color/white renders instead of throwing.
+        /// Unknown ids keep throwing so callers fall back instead of guessing.
+        /// </summary>
+        internal static class FrameworkColors
+        {
+            static readonly Dictionary<uint, uint> IdToArgb = new Dictionary<uint, uint>
+            {
+                { 0x0106000b, 0xFFFFFFFF }, // white
+                { 0x0106000c, 0xFF000000 }, // black
+                { 0x0106000d, 0x00000000 }, // transparent
+                { 0x0106000e, 0xFF000000 }, // background_dark
+                { 0x0106000f, 0xFFFFFFFF }, // background_light
+                { 0x01060012, 0xFF33B5E5 }, // holo_blue_light
+                { 0x01060013, 0xFF0099CC }, // holo_blue_dark
+                { 0x01060014, 0xFF99CC00 }, // holo_green_light
+                { 0x01060015, 0xFF669900 }, // holo_green_dark
+                { 0x01060016, 0xFFFF4444 }, // holo_red_light
+                { 0x01060017, 0xFFCC0000 }, // holo_red_dark
+                { 0x01060018, 0xFFFFBB33 }, // holo_orange_light
+                { 0x01060019, 0xFFFF8800 }, // holo_orange_dark
+                { 0x0106001A, 0xFFAA66CC }, // holo_purple
+                { 0x0106001B, 0xFF00DDFF }, // holo_blue_bright
+            };
+
+            public static bool TryResolve(string raw, out System.Drawing.Color color)
+            {
+                color = System.Drawing.Color.Empty;
+                if (raw == null) return false;
+                string v = raw.Trim();
+                if (v.Length > 2 && v[0] == '(' && v[v.Length - 1] == ')')
+                    v = v.Substring(1, v.Length - 2);
+                if (!v.StartsWith("0x") && !v.StartsWith("0X")) return false;
+                uint id;
+                if (!uint.TryParse(v.Substring(2), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out id))
+                    return false;
+                uint argb;
+                if (!IdToArgb.TryGetValue(id, out argb)) return false;
+                color = System.Drawing.Color.FromArgb((int)argb);
+                return true;
+            }
+        }
+
         static System.Drawing.Color ParseColor(string v)
         {
             v = v.Trim();
+            System.Drawing.Color fw;
+            if (FrameworkColors.TryResolve(v, out fw)) return fw;
             if (v.StartsWith("#"))
             {
                 if (v.Length == 9)

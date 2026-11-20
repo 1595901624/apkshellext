@@ -144,7 +144,7 @@ namespace ApkShellext2
             ZipEntry iconz;
             if (zip.FindEntry(path, true) >= 0)
             {
-                iconz = zip.GetEntry(path);
+                iconz = ZipSafety.GetEntryExact(zip, path);
                 // case-insensitive extension dispatch, see kkguo/apkshellext#99
                 string ext = System.IO.Path.GetExtension(path).ToLowerInvariant();
                 if (ext == ".png" || ext == ".jpg" || ext == ".jpeg" ||
@@ -689,7 +689,7 @@ namespace ApkShellext2
         {
             try
             {
-                ZipEntry en = zip.GetEntry(path);
+                ZipEntry en = ZipSafety.GetEntryExact(zip, path);
                 byte[] bytes = ZipSafety.ReadEntryBounded(zip, en, ZipSafety.MAX_XML, "xml " + path);
                 return ExtractCompressedXml(bytes);
             }

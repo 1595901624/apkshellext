@@ -22,6 +22,23 @@ namespace ApkQuickReader {
         public const long RATIO_LIMIT = 1032;
 
         /// <summary>
+        /// Resolves an entry whose name came from package metadata (arsc path
+        /// strings, AXML refs). SharpZipLib's GetEntry matches case-insensitively
+        /// and returns the first central-directory hit — fatal for AndResGuard-
+        /// obfuscated packages, whose 2-char names deliberately collide by case
+        /// (res/Fd.xml vs res/FD.xml vs res/fd.xml: 600+ such groups in real
+        /// APKs). ZIP names are case-sensitive; try the ordinal-exact entry
+        /// first, fall back to the legacy fuzzy match only when it is missing.
+        /// </summary>
+        public static ZipEntry GetEntryExact(ZipFile z, string name) {
+            foreach (ZipEntry e in z) {
+                if (string.Equals(e.Name, name, StringComparison.Ordinal))
+                    return (ZipEntry)e.Clone();
+            }
+            return z.GetEntry(name); // legacy fallback: fuzzy match beats giving up
+        }
+
+        /// <summary>
         /// Reads an entry with a hard byte cap and a compression-ratio cap.
         /// The declared Size/CompressedSize are never trusted and never used
         /// for preallocation; the buffer grows only as real bytes arrive.

@@ -1294,7 +1294,7 @@ namespace ApkQuickReader
         public Bitmap getImage(string path, Size size) {
             ZipEntry iconz;
             if (zip.FindEntry(path, true) >= 0) {
-                iconz = zip.GetEntry(path);
+                iconz = ZipSafety.GetEntryExact(zip, path);
                 // case-insensitive extension dispatch, see kkguo/apkshellext#99 (res/drawable/Icon.PNG matched no branch)
                 string ext = System.IO.Path.GetExtension(path).ToLowerInvariant();
                 if (ext == ".png" || ext == ".jpg" || ext == ".jpeg" ||
@@ -1518,14 +1518,20 @@ namespace ApkQuickReader
             try {
                 Bitmap bmp = new Bitmap(size.Width, size.Height);
                 bool anyFailed = false;
+                // Android masks the CENTER 72dp of the 108dp layer canvas, so artwork is
+                // designed 1.5x larger than the final silhouette. Rendering each layer
+                // edge-to-edge at the icon size shrinks everything to 2/3 of its on-device
+                // scale; request layers 1.5x oversized and let drawAdaptiveLayer center
+                // them so the masked area fills the icon like on the phone.
+                Size layerSize = new Size(size.Width + size.Width / 2, size.Height + size.Height / 2);
                 using (Graphics g = Graphics.FromImage(bmp)) {
                     XmlElement elem = (XmlElement)node.SelectSingleNode("/adaptive-icon/background");
                     if (elem != null && elem.HasAttribute("drawable")) {
-                        anyFailed |= !drawAdaptiveLayer(g, elem.GetAttribute("drawable"), size);
+                        anyFailed |= !drawAdaptiveLayer(g, elem.GetAttribute("drawable"), layerSize, size);
                     }
                     elem = (XmlElement)node.SelectSingleNode("/adaptive-icon/foreground");
                     if (elem != null && elem.HasAttribute("drawable")) {
-                        anyFailed |= !drawAdaptiveLayer(g, elem.GetAttribute("drawable"), size);
+                        anyFailed |= !drawAdaptiveLayer(g, elem.GetAttribute("drawable"), layerSize, size);
                     }
                 }
                 if (anyFailed) {
@@ -1544,14 +1550,24 @@ namespace ApkQuickReader
         /// <summary>
         /// Draws one adaptive-icon layer: bitmap drawable, or solid color when the layer
         /// references a color resource. A failing layer is skipped instead of killing the
-        /// whole icon (Android would still show the other layers).
+        /// whole icon (Android would still show the other layers). The layer bitmap holds
+        /// the full 108dp canvas while target is the 72dp-visible frame: draw it centered
+        /// and oversized by target/layer*1.5 so the masked area fills the icon (Android
+        /// clips the layer instead of shrinking it; edge-to-edge drew it at 2/3 scale).
         /// </summary>
-        private bool drawAdaptiveLayer(Graphics g, string drawableRef, Size size) {
+        private bool drawAdaptiveLayer(Graphics g, string drawableRef, Size layerSize, Size target) {
             try {
-                Bitmap layer = getImage(drawableRef, size);
+                Bitmap layer = getImage(drawableRef, layerSize);
                 if (layer != null) {
-                    g.DrawImage(layer, 0, 0, size.Width, size.Height);
-                    layer.Dispose();
+                    using (layer) {
+                        float w = target.Width, h = target.Height;
+                        float s = Math.Max(w * 1.5f / layer.Width, h * 1.5f / layer.Height);
+                        float dw = layer.Width * s, dh = layer.Height * s;
+                        var oldInterp = g.InterpolationMode;
+                        g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+                        g.DrawImage(layer, (w - dw) / 2f, (h - dh) / 2f, dw, dh);
+                        g.InterpolationMode = oldInterp;
+                    }
                     return true;
                 }
             } catch (Exception ex) {
@@ -1559,7 +1575,7 @@ namespace ApkQuickReader
             }
             try {
                 Color c = stringToColor(drawableRef);
-                g.FillRectangle(new SolidBrush(c), 0, 0, size.Width, size.Height);
+                g.FillRectangle(new SolidBrush(c), 0, 0, target.Width, target.Height);
                 return true;
             } catch (Exception exColor) {
                 Log("adaptive layer color failed: " + exColor.Message.Split('\n')[0]);
@@ -1783,6 +1799,10 @@ namespace ApkQuickReader
 
         private Color stringToColor(string color) {
             color = color.Trim();
+            Color fw;
+            // adaptive layers may reference a framework color by id (fallback text
+            // "(0x0106000b)" for @android:color/white); same table as the SVG path
+            if (VectorDrawableToSvg.FrameworkColors.TryResolve(color, out fw)) return fw;
             if (color.StartsWith("#")) {
                 return Color.FromArgb((int)uint.Parse(color.Substring(1), NumberStyles.HexNumber));
             } else {
@@ -1881,7 +1901,7 @@ namespace ApkQuickReader
 
         public XmlDocument ExtractCompressedXml(string path) {
             try {
-                ZipEntry en = zip.GetEntry(path);
+                ZipEntry en = ZipSafety.GetEntryExact(zip, path);
                 byte[] bytes = ZipSafety.ReadEntryBounded(zip, en, ZipSafety.MAX_XML, "xml " + path);
                 return ExtractCompressedXml(bytes);
             } catch (Exception ex) {
