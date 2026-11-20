@@ -314,4 +314,43 @@
   
   
   
+  <data name="strReplaceSpaceWith_" xml:space="preserve">
+    <value>استبدال المسافة بـ:</value>
+  </data>
+  <data name="strSearchStore" xml:space="preserve">
+    <value>البحث في المتاجر</value>
+  </data>
+  <data name="menuDump" xml:space="preserve">
+    <value>استخراج</value>
+  </data>
+  <data name="strSupportAdaptiveIcon" xml:space="preserve">
+    <value>دعم الأيقونات التكيفية (تجريبي)</value>
+  </data>
+  <data name="strEnableLog" xml:space="preserve">
+    <value>تفعيل سجل التصحيح</value>
+  </data>
+  <data name="menuDumpManifest" xml:space="preserve">
+    <value>استخراج androidmanifest.xml</value>
+  </data>
+  <data name="menuDumpOthers" xml:space="preserve">
+    <value>استخراج XML ...</value>
+  </data>
+  <data name="strDumpXML" xml:space="preserve">
+    <value>استخراج XML</value>
+  </data>
+  <data name="strDumpXMLPrompt" xml:space="preserve">
+    <value>مسار ملف XML، مثال: res\drawable\icon.xml</value>
+  </data>
+  <data name="strPatreonBtn" xml:space="preserve">
+    <value>ادعمني!</value>
+  </data>
+  <data name="strPatreonTip" xml:space="preserve">
+    <value>ادعمني على Patreon</value>
+  </data>
+  <data name="strUseAppNameLang" xml:space="preserve">
+    <value>لغة اسم التطبيق:</value>
+  </data>
+  <data name="strFollowUiLanguage" xml:space="preserve">
+    <value>(حسب لغة الواجهة)</value>
+  </data>
 </root>

@@ -281,4 +281,94 @@
   
   
   
+  <data name="btnOK" xml:space="preserve">
+    <value>확인</value>
+  </data>
+  <data name="btnGitHub" xml:space="preserve">
+    <value>GitHub 공식 페이지</value>
+  </data>
+  <data name="strShowContextMenuIcon" xml:space="preserve">
+    <value>컨텍스트 메뉴 아이콘 표시</value>
+  </data>
+  <data name="btnCancel" xml:space="preserve">
+    <value>취소</value>
+  </data>
+  <data name="btnYes" xml:space="preserve">
+    <value>예</value>
+  </data>
+  <data name="twGeneral" xml:space="preserve">
+    <value>일반</value>
+  </data>
+  <data name="twIcon" xml:space="preserve">
+    <value>아이콘</value>
+  </data>
+  <data name="twRename" xml:space="preserve">
+    <value>이름 바꾸기</value>
+  </data>
+  <data name="twInfotip" xml:space="preserve">
+    <value>정보 팁</value>
+  </data>
+  <data name="btnResetPattern" xml:space="preserve">
+    <value>마지막으로 저장한 패턴 사용</value>
+  </data>
+  <data name="strShowGooglePlay" xml:space="preserve">
+    <value>메뉴에 Google Play 링크 표시</value>
+  </data>
+  <data name="strInfoTipPattern" xml:space="preserve">
+    <value>정보 팁 패턴:</value>
+  </data>
+  <data name="btnBrowse" xml:space="preserve">
+    <value>찾아보기</value>
+  </data>
+  <data name="btnSearchAdb" xml:space="preserve">
+    <value>검색</value>
+  </data>
+  <data name="strReplaceSpaceWith_" xml:space="preserve">
+    <value>공백 대체 문자:</value>
+  </data>
+  <data name="strStretchThumbnail" xml:space="preserve">
+    <value>Windows가 더 큰 크기를 요구하면 썸네일 확대</value>
+  </data>
+  <data name="strClearCache" xml:space="preserve">
+    <value>아이콘 및 썸네일 캐시 지우기</value>
+  </data>
+  <data name="strEnableThumbnail" xml:space="preserve">
+    <value>아이콘 대신 썸네일 표시.</value>
+  </data>
+  <data name="strSearchStore" xml:space="preserve">
+    <value>상점에서 검색</value>
+  </data>
+  <data name="menuDump" xml:space="preserve">
+    <value>내보내기</value>
+  </data>
+  <data name="strSupportAdaptiveIcon" xml:space="preserve">
+    <value>적응형 아이콘 지원 (베타)</value>
+  </data>
+  <data name="strEnableLog" xml:space="preserve">
+    <value>디버그 로그 활성화</value>
+  </data>
+  <data name="menuDumpManifest" xml:space="preserve">
+    <value>androidmanifest.xml 내보내기</value>
+  </data>
+  <data name="menuDumpOthers" xml:space="preserve">
+    <value>XML 내보내기 ...</value>
+  </data>
+  <data name="strDumpXML" xml:space="preserve">
+    <value>XML 내보내기</value>
+  </data>
+  <data name="strDumpXMLPrompt" xml:space="preserve">
+    <value>XML 경로, 예: res\drawable\icon.xml</value>
+  </data>
+  <data name="strPatreonBtn" xml:space="preserve">
+    <value>후원하기!</value>
+  </data>
+  <data name="strPatreonTip" xml:space="preserve">
+    <value>Patreon에서 후원하기</value>
+  </data>
+  <data name="strUseAppNameLang" xml:space="preserve">
+    <value>앱 이름에 사용할 언어:</value>
+  </data>
+  <data name="strFollowUiLanguage" xml:space="preserve">
+    <value>(UI 언어 따르기)</value>
+  </data>
 </root>

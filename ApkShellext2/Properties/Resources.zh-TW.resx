@@ -321,4 +321,37 @@
   <data name="strFollowUiLanguage" xml:space="preserve">
     <value>(跟隨介面語言)</value>
   </data>
+  <data name="strReplaceSpaceWith_" xml:space="preserve">
+    <value>將空格取代為:</value>
+  </data>
+  <data name="strSearchStore" xml:space="preserve">
+    <value>搜索商店</value>
+  </data>
+  <data name="menuDump" xml:space="preserve">
+    <value>提取檔案</value>
+  </data>
+  <data name="strSupportAdaptiveIcon" xml:space="preserve">
+    <value>支持自適應圖示 (試用)</value>
+  </data>
+  <data name="strEnableLog" xml:space="preserve">
+    <value>啟用除錯日誌</value>
+  </data>
+  <data name="menuDumpManifest" xml:space="preserve">
+    <value>提取 androidmanifest.xml</value>
+  </data>
+  <data name="menuDumpOthers" xml:space="preserve">
+    <value>提取 XML ...</value>
+  </data>
+  <data name="strDumpXML" xml:space="preserve">
+    <value>提取 XML</value>
+  </data>
+  <data name="strDumpXMLPrompt" xml:space="preserve">
+    <value>XML 路徑,例如: res\drawable\icon.xml</value>
+  </data>
+  <data name="strPatreonBtn" xml:space="preserve">
+    <value>支持我!</value>
+  </data>
+  <data name="strPatreonTip" xml:space="preserve">
+    <value>在 Patreon 上支持我</value>
+  </data>
 </root>

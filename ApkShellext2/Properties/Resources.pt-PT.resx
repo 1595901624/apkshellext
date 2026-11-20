@@ -314,4 +314,43 @@ Verificando isso, renomeie o arquivo app como %AppName % _ % versão % _ % revis
   
   
   
+  <data name="strReplaceSpaceWith_" xml:space="preserve">
+    <value>Substituir espaço por:</value>
+  </data>
+  <data name="strSearchStore" xml:space="preserve">
+    <value>Pesquisar nas lojas</value>
+  </data>
+  <data name="menuDump" xml:space="preserve">
+    <value>Extrair</value>
+  </data>
+  <data name="strSupportAdaptiveIcon" xml:space="preserve">
+    <value>Suportar ícones adaptativos (beta)</value>
+  </data>
+  <data name="strEnableLog" xml:space="preserve">
+    <value>Ativar registo de depuração</value>
+  </data>
+  <data name="menuDumpManifest" xml:space="preserve">
+    <value>Extrair androidmanifest.xml</value>
+  </data>
+  <data name="menuDumpOthers" xml:space="preserve">
+    <value>Extrair XML ...</value>
+  </data>
+  <data name="strDumpXML" xml:space="preserve">
+    <value>Extrair XML</value>
+  </data>
+  <data name="strDumpXMLPrompt" xml:space="preserve">
+    <value>Caminho para o XML, ex.: res\drawable\icon.xml</value>
+  </data>
+  <data name="strPatreonBtn" xml:space="preserve">
+    <value>Apoie-me!</value>
+  </data>
+  <data name="strPatreonTip" xml:space="preserve">
+    <value>Apoie-me no Patreon</value>
+  </data>
+  <data name="strUseAppNameLang" xml:space="preserve">
+    <value>Idioma do nome da aplicação:</value>
+  </data>
+  <data name="strFollowUiLanguage" xml:space="preserve">
+    <value>(seguir idioma da interface)</value>
+  </data>
 </root>

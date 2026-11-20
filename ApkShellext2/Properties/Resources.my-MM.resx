@@ -193,4 +193,223 @@
   
   
   
+  <data name="btnUpdate" xml:space="preserve">
+    <value>အပ်ဒိတ်</value>
+  </data>
+  <data name="btnUpdateToolTip" xml:space="preserve">
+    <value>အပ်ဒိတ်အတွက် ပရောဂျက်စာမျက်နှာသို့ သွားရန်</value>
+  </data>
+  <data name="lblRenamePattern" xml:space="preserve">
+    <value>အမည်ပြောင်းပုံစံ</value>
+  </data>
+  <data name="menuGotoAmazonAppStore" xml:space="preserve">
+    <value>Amazon Appstore တွင် {0} ကို ရှာဖွေရန်</value>
+  </data>
+  <data name="menuGotoAppleAppStore" xml:space="preserve">
+    <value>Apple Appstore တွင် {0} ကို ရှာဖွေရန်</value>
+  </data>
+  <data name="menuGotoGooglePlay" xml:space="preserve">
+    <value>GooglePlay တွင် {0} ကို ရှာဖွေရန်</value>
+  </data>
+  <data name="menuGotoMicrosoftStore" xml:space="preserve">
+    <value>Microsoft Store တွင် {0} ကို ရှာဖွေရန်</value>
+  </data>
+  <data name="menuGotoApkMirror" xml:space="preserve">
+    <value>ApkMirror.com တွင် {0} ကို ရှာဖွေရန်</value>
+  </data>
+  <data name="menuMain" xml:space="preserve">
+    <value>APK Shell Extension</value>
+  </data>
+  <data name="menuPreferences" xml:space="preserve">
+    <value>ဆက်တင်နှင့် အပ်ဒိတ်</value>
+  </data>
+  <data name="menuRenameAs" xml:space="preserve">
+    <value>{0} သို့ အမည်ပြောင်းရန်</value>
+  </data>
+  <data name="strAlwaysShowGooglePlay" xml:space="preserve">
+    <value>ဖိုင်များစွာ ရွေးချယ်ထားချိန်တွင် အက်ပ်စတိုး မီနူးများ ပြရန်</value>
+  </data>
+  <data name="strAlwaysShowGooglePlayToolTip" xml:space="preserve">
+    <value>ရွေးချယ်ထားလျှင် apk ဖိုင်များစွာ ရွေးချယ်ထားသည့်တိုင် အက်ပ်စတိုး မီနူးများ ပေါ်ပါမည်။ 
+ဘရောက်ဇာဝင်းဒိုး အများကြီးပွင့်ပြီး စွမ်းဆောင်ရည် ထိခိုက်နိုင်သဖြင့် သတိပြုပါ။
+မူရင်းအရ ဖိုင်တစ်ခုသာ ရွေးချယ်ထားချိန်တွင် မီနူး ပေါ်ပါမည်</value>
+  </data>
+  <data name="strCheckingNewVersion" xml:space="preserve">
+    <value>ဗားရှင်းအသစ် စစ်ဆေးနေသည် ...</value>
+  </data>
+  <data name="strCheckProjectSite" xml:space="preserve">
+    <value>အပ်ဒိတ်အတွက် ပရောဂျက်စာမျက်နှာကို စစ်ဆေးပါ။</value>
+  </data>
+  <data name="strCurrVersion" xml:space="preserve">
+    <value>လက်ရှိဗားရှင်း: {0}</value>
+  </data>
+  <data name="strGotLatest" xml:space="preserve">
+    <value>ကောင်းပြီ! အသစ်ဆုံးဗားရှင်း ရရှိထားပြီးဖြစ်သည်။</value>
+  </data>
+  <data name="strGotoProjectSite" xml:space="preserve">
+    <value>ApkShellext2 ပရောဂျက်စာမျက်နှာသို့ သွားရန်</value>
+  </data>
+  <data name="strLanguages" xml:space="preserve">
+    <value>အသုံးပြုမည့် ဘာသာစကား:</value>
+  </data>
+  <data name="strNeedApkShellextService" xml:space="preserve">
+    <value>ဤအင်္ဂါရပ်အတွက် ApkShellextService လိုအပ်ပြီး ဝန်ဆောင်မှုစတင်ထားကြောင်း သေချာပါစေ။</value>
+  </data>
+  <data name="strNewVersionAvailible" xml:space="preserve">
+    <value>ဗားရှင်းအသစ် {0} ရရှိနိုင်ပါသည်</value>
+  </data>
+  <data name="strPreferencesCaption" xml:space="preserve">
+    <value>ApkShellext2 ဆက်တင်</value>
+  </data>
+  <data name="strReadFileFailed" xml:space="preserve">
+    <value>ဖိုင်ဖတ်၍မရပါ</value>
+  </data>
+  <data name="strReferToWiki" xml:space="preserve">
+    <value>ကိန်းရှင်အသုံးပြုမှုကို ပရောဂျက် Wiki တွင် ကြည့်ပါ</value>
+  </data>
+  <data name="strRenameToolTip" xml:space="preserve">
+    <value>ဗားရှင်းတူသော်လည်း ပြင်ဆင်မှုနံပါတ် ကွာခြားသည့် အခြေအနေ ရှောင်ရှားရန် (android app ဖိုင်များတွင် အဖြစ်များ)။ 
+ရွေးချယ်ထားလျှင် ဖိုင်အမည်ကို %AppName%_%Version%_%Revision% ဟု ပြောင်းပြီး၊ မရွေးလျှင် %AppName%_%Version% ကို သုံးပါ။</value>
+  </data>
+  <data name="strScanToDownload" xml:space="preserve">
+    <value>QR ကုဒ်ကို စကင်ဖတ်၍ ဒေါင်းလုဒ်ဆွဲပါ</value>
+  </data>
+  <data name="strShowAppxIcon" xml:space="preserve">
+    <value>WindowsPhone app (appx, appxbundle) သင်္ကေတ ပြရန်။</value>
+  </data>
+  <data name="strShowIpaIcon" xml:space="preserve">
+    <value>iOS app (ipa) သင်္ကေတ ပြရန်။</value>
+  </data>
+  <data name="strShowOverlayIcon" xml:space="preserve">
+    <value>OS အသီးသီးအတွက် ထပ်ဆင့်သင်္ကေတ ပြရန်</value>
+  </data>
+  <data name="strShowOverlayIconToolTip" xml:space="preserve">
+    <value>OS အသီးသီးအတွက် ထပ်ဆင့်သင်္ကေတ ပြရန်</value>
+  </data>
+  <data name="strShowContextMenuIcon" xml:space="preserve">
+    <value>context menu အတွက် သင်္ကေတ ပြရန်</value>
+  </data>
+  <data name="btnCancel" xml:space="preserve">
+    <value>ပယ်ဖျက်</value>
+  </data>
+  <data name="btnNo" xml:space="preserve">
+    <value>မဟုတ်ပါ</value>
+  </data>
+  <data name="btnYes" xml:space="preserve">
+    <value>ဟုတ်ပါ</value>
+  </data>
+  <data name="strRenameConfirm" xml:space="preserve">
+    <value>ဤဖိုင်ကို {0} ဟု အမည်ပြောင်းမလား?</value>
+  </data>
+  <data name="strRenamePattern" xml:space="preserve">
+    <value>အမည်ပြောင်းပုံစံ: (ဖိုင်အမျိုးအစား မပါ)</value>
+  </data>
+  <data name="twContextMenu" xml:space="preserve">
+    <value>အကြောင်းအရာ မီနူး</value>
+  </data>
+  <data name="twGeneral" xml:space="preserve">
+    <value>ယေဘုယျ</value>
+  </data>
+  <data name="twIcon" xml:space="preserve">
+    <value>သင်္ကေတ</value>
+  </data>
+  <data name="twRename" xml:space="preserve">
+    <value>အမည်ပြောင်း</value>
+  </data>
+  <data name="twInfotip" xml:space="preserve">
+    <value>အချက်အလက်ပြ</value>
+  </data>
+  <data name="btnResetPattern" xml:space="preserve">
+    <value>နောက်ဆုံးသိမ်းထားသော ပုံစံကို သုံးရန်</value>
+  </data>
+  <data name="strShowAmazonStore" xml:space="preserve">
+    <value>Amazon App Store မီနူး ပြရန်</value>
+  </data>
+  <data name="strShowApkMirror" xml:space="preserve">
+    <value>ApkMirror မီနူး ပြရန်</value>
+  </data>
+  <data name="strShowAppleStore" xml:space="preserve">
+    <value>Apple App Store (ipa အတွက်) မီနူး ပြရန်</value>
+  </data>
+  <data name="strShowGooglePlay" xml:space="preserve">
+    <value>Google Play မီနူး ပြရန်</value>
+  </data>
+  <data name="strShowMSStore" xml:space="preserve">
+    <value>Microsoft Store (appx/appxbundle အတွက်) မီနူး ပြရန်</value>
+  </data>
+  <data name="strInfoTipPattern" xml:space="preserve">
+    <value>အချက်အလက်ပြ ပုံစံ:</value>
+  </data>
+  <data name="btnBrowse" xml:space="preserve">
+    <value>ရွေးရန်</value>
+  </data>
+  <data name="btnSearchAdb" xml:space="preserve">
+    <value>ရှာဖွေရန်</value>
+  </data>
+  <data name="strAdbPath" xml:space="preserve">
+    <value>adb.exe လိပ်စာကို သတ်မှတ်ပါ</value>
+  </data>
+  <data name="strReplaceSpaceWith_" xml:space="preserve">
+    <value>ဟာစေ့အစား ဤအရာဖြင့် အစားထိုး:</value>
+  </data>
+  <data name="strShowNewVerInfo" xml:space="preserve">
+    <value>ဗားရှင်းအသစ် ရလျှင် အသိပေးပါ</value>
+  </data>
+  <data name="twThumbnail" xml:space="preserve">
+    <value>ပုံသေး</value>
+  </data>
+  <data name="strStretchThumbnail" xml:space="preserve">
+    <value>Windows က ပိုကြီးသော အရွယ်အစား တောင်းဆိုလျှင် ပုံသေးကို ဆန့်ပြပါမည်</value>
+  </data>
+  <data name="strHelpTranslate" xml:space="preserve">
+    <value>ဤပရောဂျက် ဘာသာပြန်ဆိုရာတွင် ကူညီပေးပါ။</value>
+  </data>
+  <data name="strClearCache" xml:space="preserve">
+    <value>သင်္ကေတနှင့် ပုံသေး ကာ့ခ်ကို ရှင်းလင်းရန်</value>
+  </data>
+  <data name="dialogClearCache" xml:space="preserve">
+    <value>ဖွင့်ထားသော File Explorer အားလုံး ပိတ်မည်၊ ဆက်မလား?</value>
+  </data>
+  <data name="strEnableThumbnail" xml:space="preserve">
+    <value>သင်္ကေတအစား ပုံသေး ပြရန်။</value>
+  </data>
+  <data name="dialogNeedClearCache" xml:space="preserve">
+    <value>သင်္ကေတနှင့် ပုံသေး မှန်ကန်စွာ ပြရန် ကာ့ခ်ကို ရှင်းလင်းရမည်၊ ယခု ရှင်းလင်းမလား?</value>
+  </data>
+  <data name="strSearchStore" xml:space="preserve">
+    <value>စတိုးများတွင် ရှာဖွေရန်</value>
+  </data>
+  <data name="menuDump" xml:space="preserve">
+    <value>ထုတ်ယူရန်</value>
+  </data>
+  <data name="strSupportAdaptiveIcon" xml:space="preserve">
+    <value>Adaptive Icon ကို ပံ့ပိုးပါ (စမ်းသပ်)</value>
+  </data>
+  <data name="strEnableLog" xml:space="preserve">
+    <value>debug မှတ်တမ်း ဖွင့်ရန်</value>
+  </data>
+  <data name="menuDumpManifest" xml:space="preserve">
+    <value>androidmanifest.xml ကို ထုတ်ယူရန်</value>
+  </data>
+  <data name="menuDumpOthers" xml:space="preserve">
+    <value>XML ထုတ်ယူရန် ...</value>
+  </data>
+  <data name="strDumpXML" xml:space="preserve">
+    <value>XML ထုတ်ယူရန်</value>
+  </data>
+  <data name="strDumpXMLPrompt" xml:space="preserve">
+    <value>XML လိပ်စာ၊ ဥပမာ: res\drawable\icon.xml</value>
+  </data>
+  <data name="strPatreonBtn" xml:space="preserve">
+    <value>ကျွန်ုပ်ကို ပံ့ပိုးပါ!</value>
+  </data>
+  <data name="strPatreonTip" xml:space="preserve">
+    <value>Patreon တွင် ကျွန်ုပ်ကို ပံ့ပိုးပါ</value>
+  </data>
+  <data name="strUseAppNameLang" xml:space="preserve">
+    <value>app အမည် ဘာသာစကား:</value>
+  </data>
+  <data name="strFollowUiLanguage" xml:space="preserve">
+    <value>(UI ဘာသာစကားကို လိုက်နာပါ)</value>
+  </data>
 </root>

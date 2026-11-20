@@ -316,4 +316,43 @@
   
   
   
+  <data name="strReplaceSpaceWith_" xml:space="preserve">
+    <value>Заміна пробілу на:</value>
+  </data>
+  <data name="strSearchStore" xml:space="preserve">
+    <value>Пошук у магазинах</value>
+  </data>
+  <data name="menuDump" xml:space="preserve">
+    <value>Дамп</value>
+  </data>
+  <data name="strSupportAdaptiveIcon" xml:space="preserve">
+    <value>Підтримка адаптивних значків (бета)</value>
+  </data>
+  <data name="strEnableLog" xml:space="preserve">
+    <value>Увімкнути журнал налагодження</value>
+  </data>
+  <data name="menuDumpManifest" xml:space="preserve">
+    <value>Дамп androidmanifest.xml</value>
+  </data>
+  <data name="menuDumpOthers" xml:space="preserve">
+    <value>Дамп XML ...</value>
+  </data>
+  <data name="strDumpXML" xml:space="preserve">
+    <value>Дамп XML</value>
+  </data>
+  <data name="strDumpXMLPrompt" xml:space="preserve">
+    <value>Шлях до XML, напр.: res\drawable\icon.xml</value>
+  </data>
+  <data name="strPatreonBtn" xml:space="preserve">
+    <value>Підтримати мене!</value>
+  </data>
+  <data name="strPatreonTip" xml:space="preserve">
+    <value>Підтримати мене на Patreon</value>
+  </data>
+  <data name="strUseAppNameLang" xml:space="preserve">
+    <value>Мова назви програми:</value>
+  </data>
+  <data name="strFollowUiLanguage" xml:space="preserve">
+    <value>(мова інтерфейсу)</value>
+  </data>
 </root>

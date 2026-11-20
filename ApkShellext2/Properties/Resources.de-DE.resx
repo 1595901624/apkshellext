@@ -237,7 +237,7 @@ Standardmäßig wird das Menü nur angezeigt, wenn Sie eine Datei auswählen</va
     <value>Allgemein</value>
   </data>
   <data name="twIcon" xml:space="preserve">
-    <value>Icon</value>
+    <value>Symbol</value>
   </data>
   <data name="twRename" xml:space="preserve">
     <value>Umbenennen</value>
@@ -307,7 +307,7 @@ Standardmäßig wird das Menü nur angezeigt, wenn Sie eine Datei auswählen</va
     <value>In Stores suchen</value>
   </data>
   <data name="menuDump" xml:space="preserve">
-    <value>Mülleimer anzeigen...</value>
+    <value>Dump</value>
   </data>
   <data name="strSupportAdaptiveIcon" xml:space="preserve">
     <value>Unterstütze Adaptive Icon (Beta)</value>
@@ -316,17 +316,32 @@ Standardmäßig wird das Menü nur angezeigt, wenn Sie eine Datei auswählen</va
     <value>Debug-Protokoll aktivieren</value>
   </data>
   <data name="menuDumpManifest" xml:space="preserve">
-    <value>Mülleimer androidmanifest.xml</value>
+    <value>androidmanifest.xml exportieren</value>
   </data>
   <data name="menuDumpOthers" xml:space="preserve">
-    <value>XML Mülleimer ...</value>
+    <value>XML exportieren ...</value>
   </data>
   <data name="strDumpXML" xml:space="preserve">
-    <value>XML Mülleimer</value>
+    <value>XML exportieren</value>
   </data>
   <data name="strDumpXMLPrompt" xml:space="preserve">
     <value>Pfad zu XML, z. B. : res\drawable\icon.xml</value>
   </data>
   
   
+  <data name="strReplaceSpaceWith_" xml:space="preserve">
+    <value>Leerzeichen ersetzen durch:</value>
+  </data>
+  <data name="strPatreonBtn" xml:space="preserve">
+    <value>Unterstütze mich!</value>
+  </data>
+  <data name="strPatreonTip" xml:space="preserve">
+    <value>Unterstütze mich auf Patreon</value>
+  </data>
+  <data name="strUseAppNameLang" xml:space="preserve">
+    <value>Sprache des App-Namens:</value>
+  </data>
+  <data name="strFollowUiLanguage" xml:space="preserve">
+    <value>(UI-Sprache folgen)</value>
+  </data>
 </root>

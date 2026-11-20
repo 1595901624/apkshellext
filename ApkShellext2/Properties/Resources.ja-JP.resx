@@ -282,4 +282,91 @@
   
   
   
+  <data name="btnUpdate" xml:space="preserve">
+    <value>更新</value>
+  </data>
+  <data name="menuMain" xml:space="preserve">
+    <value>APK シェル拡張</value>
+  </data>
+  <data name="menuPreferences" xml:space="preserve">
+    <value>設定と更新</value>
+  </data>
+  <data name="strCurrVersion" xml:space="preserve">
+    <value>現在のバージョン: {0}</value>
+  </data>
+  <data name="strPreferencesCaption" xml:space="preserve">
+    <value>ApkShellext2 の設定</value>
+  </data>
+  <data name="btnCancel" xml:space="preserve">
+    <value>キャンセル</value>
+  </data>
+  <data name="btnNo" xml:space="preserve">
+    <value>いいえ</value>
+  </data>
+  <data name="twIcon" xml:space="preserve">
+    <value>アイコン</value>
+  </data>
+  <data name="twInfotip" xml:space="preserve">
+    <value>インフォツールチップ</value>
+  </data>
+  <data name="strInfoTipPattern" xml:space="preserve">
+    <value>インフォツールチップ パターン:</value>
+  </data>
+  <data name="btnSearchAdb" xml:space="preserve">
+    <value>検索</value>
+  </data>
+  <data name="strReplaceSpaceWith_" xml:space="preserve">
+    <value>空白を置き換える文字:</value>
+  </data>
+  <data name="twThumbnail" xml:space="preserve">
+    <value>サムネイル</value>
+  </data>
+  <data name="strClearCache" xml:space="preserve">
+    <value>アイコンとサムネイルのキャッシュを削除</value>
+  </data>
+  <data name="dialogClearCache" xml:space="preserve">
+    <value>開いているすべてのエクスプローラーのウィンドウが閉じられます。続行しますか?</value>
+  </data>
+  <data name="strEnableThumbnail" xml:space="preserve">
+    <value>アイコンの代わりにサムネイルを表示する。</value>
+  </data>
+  <data name="dialogNeedClearCache" xml:space="preserve">
+    <value>アイコンとサムネイルを正しく表示するにはキャッシュの削除が必要です。今すぐ削除しますか?</value>
+  </data>
+  <data name="strSearchStore" xml:space="preserve">
+    <value>ストアで検索</value>
+  </data>
+  <data name="menuDump" xml:space="preserve">
+    <value>ダンプ</value>
+  </data>
+  <data name="strSupportAdaptiveIcon" xml:space="preserve">
+    <value>アダプティブ アイコンに対応 (ベータ)</value>
+  </data>
+  <data name="strEnableLog" xml:space="preserve">
+    <value>デバッグログを有効にする</value>
+  </data>
+  <data name="menuDumpManifest" xml:space="preserve">
+    <value>androidmanifest.xml をダンプ</value>
+  </data>
+  <data name="menuDumpOthers" xml:space="preserve">
+    <value>XML をダンプ ...</value>
+  </data>
+  <data name="strDumpXML" xml:space="preserve">
+    <value>XML をダンプ</value>
+  </data>
+  <data name="strDumpXMLPrompt" xml:space="preserve">
+    <value>XML のパス (例: res\drawable\icon.xml)</value>
+  </data>
+  <data name="strPatreonBtn" xml:space="preserve">
+    <value>支援してください!</value>
+  </data>
+  <data name="strPatreonTip" xml:space="preserve">
+    <value>Patreon で支援する</value>
+  </data>
+  <data name="strUseAppNameLang" xml:space="preserve">
+    <value>アプリ名に使用する言語:</value>
+  </data>
+  <data name="strFollowUiLanguage" xml:space="preserve">
+    <value>(UI の言語に合わせる)</value>
+  </data>
 </root>

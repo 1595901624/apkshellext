@@ -313,4 +313,43 @@ Standaard, toon het menu alleen met één geselecteerd bestand</value>
   
   
   
+  <data name="strReplaceSpaceWith_" xml:space="preserve">
+    <value>Spatie vervangen door:</value>
+  </data>
+  <data name="strSearchStore" xml:space="preserve">
+    <value>Zoeken in stores</value>
+  </data>
+  <data name="menuDump" xml:space="preserve">
+    <value>Exporteren</value>
+  </data>
+  <data name="strSupportAdaptiveIcon" xml:space="preserve">
+    <value>Ondersteuning voor Adaptive Icon (bèta)</value>
+  </data>
+  <data name="strEnableLog" xml:space="preserve">
+    <value>Foutlogboek inschakelen</value>
+  </data>
+  <data name="menuDumpManifest" xml:space="preserve">
+    <value>androidmanifest.xml exporteren</value>
+  </data>
+  <data name="menuDumpOthers" xml:space="preserve">
+    <value>XML exporteren ...</value>
+  </data>
+  <data name="strDumpXML" xml:space="preserve">
+    <value>XML exporteren</value>
+  </data>
+  <data name="strDumpXMLPrompt" xml:space="preserve">
+    <value>Pad naar XML, bv.: res\drawable\icon.xml</value>
+  </data>
+  <data name="strPatreonBtn" xml:space="preserve">
+    <value>Steun mij!</value>
+  </data>
+  <data name="strPatreonTip" xml:space="preserve">
+    <value>Steun mij op Patreon</value>
+  </data>
+  <data name="strUseAppNameLang" xml:space="preserve">
+    <value>Taal app-naam:</value>
+  </data>
+  <data name="strFollowUiLanguage" xml:space="preserve">
+    <value>(taal van interface volgen)</value>
+  </data>
 </root>
