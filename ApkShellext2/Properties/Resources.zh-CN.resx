@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -336,5 +336,12 @@
   </data>
   <data name="strPatreonTip" xml:space="preserve">
     <value>在 Patreon 上支持我</value>
+  </data>
+
+  <data name="strUseAppNameLang" xml:space="preserve">
+    <value>应用名称使用指定语言:</value>
+  </data>
+  <data name="strFollowUiLanguage" xml:space="preserve">
+    <value>(跟随界面语言)</value>
   </data>
 </root>

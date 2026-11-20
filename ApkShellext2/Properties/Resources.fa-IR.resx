@@ -142,7 +142,7 @@
     <value>بررسی {0} در فروشگاه گوگل پلی</value>
   </data>
   <data name="menuGotoMicrosoftStore" xml:space="preserve">
-    <value>بررسی {0} در  فروشگاه مایکروسافت</value>
+    <value>بررسی {0} در فروشگاه مایکروسافت</value>
   </data>
   <data name="menuMain" xml:space="preserve">
     <value>APK ابزارهای</value>
@@ -186,17 +186,17 @@
     <value>نسخه جدید {0} موجود است</value>
   </data>
   <data name="strPreferencesCaption" xml:space="preserve">
-    <value> تنظیمات</value>
+    <value>تنظیمات ApkShellext2</value>
   </data>
   <data name="strReadFileFailed" xml:space="preserve">
     <value>خطا در خواندن فایل</value>
   </data>
   <data name="strReferToWiki" xml:space="preserve">
-    <value>مراجعه کنید به پروژه در ویکیپدیا</value>
+    <value>برای استفاده از متغیرها به ویکی پروژه مراجعه کنید</value>
   </data>
   <data name="strRenameToolTip" xml:space="preserve">
-    <value>برای جلوگیری از همنام شدن فایلهای مشابه با ورژن متفاوت که معمولا در برنامه های اندرویید پیش می آید.
-با انتخاب این گزینه تغییر نام بصورت %نام برنامه%_%ورژن%_%شماره ساخت%، در غیر اینصورت تغییر نام بصورت %نام برنامه%_%ورژن% انجام خواهد شد.</value>
+    <value>برای جلوگیری از همنام شدن فایلهای مشابه با ورژن متفاوت که معمولا در برنامه های اندروید پیش می آید.
+با انتخاب این گزینه تغییر نام بصورت %AppName%_%Version%_%Revision%، در غیر اینصورت تغییر نام بصورت %AppName%_%Version% انجام خواهد شد.</value>
   </data>
   <data name="strScanToDownload" xml:space="preserve">
     <value>برای دانلود کد QR را اسکن کنید</value>
@@ -211,7 +211,7 @@
     <value>نمایش آیکون برای سیستم عاملهای مختلف</value>
   </data>
   <data name="strShowOverlayIconToolTip" xml:space="preserve">
-    <value>نمایش آیکون عمومی نسبت به نوع فایل</value>
+    <value>نمایش آیکون پوششی برای سیستم‌عامل‌های مختلف</value>
   </data>
   <data name="strShowContextMenuIcon" xml:space="preserve">
     <value>نمایش آیکن برای منوی راست کلیک</value>
@@ -296,7 +296,7 @@
     <value>حافظه موقت آیکن و تصویر بند انگشتی را پاک کن</value>
   </data>
   <data name="dialogClearCache" xml:space="preserve">
-    <value>همه پنجره های باز فایل اکسپلورر بسته خواهد شد، ادامه می دهید?</value>
+    <value>همه پنجره‌های باز فایل اکسپلورر بسته خواهند شد، ادامه می‌دهید؟</value>
   </data>
   <data name="strEnableThumbnail" xml:space="preserve">
     <value>بجای آیکن، تصویر بند انگشتی را نشان بده.</value>
@@ -314,4 +314,43 @@
   
   
   
+  <data name="strReplaceSpaceWith_" xml:space="preserve">
+    <value>جایگزین کردن فاصله با:</value>
+  </data>
+  <data name="strSearchStore" xml:space="preserve">
+    <value>جستجو در فروشگاه ها</value>
+  </data>
+  <data name="menuDump" xml:space="preserve">
+    <value>استخراج</value>
+  </data>
+  <data name="strSupportAdaptiveIcon" xml:space="preserve">
+    <value>پشتیبانی از آیکن تطبیقی (بتا)</value>
+  </data>
+  <data name="strEnableLog" xml:space="preserve">
+    <value>فعال کردن گزارش اشکال زدایی</value>
+  </data>
+  <data name="menuDumpManifest" xml:space="preserve">
+    <value>استخراج androidmanifest.xml</value>
+  </data>
+  <data name="menuDumpOthers" xml:space="preserve">
+    <value>استخراج XML ...</value>
+  </data>
+  <data name="strDumpXML" xml:space="preserve">
+    <value>استخراج XML</value>
+  </data>
+  <data name="strDumpXMLPrompt" xml:space="preserve">
+    <value>مسیر XML، مثال: res\drawable\icon.xml</value>
+  </data>
+  <data name="strPatreonBtn" xml:space="preserve">
+    <value>از من حمایت کنید!</value>
+  </data>
+  <data name="strPatreonTip" xml:space="preserve">
+    <value>حمایت از من در Patreon</value>
+  </data>
+  <data name="strUseAppNameLang" xml:space="preserve">
+    <value>زبان نام برنامه:</value>
+  </data>
+  <data name="strFollowUiLanguage" xml:space="preserve">
+    <value>(هماهنگ با زبان رابط)</value>
+  </data>
 </root>

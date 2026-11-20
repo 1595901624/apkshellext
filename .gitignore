@@ -232,3 +232,5 @@ $RECYCLE.BIN/
 /.vs
 /ApkShellext2/Properties/apkshellext/mv.bat
 /ApkShellext2/Properties/apkshellext
+
+*.snk

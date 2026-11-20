@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -41,7 +41,8 @@ namespace ApkShellext2
         {
             Log("create AabReader new");
             FileName = path;
-            openStream(new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read));
+            // FileShare.Delete so Explorer can delete/rename the package while handlers are alive (kkguo/apkshellext#103)
+            openStream(new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read | FileShare.Delete));
         }
 
 
@@ -50,8 +51,9 @@ namespace ApkShellext2
             zip = new ZipFile(stream);
             ZipEntry en = zip.GetEntry(AndroidManifestXML);
             Log("find manifest: " + (en == null).ToString());
-            BinaryReader s = new BinaryReader(zip.GetInputStream(en));
-            manifest = s.ReadBytes((int)en.Size);
+            // bounded read: attacker-declared entry sizes must never drive
+            // (int) casts or buffer allocation in explorer's process
+            manifest = ZipSafety.ReadEntryBounded(zip, en, ZipSafety.MAX_MANIFEST, "AndroidManifest.xml");
         }
 
         public override AppPackageReader.AppType Type
@@ -140,22 +142,28 @@ namespace ApkShellext2
         public Bitmap getImage(string path, Size size)
         {
             ZipEntry iconz;
-            if (zip.FindEntry(path, true) > 0)
+            if (zip.FindEntry(path, true) >= 0)
             {
                 iconz = zip.GetEntry(path);
-                if (path.EndsWith(".png") || path.EndsWith(".jpg") || path.EndsWith(".jpeg") ||
-                    path.EndsWith(".gif") || path.EndsWith(".tif") || path.EndsWith(".tiff"))
+                // case-insensitive extension dispatch, see kkguo/apkshellext#99
+                string ext = System.IO.Path.GetExtension(path).ToLowerInvariant();
+                if (ext == ".png" || ext == ".jpg" || ext == ".jpeg" ||
+                    ext == ".gif" || ext == ".tif" || ext == ".tiff")
                 {
-                    return Utility.ResizeBitmap((Bitmap)Image.FromStream(zip.GetInputStream(iconz)), size);
+                    // fully buffer before decoding: GDI+ decodes PNG lazily and renders BLANK pixels when
+                    // scaled from SharpZipLib 1.4.2's non-seekable zip streams after they are closed
+                    byte[] imgBytes = ZipSafety.ReadEntryBounded(zip, iconz, ZipSafety.MAX_ICON, "image " + path);
+                    using (MemoryStream ms = new MemoryStream(imgBytes, 0, imgBytes.Length, false, false))
+                        return Utility.ResizeBitmap((Bitmap)Image.FromStream(ms), size);
                 }
-                else if (path.EndsWith(".webp"))
+                else if (ext == ".webp")
                 {
                     WebP webp = new WebP();
-                    byte[] bytes = new BinaryReader(zip.GetInputStream(iconz)).ReadBytes((int)iconz.Size);
+                    byte[] bytes = ZipSafety.ReadEntryBounded(zip, iconz, ZipSafety.MAX_ICON, "webp " + path);
                     //webp.Decode(bytes).Save(FileName+".webp");
                     return Utility.ResizeBitmap(webp.Decode(bytes), size);
                 }
-                else if (path.EndsWith(".xml"))
+                else if (ext == ".xml")
                 {
                     XmlDocument doc = ExtractCompressedXml(path);
                     if (doc.FirstChild.Name == "adaptive-icon")
@@ -608,7 +616,7 @@ namespace ApkShellext2
                         }
                         tagDepth--;
                     }
-                    ms.Seek(chunkPos + chunkSize, SeekOrigin.Begin);
+                    SeekNextChunk(ms, chunkPos, chunkSize);
                 }
                 return "";
             }
@@ -619,7 +627,7 @@ namespace ApkShellext2
             try
             {
                 ZipEntry en = zip.GetEntry(path);
-                byte[] bytes = new BinaryReader(zip.GetInputStream(en)).ReadBytes((int)en.Size);
+                byte[] bytes = ZipSafety.ReadEntryBounded(zip, en, ZipSafety.MAX_XML, "xml " + path);
                 return ExtractCompressedXml(bytes);
             }
             catch (Exception ex)
@@ -693,7 +701,7 @@ namespace ApkShellext2
                         {
                             currentNode = currentNode.ParentNode;
                         }
-                        ms.Seek(chunkPos + chunkSize, SeekOrigin.Begin);
+                        SeekNextChunk(ms, chunkPos, chunkSize);
                     }
                     return doc;
                 }
@@ -750,6 +758,16 @@ namespace ApkShellext2
             }
         }
 
+        // Guards the forward chunk walks below (same hazard as in ApkReader:
+        // a chunk header claiming size < 8 spins the while loops forever and
+        // hangs the shell UI thread).
+        private static void SeekNextChunk(MemoryStream ms, long chunkPos, int chunkSize)
+        {
+            if (chunkSize < 8)
+                throw new InvalidDataException("chunk at offset " + chunkPos + " claims size " + chunkSize);
+            ms.Seek(chunkPos + chunkSize, SeekOrigin.Begin);
+        }
+
         private string QuickSearchCompressedXmlStringPoolAndResMap(byte[] xml, uint id)
         {
             if (id == 0xffffffff) return "";
@@ -801,6 +819,10 @@ namespace ApkShellext2
                             {// larger than 128
                                 u8len = ((u8len & 0x7F) << 8) + br.ReadByte();
                             }
+                            // a hostile pool entry may claim more bytes than the pool
+                            // holds; ReadBytes would pre-allocate the claimed size (OOM)
+                            if (u8len > ms.Length - ms.Position)
+                                throw new InvalidDataException("string pool entry out of bounds");
                             return Encoding.UTF8.GetString(br.ReadBytes(u8len));
                         }
                         else // UTF_16
@@ -811,12 +833,14 @@ namespace ApkShellext2
                                 u16len = ((u16len & 0x7FFF) << 16) + br.ReadUInt16();
                             }
 
+                            if (u16len < 0 || u16len > (ms.Length - ms.Position) / 2)
+                                throw new InvalidDataException("string pool entry out of bounds");
                             return Encoding.Unicode.GetString(br.ReadBytes(u16len * 2));
                         }
                     }
                     else
                     {
-                        ms.Seek(chunkPos + chunkSize, SeekOrigin.Begin);
+                        SeekNextChunk(ms, chunkPos, chunkSize);
                     }
                 }
                 return "";
@@ -852,7 +876,7 @@ namespace ApkShellext2
                     }
                     else
                     {
-                        ms.Seek(chunkPos + chunkSize, SeekOrigin.Begin);
+                        SeekNextChunk(ms, chunkPos, chunkSize);
                     }
                 }
                 return "";

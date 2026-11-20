@@ -1,5 +1,6 @@
-﻿using SharpShell.Diagnostics;
+using SharpShell.Diagnostics;
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Net;
@@ -26,6 +27,7 @@ namespace ApkShellext2 {
 
         private void Preferences_Load(object sender, EventArgs e) {
             Utility.Localize();
+            if (AppsUseDarkTheme()) ApplyDarkTheme(this);
 
             Log("Using setting file from: " + ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal).FilePath);
 
@@ -138,6 +140,28 @@ namespace ApkShellext2 {
             ckReplaceSpace.Checked = Utility.GetSetting("ReplaceSpace", "False") == "True";
             txtReplaceWhiteSpace.Enabled = ckReplaceSpace.Checked;
             txtReplaceWhiteSpace.Text = Utility.GetSetting("ReplaceSpaceChar", "_");
+
+            ckUseAppNameLang.Text = Resources.strUseAppNameLang;
+            ckUseAppNameLang.Checked = Utility.GetSetting("UseAppNameLanguage", "False") == "True";
+            if (!appLangCulturesLoaded) {
+                combAppNameLang.Items.Add(Resources.strFollowUiLanguage);
+                appLangCultures.Add(null);
+                foreach (CultureInfo cul in Utility.getSupportedLanguages()) {
+                    combAppNameLang.Items.Add(cul.NativeName);
+                    appLangCultures.Add(cul);
+                }
+                appLangCulturesLoaded = true;
+            }
+            string appNameLang = Utility.GetSetting("AppNameLanguage", "");
+            int appNameLangIndex = 0;
+            for (int i = 1; i < appLangCultures.Count; i++) {
+                if (string.Equals(appLangCultures[i].Name, appNameLang, StringComparison.OrdinalIgnoreCase)) {
+                    appNameLangIndex = i;
+                    break;
+                }
+            }
+            combAppNameLang.SelectedIndex = appNameLangIndex;
+            combAppNameLang.Enabled = ckUseAppNameLang.Checked;
             #endregion
 
             #region ToolTip Panel
@@ -329,7 +353,9 @@ namespace ApkShellext2 {
                     MessageBoxButtons.YesNo,
                     MessageBoxIcon.Exclamation) == DialogResult.Yes) {
                 Process process = new Process();
-                string path = Path.GetTempPath() + "\\clearcache.bat";
+                // random file name: a fixed %TEMP%\clearcache.bat lets another
+                // same-user process rewrite it between our write and Start()
+                string path = Path.Combine(Path.GetTempPath(), "clearcache" + Path.GetRandomFileName() + ".bat");
                 File.WriteAllText(path, NonLocalizeResources.cmdClearCache);
                 process.StartInfo.FileName = path;
                 process.StartInfo.UseShellExecute = true;
@@ -345,6 +371,22 @@ namespace ApkShellext2 {
         private void CkAdaptiveIconSupport_CheckedChanged(object sender, EventArgs e) {
             Utility.SaveSetting("SupportAdaptiveIcon", ckAdaptiveIconSupport.Checked);
             needClearThumbnailCache = formLoaded;
+        }
+
+        private readonly List<CultureInfo> appLangCultures = new List<CultureInfo>();
+        private bool appLangCulturesLoaded = false;
+
+        private void CkUseAppNameLang_CheckedChanged(object sender, EventArgs e) {
+            Utility.SaveSetting("UseAppNameLanguage", ckUseAppNameLang.Checked);
+            combAppNameLang.Enabled = ckUseAppNameLang.Checked;
+        }
+
+        private void CombAppNameLang_SelectedIndexChanged(object sender, EventArgs e) {
+            int i = combAppNameLang.SelectedIndex;
+            if (i < 0 || i >= appLangCultures.Count) return;
+            CultureInfo cul = appLangCultures[i];
+            // index 0 == 'follow UI language': empty setting makes requestedNameCulture() use CurrentUICulture
+            Utility.SaveSetting("AppNameLanguage", cul == null ? "" : cul.Name);
         }
 
         private void Label1_Click(object sender, EventArgs e) {
@@ -363,5 +405,75 @@ namespace ApkShellext2 {
         private void Preferences_ResizeBegin(object sender, EventArgs e) {
             
         }
+
+        #region Windows 10/11 dark mode
+        // Follows the per-user "Choose your app mode" (Settings → Personalization → Colors).
+        // HKCU\...\Personalize\AppsUseLightTheme = 0 means the shell runs apps in dark mode;
+        // a light WinForms dialog inside dark Explorer is the classic "forgot the theme" look.
+        private static bool AppsUseDarkTheme() {
+            try {
+                using (var k = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(
+                    @"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize")) {
+                    object v = k == null ? null : k.GetValue("AppsUseLightTheme");
+                    return v is int && (int)v == 0;
+                }
+            } catch { return false; }
+        }
+
+        private static readonly Color DarkBack = Color.FromArgb(32, 32, 32);
+        private static readonly Color DarkField = Color.FromArgb(43, 43, 43);
+        private static readonly Color DarkFore = Color.FromArgb(238, 238, 238);
+        private static readonly Color DarkBorder = Color.FromArgb(70, 70, 70);
+
+        private static void ApplyDarkTheme(Control c) {
+            var tb = c as TextBox;
+            var cb = c as ComboBox;
+            var tv = c as TreeView;
+            var btn = c as Button;
+            if (tb != null) {
+                tb.BackColor = DarkField;
+                tb.ForeColor = DarkFore;
+                tb.BorderStyle = BorderStyle.FixedSingle;
+            } else if (cb != null) {
+                cb.FlatStyle = FlatStyle.Flat;
+                cb.BackColor = DarkField;
+                cb.ForeColor = DarkFore;
+            } else if (tv != null) {
+                tv.BackColor = DarkBack;
+                tv.ForeColor = DarkFore;
+                tv.BorderStyle = BorderStyle.FixedSingle;
+            } else if (btn != null) {
+                btn.FlatStyle = FlatStyle.Flat;
+                btn.BackColor = DarkField;
+                btn.ForeColor = DarkFore;
+                btn.FlatAppearance.BorderColor = DarkBorder;
+                btn.FlatAppearance.MouseOverBackColor = Color.FromArgb(55, 55, 55);
+            } else if (c is Label || c is CheckBox || c is LinkLabel) {
+                c.ForeColor = DarkFore;
+            } else {
+                c.BackColor = DarkBack;
+                c.ForeColor = DarkFore;
+            }
+            foreach (Control child in c.Controls)
+                ApplyDarkTheme(child);
+        }
+
+        private void EnableDarkTitleBar() {
+            // DWMWA_USE_IMMERSIVE_DARK_MODE: 20 on 2004+/Win11, 19 on 1809-1903.
+            try {
+                int on = 1;
+                if (DwmSetWindowAttribute(this.Handle, 20, ref on, sizeof(int)) != 0)
+                    DwmSetWindowAttribute(this.Handle, 19, ref on, sizeof(int));
+            } catch { /* dwmapi missing on ancient builds - stay light */ }
+        }
+
+        [System.Runtime.InteropServices.DllImport("dwmapi.dll", PreserveSig = true)]
+        private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int attrValue, int attrSize);
+
+        protected override void OnHandleCreated(EventArgs e) {
+            base.OnHandleCreated(e);
+            if (AppsUseDarkTheme()) EnableDarkTitleBar();
+        }
+        #endregion
     }
 }

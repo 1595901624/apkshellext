@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -139,7 +139,7 @@
     <value>在蘋果應用商店上檢查 {0}</value>
   </data>
   <data name="menuGotoGooglePlay" xml:space="preserve">
-    <value>在 GooglePlay 檢查 {0}</value>
+    <value>在 Google Play 檢查 {0}</value>
   </data>
   <data name="menuGotoMicrosoftStore" xml:space="preserve">
     <value>在微軟商店檢查 {0}</value>
@@ -154,24 +154,24 @@
     <value>重命名為 {0}</value>
   </data>
   <data name="strAlwaysShowGooglePlay" xml:space="preserve">
-    <value>當選定多個檔案時顯示應用程式商店功能表</value>
+    <value>選取多個檔案時也顯示應用程式商店功能表</value>
   </data>
   <data name="strAlwaysShowGooglePlayToolTip" xml:space="preserve">
-    <value>如果選中此選項，當多個apk選中時仍然應用程式商店功能表
-請注意，您可能打開大量的瀏覽器視窗並顯著影響性能。
+    <value>如果勾選此選項，選取多個 apk 檔案時仍會顯示應用程式商店功能表
+請注意，可能會開啟大量瀏覽器視窗，並顯著影響效能。
 預設情況下，僅選擇一個檔時顯示功能表</value>
   </data>
   <data name="strCheckingNewVersion" xml:space="preserve">
     <value>正在檢查新版本...</value>
   </data>
   <data name="strCheckProjectSite" xml:space="preserve">
-    <value>通過網站檢查更新。</value>
+    <value>至專案網站檢查更新。</value>
   </data>
   <data name="strCurrVersion" xml:space="preserve">
     <value>當前版本: {0}</value>
   </data>
   <data name="strGotLatest" xml:space="preserve">
-    <value>太好了! 你有最新版本</value>
+    <value>太好了！您已使用最新版本。</value>
   </data>
   <data name="strGotoProjectSite" xml:space="preserve">
     <value>轉到 ApkShellext2 專案網站</value>
@@ -183,7 +183,7 @@
     <value>此功能需要 ApkShellextService，請確保服務已啟動。</value>
   </data>
   <data name="strNewVersionAvailible" xml:space="preserve">
-    <value>有新版本 {0} </value>
+    <value>有新版本 {0} 可用</value>
   </data>
   <data name="strPreferencesCaption" xml:space="preserve">
     <value>ApkShellext2 首選項</value>
@@ -195,11 +195,11 @@
     <value>變數用法請參照專案 Wiki</value>
   </data>
   <data name="strRenameToolTip" xml:space="preserve">
-    <value>为避免情況的版本相同，但不同的版本號，這最喜歡發生在 android 應用程式檔。
-通過檢查這，否則作為 %Appname%_%Version%_ %Revision %，重命名應用程式檔，使用 %Appname%_ %Version%。</value>
+    <value>為避免版本號相同但修訂號不同的情況（最常發生在 Android 應用程式檔案）。
+勾選後將以 %AppName%_%Version%_%Revision% 重新命名檔案，否則使用 %AppName%_%Version%。</value>
   </data>
   <data name="strScanToDownload" xml:space="preserve">
-    <value>掃描二維碼下載</value>
+    <value>掃描 QR Code 下載</value>
   </data>
   <data name="strShowAppxIcon" xml:space="preserve">
     <value>顯示 WindowsPhone (appx，appxbundle) 的應用程式圖示。</value>
@@ -262,10 +262,10 @@
     <value>在內容功能表中顯示Apple Store的連結 (ipa)</value>
   </data>
   <data name="strShowGooglePlay" xml:space="preserve">
-    <value>在內容功能表中顯示GooglePlay連結</value>
+    <value>在內容功能表中顯示 Google Play 連結</value>
   </data>
   <data name="strShowMSStore" xml:space="preserve">
-    <value>在內容功能表中顯示 Microsoft Store 連結 (為 appx/appxbundle)</value>
+    <value>在內容功能表中顯示 Microsoft Store 連結 (適用於 appx/appxbundle)</value>
   </data>
   <data name="strInfoTipPattern" xml:space="preserve">
     <value>資訊提示模式:</value>
@@ -277,7 +277,7 @@
     <value>搜索</value>
   </data>
   <data name="strAdbPath" xml:space="preserve">
-    <value>請指定的adb.exe路徑 </value>
+    <value>請指定 adb.exe 的路徑</value>
   </data>
   
   <data name="strShowNewVerInfo" xml:space="preserve">
@@ -287,16 +287,16 @@
     <value>縮略圖</value>
   </data>
   <data name="strStretchThumbnail" xml:space="preserve">
-    <value>如果 Windows 要求更大的大小拉伸的縮略圖</value>
+    <value>如果 Windows 要求更大的尺寸，則拉伸縮略圖</value>
   </data>
   <data name="strHelpTranslate" xml:space="preserve">
-    <value>请幫忙翻譯一下這個專案。</value>
+    <value>請幫忙翻譯這個專案。</value>
   </data>
   <data name="strClearCache" xml:space="preserve">
     <value>清除圖示和縮略圖的緩存</value>
   </data>
   <data name="dialogClearCache" xml:space="preserve">
-    <value>所有打開的檔瀏覽器將會封閉，是否繼續?</value>
+    <value>所有開啟的檔案總管視窗都將被关闭，是否繼續?</value>
   </data>
   <data name="strEnableThumbnail" xml:space="preserve">
     <value>顯示縮略圖而不是圖示。</value>
@@ -314,4 +314,44 @@
   
   
   
+
+  <data name="strUseAppNameLang" xml:space="preserve">
+    <value>應用程式名稱使用指定語言:</value>
+  </data>
+  <data name="strFollowUiLanguage" xml:space="preserve">
+    <value>(跟隨介面語言)</value>
+  </data>
+  <data name="strReplaceSpaceWith_" xml:space="preserve">
+    <value>將空格取代為:</value>
+  </data>
+  <data name="strSearchStore" xml:space="preserve">
+    <value>搜索商店</value>
+  </data>
+  <data name="menuDump" xml:space="preserve">
+    <value>提取檔案</value>
+  </data>
+  <data name="strSupportAdaptiveIcon" xml:space="preserve">
+    <value>支持自適應圖示 (試用)</value>
+  </data>
+  <data name="strEnableLog" xml:space="preserve">
+    <value>啟用除錯日誌</value>
+  </data>
+  <data name="menuDumpManifest" xml:space="preserve">
+    <value>提取 androidmanifest.xml</value>
+  </data>
+  <data name="menuDumpOthers" xml:space="preserve">
+    <value>提取 XML ...</value>
+  </data>
+  <data name="strDumpXML" xml:space="preserve">
+    <value>提取 XML</value>
+  </data>
+  <data name="strDumpXMLPrompt" xml:space="preserve">
+    <value>XML 路徑,例如: res\drawable\icon.xml</value>
+  </data>
+  <data name="strPatreonBtn" xml:space="preserve">
+    <value>支持我!</value>
+  </data>
+  <data name="strPatreonTip" xml:space="preserve">
+    <value>在 Patreon 上支持我</value>
+  </data>
 </root>

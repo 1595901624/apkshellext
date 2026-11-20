@@ -1,4 +1,4 @@
-﻿using Microsoft.Win32;
+using Microsoft.Win32;
 using SharpShell.Attributes;
 using SharpShell.Diagnostics;
 using SharpShell.SharpThumbnailHandler;
@@ -35,7 +35,9 @@ namespace ApkShellext2 {
                 int outputSize = (int) width;
                 using (AppPackageReader reader = new ApkReader(SelectedItemStream)) {
                     Log("Reading stream from " + reader.AppName);
-                    m_icon = reader.Icon;
+                    // render at the requested size; the Icon property is fixed
+                    // 64px and looked blurry upscaled in the preview pane
+                    m_icon = reader.getIcon(new Size(outputSize, outputSize));
                 }
 
                 if (m_icon == null)
@@ -47,16 +49,19 @@ namespace ApkShellext2 {
 
                 Log("Got icon, resizing...");
                 //if (Settings.Default.ShowOverLayIcon) {
+                Bitmap composed;
                 if (Utility.GetSetting("ShowOverlayIcon")=="True") {
                     Log("Draw overlay");
-                    m_icon = Utility.CombineBitmap(m_icon,
+                    composed = Utility.CombineBitmap(m_icon,
                            Utility.AppTypeIcon(AppPackageReader.AppType.AndroidApp),
                            new Rectangle(0, 0, outputSize , outputSize),
                            new Rectangle(0, (int)outputSize / 2, (int)outputSize / 2, (int)outputSize / 2),
                            new Size(outputSize, outputSize));
                 } else {
-                    m_icon = Utility.ResizeBitmap(m_icon, outputSize);
+                    composed = Utility.ResizeBitmap(m_icon, outputSize);
                 }
+                m_icon.Dispose();
+                m_icon = composed;
 #if DEBUG
                 string p = Path.GetTempFileName();
                 m_icon.Save(p);

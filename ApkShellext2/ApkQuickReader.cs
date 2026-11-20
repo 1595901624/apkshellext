@@ -1,4 +1,4 @@
-﻿using ApkShellext2;
+using ApkShellext2;
 using ICSharpCode.SharpZipLib.Zip;
 using System;
 using System.Collections;
@@ -1143,6 +1143,16 @@ namespace ApkQuickReader
         private const string viewportHeight = "viewportHeight";
         private const string adaptive_icon = @"adaptive-icon";
 
+        static ApkReader() {
+            // Icons parsed here are attacker-controlled data rendered inside
+            // explorer: never let Svg.NET fetch external images/elements
+            // (a crafted drawable could read local files or dial out - SSRF),
+            // and never parse DTDs from package content.
+            Svg.SvgDocument.DisableDtdProcessing = true;
+            Svg.SvgDocument.ResolveExternalImages = Svg.ExternalType.None;
+            Svg.SvgDocument.ResolveExternalElements = Svg.ExternalType.None;
+        }
+
         /// <summary>
         /// extract the manifext
         /// </summary>
@@ -1150,7 +1160,8 @@ namespace ApkQuickReader
         /// <param name="culture"></param>
         public ApkReader(string filename, string culture = "") {
             FileName = filename;
-            openStream(new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.Read));
+            // FileShare.Delete so Explorer can delete/rename the package while our icon/infotip handles are alive (kkguo/apkshellext#103)
+            openStream(new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.Read | FileShare.Delete));
         }
 
         public ApkReader(Stream stream, string culture = "") {
@@ -1160,13 +1171,12 @@ namespace ApkQuickReader
 
         private void openStream(Stream stream) {
             zip = new ZipFile(stream);
-            ZipEntry en = zip.GetEntry(AndroidManifestXML);
-            BinaryReader s = new BinaryReader(zip.GetInputStream(en));
-            manifest = s.ReadBytes((int)en.Size);
-
-            en = zip.GetEntry(Resources_arsc);
-            s = new BinaryReader(zip.GetInputStream(en));
-            resources = s.ReadBytes((int)en.Size);
+            // bounded reads: attacker-declared entry sizes must never drive
+            // (int) casts or buffer allocation in explorer's process
+            manifest = ZipSafety.ReadEntryBounded(zip, zip.GetEntry(AndroidManifestXML),
+                ZipSafety.MAX_MANIFEST, "AndroidManifest.xml");
+            resources = ZipSafety.ReadEntryBounded(zip, zip.GetEntry(Resources_arsc),
+                ZipSafety.MAX_MANIFEST, "resources.arsc");
         }
 
         public override AppPackageReader.AppType Type {
@@ -1176,7 +1186,8 @@ namespace ApkQuickReader
         }
         public override string AppName {
             get {
-                return getAttribute(TagApplication, AttrLabel);
+                // localized label: applyLocaleFilter() prefers the configured app-name language
+                return getAttribute(TagApplication, AttrLabel, true);
             }
         }
         public override string Version {
@@ -1209,7 +1220,11 @@ namespace ApkQuickReader
         /// <param name="attr"></param>
         /// <returns></returns>
         public string getAttribute(string tag, string attr) {
-            return QuickSearchManifestXml(tag, attr);
+            return getAttribute(tag, attr, false);
+        }
+
+        public string getAttribute(string tag, string attr, bool preferLocale) {
+            return QuickSearchManifestXml(tag, attr, preferLocale);
         }
 
         // get an icon with size
@@ -1234,15 +1249,41 @@ namespace ApkQuickReader
 
             try {
                 if (path != "") {
-                    return getImage(path, size);
+                    Bitmap extracted = getImage(path, size);
+                    if (extracted != null) {
+                        return extracted;
+                    }
                 }
                 throw new Exception("Cannot found image " + tag + "@" + attr);
             } catch (Exception ex) {
                 Log("Image path : " + path);
                 Log("Error happens during extracting image, " + ex.Message);
+                // adaptive/anydpi drawables may use constructs we cannot render (widget
+                // layouts as drawable, unsupported gradients...). Android itself falls back
+                // to the legacy bitmap density for such apps - do the same instead of
+                // giving up with a null icon: re-resolve the attribute ignoring xml entries.
+                if (path.EndsWith(".xml")) {
+                    try {
+                        _ignoreXmlDensity = true;
+                        string legacy = QuickSearchManifestXml(tag, attr);
+                        if (legacy != "" && legacy != path) {
+                            Bitmap fallbackImg = getImage(legacy, size);
+                            if (fallbackImg != null) {
+                                Log("xml drawable failed, fell back to " + legacy);
+                                return fallbackImg;
+                            }
+                        }
+                    } catch (Exception ex2) {
+                        Log("legacy icon fallback failed, " + ex2.Message.Split('\n')[0]);
+                    } finally {
+                        _ignoreXmlDensity = false;
+                    }
+                }
                 return null;
             }
         }
+
+        private bool _ignoreXmlDensity = false;
 
         /// <summary>
         /// return the bitmap of a image file path located in apk zip
@@ -1252,17 +1293,32 @@ namespace ApkQuickReader
         /// <returns>Bitmap or </returns>
         public Bitmap getImage(string path, Size size) {
             ZipEntry iconz;
-            if (zip.FindEntry(path, true) > 0) {
+            if (zip.FindEntry(path, true) >= 0) {
                 iconz = zip.GetEntry(path);
-                if (path.EndsWith(".png") || path.EndsWith(".jpg") || path.EndsWith(".jpeg") || 
-                    path.EndsWith(".gif") || path.EndsWith(".tif") || path.EndsWith(".tiff")) {
-                    return Utility.ResizeBitmap((Bitmap)Image.FromStream(zip.GetInputStream(iconz)),size);
-                } else if (path.EndsWith(".webp")) {
+                // case-insensitive extension dispatch, see kkguo/apkshellext#99 (res/drawable/Icon.PNG matched no branch)
+                string ext = System.IO.Path.GetExtension(path).ToLowerInvariant();
+                if (ext == ".png" || ext == ".jpg" || ext == ".jpeg" ||
+                    ext == ".gif" || ext == ".tif" || ext == ".tiff") {
+                    // fully buffer before decoding: GDI+ scaled DrawImage silently renders BLANK pixels
+                    // from SharpZipLib 1.4.2's non-seekable decompression streams (0.86's were buffered);
+                    // bounded read: attacker-declared Size must never drive allocation or (int) cast
+                    byte[] raw = ZipSafety.ReadEntryBounded(zip, iconz, ZipSafety.MAX_ICON, "image " + path);
+                    using (MemoryStream ms = new MemoryStream(raw, 0, raw.Length, false, false)) {
+                        return Utility.ResizeBitmap((Bitmap)Image.FromStream(ms), size);
+                    }
+                } else if (ext == ".webp") {
                     WebP webp = new WebP();
-                    byte[] bytes = new BinaryReader(zip.GetInputStream(iconz)).ReadBytes((int)iconz.Size);
+                    byte[] bytes = ZipSafety.ReadEntryBounded(zip, iconz, ZipSafety.MAX_ICON, "webp " + path);
                     //webp.Decode(bytes).Save(FileName+".webp");
                     return Utility.ResizeBitmap(webp.Decode(bytes),size);
-                } else if (path.EndsWith(".xml")) {
+                } else if (ext == ".xml") {
+                    // self/mutually-referencing drawables (adaptive layer -> itself) would
+                    // recurse until StackOverflow (uncatchable, kills explorer) — bound depth
+                    if (++_xmlDepth > 8) {
+                        _xmlDepth--;
+                        throw new Exception("drawable xml reference nesting too deep at " + path);
+                    }
+                    try {
                     XmlDocument doc = ExtractCompressedXml(path);
                     if (doc.FirstChild.Name == "adaptive-icon") {
                         return parseAdaptiveIcon(doc, size);
@@ -1275,10 +1331,16 @@ namespace ApkQuickReader
                     } else {
                         throw new Exception("unsupported image file " + path + " with tag " + doc.FirstChild.Name);
                     }
+                    } finally {
+                        _xmlDepth--;
+                    }
                 }
             }
             return null;
         }
+
+        // recursion guard for xml drawable references (adaptive/layer -> getImage -> xml…)
+        private int _xmlDepth = 0;
 
         private Bitmap parseLayerDrawable(XmlNode node, Size size) {
             try {
@@ -1298,10 +1360,14 @@ namespace ApkQuickReader
                     }
                 }
                 Bitmap bmp = new Bitmap(size.Width, size.Height);
-                Graphics g = Graphics.FromImage(bmp);
-                foreach (Bitmap b in bitmapList) {
-                    g.DrawImage(Utility.ResizeBitmap(b, new Size(bmp.Width, bmp.Height)), 0, 0);
+                using (Graphics g = Graphics.FromImage(bmp)) {
+                    foreach (Bitmap b in bitmapList) {
+                        if (b == null) continue;
+                        using (Bitmap scaled = Utility.ResizeBitmap(b, new Size(bmp.Width, bmp.Height)))
+                            g.DrawImage(scaled, 0, 0);
+                    }
                 }
+                foreach (Bitmap b in bitmapList) if (b != null) b.Dispose();
                 return bmp;
             } catch (Exception ex) {
                 throw new Exception(ex.Message + "\nError happens during parsing layer-list: " + node.InnerXml);
@@ -1309,6 +1375,33 @@ namespace ApkQuickReader
         }
 
         private Bitmap parseVectorDrawable(XmlNode node, Size size) {
+            // Preferred path: translate the VectorDrawable to SVG and let the vendored
+            // Svg.NET renderer do the drawing (transforms, gradients, clips are mature
+            // there). The legacy GDI+ walker remains as fallback for anything the
+            // translator refuses.
+            try {
+                XmlElement vec = node as XmlElement;
+                if (vec == null) vec = node.SelectSingleNode("/vector") as XmlElement;
+                if (vec != null) {
+                    string svg = VectorDrawableToSvg.Translate(vec, new Func<string, XmlDocument>(ExtractCompressedXml));
+                    Svg.SvgDocument svgDoc = Svg.SvgDocument.FromSvg<Svg.SvgDocument>(svg);
+                    if (svgDoc != null) {
+                        using (Bitmap rendered = svgDoc.Draw(size.Width, size.Height)) {
+                            if (rendered != null) return new Bitmap(rendered);
+                        }
+                    }
+                }
+            } catch (Exception exSvg) {
+                Log("svg vector render fallback for " + size.Width + "px: " + exSvg.Message);
+            }
+            try {
+                return parseVectorDrawableLegacy(node, size);
+            } catch (Exception ex) {
+                throw new Exception(ex.Message + "\nError happens during parsing vectordrawable: " + node.InnerXml);
+            }
+        }
+
+        private Bitmap parseVectorDrawableLegacy(XmlNode node, Size size) {
             try {
                 XmlElement vector = (XmlElement)node.SelectSingleNode("/vector");
                 float viewportWidth = 0, viewportHeight = 0;
@@ -1356,33 +1449,93 @@ namespace ApkQuickReader
                     }
                     //Not finished yet
                 }
-                Bitmap b = new Bitmap((int)viewportWidth, (int)viewportHeight);
+                // viewport comes from attacker XML: a huge/NaN value would OOM explorer's
+                // process via the intermediate canvas. Real adaptive vectors are ≤ 108dp.
+                Bitmap b = new Bitmap(ClampCanvas(viewportWidth), ClampCanvas(viewportHeight));
                 using (Graphics g = Graphics.FromImage(b)) {
-                    XmlElement group = (XmlElement)vector.SelectSingleNode("group");
-                    XmlNodeList nl = (group != null) ? group.SelectNodes("path") :
-                                                      vector.SelectNodes("path");
-                    foreach (XmlElement elem in nl) {
+                    DrawVectorGroup(g, vector, new System.Drawing.Drawing2D.Matrix());
+                }
+                Bitmap legacyResized = Utility.ResizeBitmap(b, size);
+                b.Dispose(); // native-size canvas is dead once resized
+                return legacyResized;
+            } catch (Exception ex) {
+                throw new Exception(ex.Message + "\nError happens during parsing vectordrawable: " + node.InnerXml);
+            }
+        }
+
+        private static int ClampCanvas(float v) {
+            if (float.IsNaN(v) || float.IsInfinity(v) || v <= 1f) return 1;
+            // icons are rasterised at <=256px by every caller; 1024 keeps even
+            // 8x supersampling honest while a hostile viewport can no longer
+            // demand a 4096x4096 (64 MB) bitmap
+            return (int)Math.Min(v, 1024f);
+        }
+
+        /// <summary>
+        /// Fills paths of a &lt;vector&gt; or nested &lt;group&gt;, honouring the group
+        /// transforms (scale/rotation about pivot, then translation) defined by Android
+        /// VectorDrawable. Older code read only the paths of one first-level group and
+        /// silently ignored every transform, misplacing artwork such as the adaptive
+        /// foreground of 'Light Start' (drawn upper-left instead of centered).
+        /// </summary>
+        private void DrawVectorGroup(Graphics g, XmlElement parent, System.Drawing.Drawing2D.Matrix world) {
+            foreach (XmlNode child in parent.ChildNodes) {
+                XmlElement elem = child as XmlElement;
+                if (elem == null) continue;
+                if (elem.Name == "path") {
+                    try {
                         string pathdata = elem.GetAttribute("pathData");
+                        if (pathdata == "") continue;
                         GraphicsPath gpath = VectorDrawableRender.Convert2Path(pathdata);
+                        gpath.Transform(world);
                         Brush fill = null;
                         if (elem.HasAttribute("fillColor")) {
                             string fillcolor = elem.GetAttribute("fillColor");
-                            if (fillcolor.EndsWith(".xml")) {//gradien
-                                fill = parseGradient(fillcolor);
+                            if (fillcolor.EndsWith(".xml")) {//gradient or indirect color resource
+                                try {
+                                    fill = parseGradient(fillcolor);
+                                } catch (Exception exGrad) {
+                                    fill = TryParseColorRef(fillcolor, 0);
+                                    if (fill == null) throw exGrad;
+                                }
                             } else {
-                                fill = new SolidBrush(stringToColor(elem.GetAttribute("fillColor")));
+                                fill = new SolidBrush(stringToColor(fillcolor));
                             }
                         } else {
                             fill = new SolidBrush(System.Drawing.Color.Black);
                         }
                         g.FillPath(fill, gpath);
-                        //g.DrawPath(new Pen(fill, 2), path);                    
+                        //g.DrawPath(new Pen(fill, 2), path);
+                    } catch (Exception exPath) {
+                        // one unparseable path (clipped/animated art) must not kill the icon
+                        Log("vector path skipped: " + exPath.Message.Split('\n')[0]);
                     }
+                } else if (elem.Name == "group") {
+                    System.Drawing.Drawing2D.Matrix m = (System.Drawing.Drawing2D.Matrix)world.Clone();
+                    float pivotX = GetXmlFloat(elem, "pivotX", 0f);
+                    float pivotY = GetXmlFloat(elem, "pivotY", 0f);
+                    float sx = GetXmlFloat(elem, "scaleX", 1f);
+                    float sy = GetXmlFloat(elem, "scaleY", 1f);
+                    float rot = GetXmlFloat(elem, "rotation", 0f);
+                    // Android applies scale then rotation about the pivot, then translation;
+                    // appending mirrors that order for point transformation.
+                    if (sx != 1f || sy != 1f) m.Scale(sx, sy, System.Drawing.Drawing2D.MatrixOrder.Append);
+                    if (pivotX != 0f || pivotY != 0f) m.Translate(-pivotX, -pivotY, System.Drawing.Drawing2D.MatrixOrder.Append);
+                    if (rot != 0f) m.Rotate(rot, System.Drawing.Drawing2D.MatrixOrder.Append);
+                    if (pivotX != 0f || pivotY != 0f) m.Translate(pivotX, pivotY, System.Drawing.Drawing2D.MatrixOrder.Append);
+                    m.Translate(GetXmlFloat(elem, "translateX", 0f), GetXmlFloat(elem, "translateY", 0f), System.Drawing.Drawing2D.MatrixOrder.Append);
+                    DrawVectorGroup(g, elem, m);
+                    m.Dispose();
                 }
-                return Utility.ResizeBitmap(b,size);
-            } catch (Exception ex) {
-                throw new Exception(ex.Message + "\nError happens during parsing vectordrawable: " + node.InnerXml);
             }
+            world.Dispose();
+        }
+
+        private static float GetXmlFloat(XmlElement elem, string name, float def) {
+            if (!elem.HasAttribute(name)) return def;
+            float v;
+            return float.TryParse(elem.GetAttribute(name), System.Globalization.NumberStyles.Float,
+                System.Globalization.CultureInfo.InvariantCulture, out v) ? v : def;
         }
         
         private Bitmap parseAdaptiveIcon(XmlNode node, Size size) {
@@ -1396,28 +1549,24 @@ namespace ApkQuickReader
             </adaptive-icon>
             */
             try {
-                XmlElement elem = (XmlElement)node.SelectSingleNode("/adaptive-icon/background");
-                Bitmap b = null, f = null;
                 Bitmap bmp = new Bitmap(size.Width, size.Height);
-                Graphics g = Graphics.FromImage(bmp);
-                if (elem.HasAttribute("drawable")) {
-                    b = getImage(elem.GetAttribute("drawable"), size);
-                    if (b != null)
-                        g.DrawImage(b, 0, 0);
-                    else {
-                        Color c = stringToColor(elem.GetAttribute("drawable"));
-                        g.FillRectangle(new SolidBrush(c), 0, 0, bmp.Width, bmp.Height);
+                bool anyFailed = false;
+                using (Graphics g = Graphics.FromImage(bmp)) {
+                    XmlElement elem = (XmlElement)node.SelectSingleNode("/adaptive-icon/background");
+                    if (elem != null && elem.HasAttribute("drawable")) {
+                        anyFailed |= !drawAdaptiveLayer(g, elem.GetAttribute("drawable"), size);
+                    }
+                    elem = (XmlElement)node.SelectSingleNode("/adaptive-icon/foreground");
+                    if (elem != null && elem.HasAttribute("drawable")) {
+                        anyFailed |= !drawAdaptiveLayer(g, elem.GetAttribute("drawable"), size);
                     }
                 }
-                elem = (XmlElement)node.SelectSingleNode("/adaptive-icon/foreground");
-                if (elem.HasAttribute("drawable")) {
-                    f = getImage(elem.GetAttribute("drawable"), size);
-                    if (f != null)
-                        g.DrawImage(f, 0, 0);
-                    else {
-                        Color c = stringToColor(elem.GetAttribute("drawable"));
-                        g.FillRectangle(new SolidBrush(c), 0, 0, bmp.Width, bmp.Height);
-                    }
+                if (anyFailed) {
+                    // a missing/broken layer shows as a solid blob or cut artwork; apps that
+                    // abuse layouts as adaptive layers (e.g. widget XML) are unrenderable by
+                    // design - propagate so the caller falls back to the legacy bitmap entry,
+                    // which is exactly what Android devices use for such apps
+                    throw new Exception("adaptive layer could not be rendered");
                 }
                 return bmp;
             } catch (Exception ex) {
@@ -1425,40 +1574,176 @@ namespace ApkQuickReader
             }
         }
 
+        /// <summary>
+        /// Draws one adaptive-icon layer: bitmap drawable, or solid color when the layer
+        /// references a color resource. A failing layer is skipped instead of killing the
+        /// whole icon (Android would still show the other layers).
+        /// </summary>
+        private bool drawAdaptiveLayer(Graphics g, string drawableRef, Size size) {
+            try {
+                Bitmap layer = getImage(drawableRef, size);
+                if (layer != null) {
+                    g.DrawImage(layer, 0, 0, size.Width, size.Height);
+                    layer.Dispose();
+                    return true;
+                }
+            } catch (Exception ex) {
+                Log("adaptive layer drawable failed: " + ex.Message.Split('\n')[0]);
+            }
+            try {
+                Color c = stringToColor(drawableRef);
+                g.FillRectangle(new SolidBrush(c), 0, 0, size.Width, size.Height);
+                return true;
+            } catch (Exception exColor) {
+                Log("adaptive layer color failed: " + exColor.Message.Split('\n')[0]);
+            }
+            return false;
+        }
+
         private Brush parseGradient(XmlNode node) {
+            // Android <gradient> drawables come in two flavours: the legacy
+            // startColor/centerColor/endColor attributes and the item-list form
+            // <item color offset/> which modern (Material You / adaptive icon) apps use.
+            // 'type' is optional and defaults to linear; many files carry only 'angle'.
             try {
                 XmlElement gradient = (XmlElement)node.FirstChild;
-                gradientType type = (gradientType)int.Parse(gradient.GetAttribute("type"));
-                if (type == gradientType.linear) {
+                gradientType type = gradientType.linear;
+                if (gradient.HasAttribute("type") && gradient.GetAttribute("type") != "")
+                    type = (gradientType)int.Parse(gradient.GetAttribute("type"));
+
+                // collect color stops
+                List<Color> colors = new List<Color>();
+                List<float> offsets = new List<float>();
+                XmlNodeList points = node.SelectNodes("/gradient/item");
+                if (points != null) {
+                    foreach (XmlElement p in points) {
+                        if (!p.HasAttribute("color")) continue;
+                        float off = 1f;
+                        float.TryParse(p.GetAttribute("offset"), System.Globalization.NumberStyles.Float,
+                            System.Globalization.CultureInfo.InvariantCulture, out off);
+                        colors.Add(stringToColor(p.GetAttribute("color")));
+                        offsets.Add(Math.Max(0f, Math.Min(1f, off)));
+                    }
+                }
+                if (colors.Count == 0) {
+                    // legacy attribute form
                     Color startC = stringToColor(gradient.GetAttribute("startColor"));
                     Color endC = stringToColor(gradient.GetAttribute("endColor"));
-                    float startX = float.Parse(gradient.GetAttribute("startX"));
-                    float startY = float.Parse(gradient.GetAttribute("startY"));
-                    float endX = float.Parse(gradient.GetAttribute("endX"));
-                    float endY = float.Parse(gradient.GetAttribute("endY"));
-                    return new LinearGradientBrush(new PointF(startX, startY), new PointF(endX, endY), startC, endC);
+                    colors.Add(startC); offsets.Add(0f);
+                    if (gradient.HasAttribute("centerColor") && gradient.GetAttribute("centerColor") != "") {
+                        colors.Add(stringToColor(gradient.GetAttribute("centerColor"))); offsets.Add(0.5f);
+                    }
+                    colors.Add(endC); offsets.Add(1f);
+                }
+                // stable order by offset; ColorBlend requires ascending positions
+                for (int i = 1; i < offsets.Count; i++) {
+                    for (int j = i; j > 0 && offsets[j] < offsets[j - 1]; j--) {
+                        float tf = offsets[j]; offsets[j] = offsets[j - 1]; offsets[j - 1] = tf;
+                        Color tc = colors[j]; colors[j] = colors[j - 1]; colors[j - 1] = tc;
+                    }
+                }
+                if (colors.Count == 1) return new SolidBrush(colors[0]);
+
+                // GDI+ ColorBlend rejects position sets not starting at 0 / ending at 1 /
+                // strictly ascending (Steam's adaptive background gradient uses stops
+                // 0.01..0.57 -> the whole path was silently skipped, icon stayed white).
+                // Android holds the edge colors constant outside the stop range, which is
+                // mirrored by duplicating the edge colors onto the bounds.
+                if (offsets[0] > 0f) { colors.Insert(0, colors[0]); offsets.Insert(0, 0f); }
+                if (offsets[offsets.Count - 1] < 1f) { colors.Add(colors[colors.Count - 1]); offsets.Add(1f); }
+                for (int i = 1; i < offsets.Count; i++)
+                    if (offsets[i] <= offsets[i - 1]) offsets[i] = Math.Min(1f, offsets[i - 1] + 1e-4f);
+
+                if (type == gradientType.linear) {
+                    float startX = 0f, startY = 0f, endX = 0f, endY = 0f;
+                    bool haveLine =
+                        float.TryParse(gradient.GetAttribute("startX"), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out startX) &&
+                        float.TryParse(gradient.GetAttribute("startY"), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out startY) &&
+                        float.TryParse(gradient.GetAttribute("endX"), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out endX) &&
+                        float.TryParse(gradient.GetAttribute("endY"), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out endY);
+                    if (!haveLine) {
+                        // 'angle' only (degrees, 0 = left→right, counter-clockwise); without a
+                        // shape bounds the best approximation is a horizontal gradient of unit length
+                        float angle = 0f;
+                        float.TryParse(gradient.GetAttribute("angle"), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out angle);
+                        double rad = angle * Math.PI / 180.0;
+                        // Android's angle is clockwise from +x in screen coords (y down)
+                        endX = (float)Math.Cos(rad); endY = (float)Math.Sin(rad);
+                    }
+                    if (startX == endX && startY == endY) return new SolidBrush(colors[colors.Count - 1]);
+                    LinearGradientBrush lb = new LinearGradientBrush(new PointF(startX, startY), new PointF(endX, endY), colors[0], colors[colors.Count - 1]);
+                    try { lb.WrapMode = System.Drawing.Drawing2D.WrapMode.Clamp; } catch { }
+                    if (colors.Count > 2) {
+                        System.Drawing.Drawing2D.ColorBlend blend = new System.Drawing.Drawing2D.ColorBlend();
+                        blend.Colors = colors.ToArray();
+                        blend.Positions = offsets.ToArray();
+                        lb.InterpolationColors = blend;
+                    }
+                    return lb;
                 } else if (type == gradientType.radial) {
-                    XmlNodeList points = node.SelectNodes("/gradient/item");
-                    int cx = int.Parse(gradient.GetAttribute("centerX"));
-                    int cy = int.Parse(gradient.GetAttribute("centerY"));
-                    float radius = float.Parse(gradient.GetAttribute("gradientRadius"));
-                    List<Color> colors = new List<Color>(points.Count);
-                    List<float> offsets = new List<float>(points.Count);
-                    foreach (XmlElement p in points) {
-                        string fillcolor = p.GetAttribute("color");
-                        colors.Add(stringToColor(p.GetAttribute("color")));
-                        offsets.Add(float.Parse(p.GetAttribute("offset")));
+                    float cx, cy, radius;
+                    if (float.TryParse(gradient.GetAttribute("centerX"), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out cx) &&
+                        float.TryParse(gradient.GetAttribute("centerY"), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out cy) &&
+                        float.TryParse(gradient.GetAttribute("gradientRadius"), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out radius) &&
+                        radius > 0f) {
+                        // circle outline as the focus point set -> radial falloff with full
+                        // multi-stop support through InterpolationColors
+                        RectangleF circle = new RectangleF(cx - radius, cy - radius, radius * 2, radius * 2);
+                        GraphicsPath ring = new GraphicsPath();
+                        ring.AddEllipse(circle);
+                        PathGradientBrush pg = new PathGradientBrush(ring);
+                        ring.Dispose();
+                        pg.CenterColor = colors[0];
+                        pg.SurroundColors = new[] { colors[colors.Count - 1] };
+                        if (colors.Count > 2) {
+                            System.Drawing.Drawing2D.ColorBlend blend = new System.Drawing.Drawing2D.ColorBlend();
+                            blend.Colors = colors.ToArray();
+                            blend.Positions = offsets.ToArray();
+                            pg.InterpolationColors = blend;
+                        }
+                        try { pg.WrapMode = System.Drawing.Drawing2D.WrapMode.Clamp; } catch { }
+                        return pg;
                     }
                     return new SolidBrush(colors[colors.Count - 1]);
-                    //fill = new Media.RadialGradientBrush();
-                } else if (type == gradientType.sweep) {
-                    return null;
-                } else {
-                    throw new Exception("Unknow gradien type when parsing gradient xml");
+                } else { // sweep: GDI+ has no angular brush; nearest reasonable approximation
+                    return new SolidBrush(colors[0]);
                 }
             } catch (Exception ex) {
                 throw new Exception(ex.Message + "\nError happend during parse Gradient " + node.InnerXml);
             }
+        }
+
+        /// <summary>
+        /// Resolves a non-gradient xml color indirection used as a paint:
+        /// &lt;selector&gt;&lt;item color&gt;, &lt;vector&gt; first path fillColor,
+        /// &lt;shape&gt;&lt;solid color&gt; or &lt;color&gt;. Follows nested .xml
+        /// references up to 3 levels; null when nothing resolvable.
+        /// </summary>
+        private Brush TryParseColorRef(string path, int depth) {
+            if (depth > 3 || string.IsNullOrEmpty(path) || !path.EndsWith(".xml", StringComparison.OrdinalIgnoreCase)) return null;
+            XmlDocument doc;
+            try { doc = ExtractCompressedXml(path); } catch { return null; }
+            if (doc == null || doc.DocumentElement == null) return null;
+            XmlElement root = doc.DocumentElement;
+            string colorAttr = null;
+            if (root.Name == "selector") {
+                XmlElement item = root.SelectSingleNode("item") as XmlElement;
+                colorAttr = item != null ? item.GetAttribute("color") : root.GetAttribute("color");
+            } else if (root.Name == "vector") {
+                foreach (XmlNode n in root.SelectNodes(".//path")) {
+                    XmlElement p = n as XmlElement;
+                    string c = p != null ? p.GetAttribute("fillColor") : null;
+                    if (!string.IsNullOrEmpty(c)) { colorAttr = c; break; }
+                }
+            } else if (root.Name == "shape") {
+                XmlElement solid = root.SelectSingleNode("solid") as XmlElement;
+                if (solid != null) colorAttr = solid.GetAttribute("color");
+            } else if (root.Name == "color") {
+                colorAttr = root.HasAttribute("color") ? root.GetAttribute("color") : root.InnerText.Trim();
+            }
+            if (string.IsNullOrEmpty(colorAttr)) return null;
+            if (colorAttr.EndsWith(".xml", StringComparison.OrdinalIgnoreCase)) return TryParseColorRef(colorAttr, depth + 1);
+            try { return new SolidBrush(stringToColor(colorAttr)); } catch { return null; }
         }
 
         private Brush parseGradient(string xml) {
@@ -1489,7 +1774,6 @@ namespace ApkQuickReader
                 else {
                     b = new Bitmap(size.Width, size.Height);
                 }
-                Graphics g = Graphics.FromImage(b);
                 GraphicsPath p = new GraphicsPath();
                 Brush brush;
                 XmlElement ebrush = (XmlElement)eShape.SelectSingleNode("solid");
@@ -1517,8 +1801,14 @@ namespace ApkQuickReader
                 } else {
                     throw new Exception("Unsupported shape type: " + (int)type);
                 }
-                g.FillPath(brush, p);
-                return Utility.ResizeBitmap(b, size);
+                using (Graphics g = Graphics.FromImage(b))
+                using (brush)
+                using (p) {
+                    g.FillPath(brush, p);
+                }
+                Bitmap shapeResized = Utility.ResizeBitmap(b, size);
+                b.Dispose(); // native-size shape canvas is dead once resized
+                return shapeResized;
             } catch (Exception ex) {
                 throw new Exception(ex.Message + "\nError happending during parsing shape:" + shapeNode.InnerXml);
             }
@@ -1540,7 +1830,11 @@ namespace ApkQuickReader
         /// <param name="attribute"></param>
         /// <returns></returns>
         public string QuickSearchManifestXml(string tag, string attribute) {
-            return QuickSearchCompressedXml(manifest, tag, attribute);
+            return QuickSearchCompressedXml(manifest, tag, attribute, false);
+        }
+
+        public string QuickSearchManifestXml(string tag, string attribute, bool preferLocale) {
+            return QuickSearchCompressedXml(manifest, tag, attribute, preferLocale);
         }
 
         /// <summary>
@@ -1551,7 +1845,7 @@ namespace ApkQuickReader
         /// <param name="attribute"></param>
         /// <param name="sub"></param>
         /// <returns></returns>
-        private string QuickSearchCompressedXml(byte[] xml, string xpath, string attribute) {
+        private string QuickSearchCompressedXml(byte[] xml, string xpath, string attribute, bool preferLocale) {
             using (MemoryStream ms = new MemoryStream(xml))
             using (BinaryReader br = new BinaryReader(ms)) {
                 Log("Search xml for " + xpath + " " + attribute);
@@ -1591,7 +1885,7 @@ namespace ApkQuickReader
                                         ms.Seek(4 + 2 + 1, SeekOrigin.Current); // skip rawValue/size/0/
                                         DATA_TYPE dataType = (DATA_TYPE)br.ReadByte();
                                         uint data = br.ReadUInt32();
-                                        return convertData(xml, dataType, data);
+                                        return convertData(xml, dataType, data, preferLocale);
                                     }
                                 }
                             }
@@ -1602,16 +1896,26 @@ namespace ApkQuickReader
                         }
                         tagDepth--;
                     }
-                    ms.Seek(chunkPos + chunkSize, SeekOrigin.Begin);
+                    SeekNextChunk(ms, chunkPos, chunkSize);
                 }
                 return "";
             }
         }
 
+        // Every forward chunk walk in this class is driven by a
+        // while (ms.Position < ms.Length) loop. A malformed chunk header
+        // claiming size < 8 (the minimum RES chunk header) would make the
+        // walk revisit the same offset forever and hang the shell UI thread.
+        private static void SeekNextChunk(MemoryStream ms, long chunkPos, int chunkSize) {
+            if (chunkSize < 8)
+                throw new InvalidDataException("chunk at offset " + chunkPos + " claims size " + chunkSize);
+            ms.Seek(chunkPos + chunkSize, SeekOrigin.Begin);
+        }
+
         public XmlDocument ExtractCompressedXml(string path) {
             try {
                 ZipEntry en = zip.GetEntry(path);
-                byte[] bytes = new BinaryReader(zip.GetInputStream(en)).ReadBytes((int)en.Size);
+                byte[] bytes = ZipSafety.ReadEntryBounded(zip, en, ZipSafety.MAX_XML, "xml " + path);
                 return ExtractCompressedXml(bytes);
             } catch (Exception ex) {
                 throw new Exception(ex.Message + "\nError happens during dump " + path);
@@ -1671,7 +1975,7 @@ namespace ApkQuickReader
                         } else if (chunkType == RES_TYPE.RES_XML_END_ELEMENT_TYPE) {
                             currentNode = currentNode.ParentNode;
                         }
-                        ms.Seek(chunkPos + chunkSize, SeekOrigin.Begin);
+                        SeekNextChunk(ms, chunkPos, chunkSize);
                     }
                     return doc;
                 } catch (Exception ex) {
@@ -1682,6 +1986,10 @@ namespace ApkQuickReader
         }
 
         private string convertData(byte[] bytes, DATA_TYPE type, UInt32 data) {
+            return convertData(bytes, type, data, false);
+        }
+
+        private string convertData(byte[] bytes, DATA_TYPE type, UInt32 data, bool preferLocale) {
             switch (type) {
                 case DATA_TYPE.TYPE_STRING:
                     return QuickSearchStringPool(bytes, data);
@@ -1690,7 +1998,8 @@ namespace ApkQuickReader
                         ApkResource r = QuickSearchResource((UInt32)data);
                         int ind = 0;
                         if (r.Count > 1)
-                            ind = applyFilter(r);
+                            // localized app names: label lookups prefer the configured language over density
+                            ind = preferLocale ? applyLocaleFilter(r) : applyFilter(r);
                         return r.values[ind].ToString();
                     } catch (Exception ex) {
                         Log("Error happen when finding resource with ID:0x" + data.ToString("X8") + ex.Message);
@@ -1763,6 +2072,10 @@ namespace ApkQuickReader
                             if ((u8len & 0x80) != 0) {// larger than 128
                                 u8len = ((u8len & 0x7F) << 8) + br.ReadByte();
                             }
+                            // hostile pool entry may claim more bytes than the pool
+                            // holds; ReadBytes would pre-allocate the claimed size (OOM)
+                            if (u8len > ms.Length - ms.Position)
+                                throw new InvalidDataException("string pool entry out of bounds");
                             return Encoding.UTF8.GetString(br.ReadBytes(u8len));
                         } else // UTF_16
                         {
@@ -1771,10 +2084,12 @@ namespace ApkQuickReader
                                 u16len = ((u16len & 0x7FFF) << 16) + br.ReadUInt16();
                             }
 
+                            if (u16len < 0 || u16len > (ms.Length - ms.Position) / 2)
+                                throw new InvalidDataException("string pool entry out of bounds");
                             return Encoding.Unicode.GetString(br.ReadBytes(u16len * 2));
                         }
                     } else {
-                        ms.Seek(chunkPos + chunkSize, SeekOrigin.Begin);
+                        SeekNextChunk(ms, chunkPos, chunkSize);
                     }
                 }
                 return "";
@@ -1804,7 +2119,7 @@ namespace ApkQuickReader
                         else
                             return "";
                     } else {
-                        ms.Seek(chunkPos + chunkSize, SeekOrigin.Begin);
+                        SeekNextChunk(ms, chunkPos, chunkSize);
                     }
                 }
                 return "";
@@ -1836,11 +2151,28 @@ namespace ApkQuickReader
                 decode[0] = (byte)(code[2] & 0x1F);
                 decode[1] = (byte)(((code[3] & 0x3) << 3) + (code[2] & 0xE0) >> 1);
             } else {
-                decode[0] = code[0];
-                decode[1] = code[1];
+                decode[0] = code[2];
+                decode[1] = code[3];
             }
             country = System.Text.Encoding.ASCII.GetString(decode);
-            return new CultureInfo(country + "-" + language);
+            // locale-less configs (0x00,0x00...) or garbage BCP47 bytes are not cultures: null
+            language = language.Trim((char)0, ' ');
+            country = country.Trim((char)0, ' ');
+            if (language.Length == 0 || !IsAsciiAlpha(language) || (country.Length > 0 && !IsAsciiAlpha(country)))
+                return null;
+            try {
+                return country.Length == 0
+                    ? CultureInfo.GetCultureInfo(language)
+                    : CultureInfo.GetCultureInfo(language.ToLowerInvariant() + "-" + country.ToUpperInvariant());
+            } catch {
+                try { return CultureInfo.GetCultureInfo(language); } catch { return null; }
+            }
+        }
+
+        private static bool IsAsciiAlpha(string s) {
+            foreach (char c in s)
+                if ((c < 'a' || c > 'z') && (c < 'A' || c > 'Z')) return false;
+            return true;
         }
 
         // for handling loop reference
@@ -1916,7 +2248,7 @@ namespace ApkQuickReader
                                     //ms.Seek(EntryID * 4, SeekOrigin.Current); // goto index
                                     uint entryIndic = br.ReadUInt32();
                                     if (entryIndic == 0xffffffff) {
-                                        ms.Seek(chunkPos + chunkSize, SeekOrigin.Begin);
+                                        SeekNextChunk(ms, chunkPos, chunkSize);
                                         continue; //no entry here, go to next chunk
                                     }
                                     ms.Seek(chunkPos + entryStart + entryIndic, SeekOrigin.Begin);
@@ -1930,7 +2262,7 @@ namespace ApkQuickReader
                                     } else if (dataType == (byte)DATA_TYPE.TYPE_REFERENCE) {
                                         // the entry is null, or it's referencing in loop, go to next chunk
                                         if (data == 0x00000000 || searchstack.Contains(data)) {
-                                            ms.Seek(chunkPos + chunkSize, SeekOrigin.Begin);
+                                            SeekNextChunk(ms, chunkPos, chunkSize);
                                             continue;
                                         }
                                         res.Add(QuickSearchResource((UInt32)data));
@@ -1939,7 +2271,7 @@ namespace ApkQuickReader
                                     }
                                 }
                             }
-                            ms.Seek(chunkPos + chunkSize, SeekOrigin.Begin); // skip this chunk
+                            SeekNextChunk(ms, chunkPos, chunkSize); // skip this chunk
                         } while (ms.Position < PackChunkPos + PackChunkSize);
                     }
                 }
@@ -1952,10 +2284,10 @@ namespace ApkQuickReader
             int best = 0;
             if (getFlag("Density") != null) {
                 int bestDensity = 0;
-                bool supAI = Utility.GetSetting("SupportAdaptiveIcon", "False") == "True";
+                bool supAI = Utility.GetSetting("SupportAdaptiveIcon", "False") == "True" && !_ignoreXmlDensity;
                 for (int i = 0; i < r.configs.Count; i++) {
                     if (!supAI) {
-                        if (r.values[i].ToString().EndsWith(".xml")) break;
+                        if (r.values[i].ToString().EndsWith(".xml")) continue;
                     }
                     byte[] bytes = r.configs[i];
                     int density = bytes[(int)ResourceConfig.Density + 1] * 256 + bytes[(int)ResourceConfig.Density];
@@ -1966,6 +2298,51 @@ namespace ApkQuickReader
                 }
             }
             return best;
+        }
+
+        /// <summary>
+        /// Picks the entry whose locale best matches the requested app-name language (localized names
+        /// feature, kkguo/apkshellext). Ranking: exact language+region > region-neutral entry of the
+        /// same language > same language with a different region > locale-less default config > 0.
+        /// Returns applyFilter() when the feature is off so legacy behaviour is untouched.
+        /// </summary>
+        private int applyLocaleFilter(ApkResource r) {
+            CultureInfo want = Utility.requestedNameCulture();
+            if (want == null) return applyFilter(r);
+
+            string wantLang = want.TwoLetterISOLanguageName;
+            string wantRegion = "";
+            int dash = want.Name.IndexOf('-');
+            if (dash > 0) wantRegion = want.Name.Substring(dash + 1);
+
+            int neutral = -1, sameLang = -1, defaultCfg = -1;
+            for (int i = 0; i < r.configs.Count; i++) {
+                byte[] conf = r.configs[i];
+                if (conf == null || conf.Length < 8) continue; // ResTable_config minus size prefix: lang@4 country@6
+                byte[] code = new byte[4];
+                Array.Copy(conf, 4, code, 0, 4);
+                CultureInfo cul;
+                try { cul = getCulture(code); } catch { continue; }
+                if (cul == null) {
+                    if (defaultCfg < 0) defaultCfg = i; // locale-less = default configuration
+                    continue;
+                }
+                if (!string.Equals(cul.TwoLetterISOLanguageName, wantLang, StringComparison.OrdinalIgnoreCase))
+                    continue;
+                int culDash = cul.Name.IndexOf('-');
+                string culRegion = culDash > 0 ? cul.Name.Substring(culDash + 1) : "";
+                if (culRegion.Length == 0) {
+                    if (neutral < 0) neutral = i;
+                } else if (string.Equals(culRegion, wantRegion, StringComparison.OrdinalIgnoreCase)) {
+                    return i; // exact language + region
+                } else if (sameLang < 0) {
+                    sameLang = i;
+                }
+            }
+            if (neutral >= 0) return neutral;
+            if (sameLang >= 0) return sameLang;
+            if (defaultCfg >= 0) return defaultCfg;
+            return 0;
         }
 
         #region IDispose
@@ -1984,10 +2361,14 @@ namespace ApkQuickReader
 
         public void Close() {
             Dispose(true);
+            GC.SuppressFinalize(this);
         }
 
         ~ApkReader() {
-            Dispose(true);
+            // never touch managed objects from a finalizer: they may already be
+            // gone and a throw here would take down the process; the owned
+            // streams release their handles via their own finalizers
+            Dispose(false);
         }
         #endregion
     }

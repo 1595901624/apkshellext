@@ -162,7 +162,7 @@ Lütfen dikkat, bir çok tarayıcı penceresi açılabilir ve bu performansı ö
 Varsayılan olarak menü yalnızca tek dosya seçildiğinde gösterilir</value>
   </data>
   <data name="strCheckingNewVersion" xml:space="preserve">
-    <value>Yeni sürüm denetleniyor...</value>
+    <value>Yeni sürüm kontrol ediliyor...</value>
   </data>
   <data name="strCheckProjectSite" xml:space="preserve">
     <value>Güncelleme için proje sayfasına göz atın.</value>
@@ -174,7 +174,7 @@ Varsayılan olarak menü yalnızca tek dosya seçildiğinde gösterilir</value>
     <value>Harika! En son sürüme sahipsin.</value>
   </data>
   <data name="strGotoProjectSite" xml:space="preserve">
-    <value>ApkShellext2 Projesi sayfasına gidin</value>
+    <value>ApkShellext2 proje sayfasına gidin</value>
   </data>
   <data name="strLanguages" xml:space="preserve">
     <value>Kullanım Dili:</value>
@@ -196,7 +196,7 @@ Varsayılan olarak menü yalnızca tek dosya seçildiğinde gösterilir</value>
   </data>
   <data name="strRenameToolTip" xml:space="preserve">
     <value>Aynı sürüm fakat farklı düzeltme numarası olması durumundan kaçınmaya yarar, bu çoğu Android uygulama dosyasında olur.
-Bu işaretlendiğinde uygulama dosyası %AppName%_%Version%_%Revision%, otherwise, use %AppName%_%Version% olarak yeniden adlandırılır.</value>
+Bu seçenek işaretlendiğinde uygulama dosyası %AppName%_%Version%_%Revision% biçiminde, işaretlenmediğinde %AppName%_%Version% biçiminde yeniden adlandırılır.</value>
   </data>
   <data name="strScanToDownload" xml:space="preserve">
     <value>İndirmek için QR kodunu taratın</value>
@@ -287,7 +287,7 @@ Bu işaretlendiğinde uygulama dosyası %AppName%_%Version%_%Revision%, otherwis
     <value>Küçük resim</value>
   </data>
   <data name="strStretchThumbnail" xml:space="preserve">
-    <value>Windowsdaha büyük boyutlu küçük resim isterse genişlet</value>
+    <value>Windows daha büyük boyutlu küçük resim isterse genişlet</value>
   </data>
   <data name="strHelpTranslate" xml:space="preserve">
     <value>Bu projeyi çevirmek için yardım edin.</value>
@@ -314,4 +314,43 @@ Bu işaretlendiğinde uygulama dosyası %AppName%_%Version%_%Revision%, otherwis
   
   
   
+  <data name="strReplaceSpaceWith_" xml:space="preserve">
+    <value>Boşluk yerine koy:</value>
+  </data>
+  <data name="strSearchStore" xml:space="preserve">
+    <value>Mağazalarda ara</value>
+  </data>
+  <data name="menuDump" xml:space="preserve">
+    <value>Dök</value>
+  </data>
+  <data name="strSupportAdaptiveIcon" xml:space="preserve">
+    <value>Uyarlanabilir simge desteği (beta)</value>
+  </data>
+  <data name="strEnableLog" xml:space="preserve">
+    <value>Hata ayıklama günlüğünü etkinleştir</value>
+  </data>
+  <data name="menuDumpManifest" xml:space="preserve">
+    <value>androidmanifest.xml dök</value>
+  </data>
+  <data name="menuDumpOthers" xml:space="preserve">
+    <value>XML dök ...</value>
+  </data>
+  <data name="strDumpXML" xml:space="preserve">
+    <value>XML dök</value>
+  </data>
+  <data name="strDumpXMLPrompt" xml:space="preserve">
+    <value>XML yolu, örn.: res\drawable\icon.xml</value>
+  </data>
+  <data name="strPatreonBtn" xml:space="preserve">
+    <value>Bana destek ol!</value>
+  </data>
+  <data name="strPatreonTip" xml:space="preserve">
+    <value>Patreon'da bana destek ol</value>
+  </data>
+  <data name="strUseAppNameLang" xml:space="preserve">
+    <value>Uygulama adı dili:</value>
+  </data>
+  <data name="strFollowUiLanguage" xml:space="preserve">
+    <value>(arayüz dilini takip et)</value>
+  </data>
 </root>

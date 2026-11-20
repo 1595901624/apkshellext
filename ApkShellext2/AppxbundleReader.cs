@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -35,7 +35,8 @@ namespace ApkShellext2 {
 
         public AppxBundleReader(string path) {
             FileName = path;
-            openFile(new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read));
+            // FileShare.Delete so Explorer can delete/rename the package while handlers are alive (kkguo/apkshellext#103)
+            openFile(new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read | FileShare.Delete));
         }
 
         private void openFile(Stream stream) {
@@ -62,6 +63,17 @@ namespace ApkShellext2 {
             }
 
             en = zip.GetEntry(appxFileName);
+            if (en == null) {
+                // newer Store bundles are packed with percent-encoded entry names
+                // ("Bluetooth Audio…" → "Bluetooth%20Audio…") while the manifest keeps raw names
+                string encoded = Uri.EscapeDataString(appxFileName);
+                foreach (ZipEntry cand in zip) {
+                    if (cand.IsFile && (cand.Name == encoded || cand.Name == appxFileName.Replace(" ", "%20"))) {
+                        en = cand;
+                        break;
+                    }
+                }
+            }
             if (en == null)
                 throw new EntryPointNotFoundException("cannot find appx " + appxFileName);
 

@@ -4,6 +4,11 @@
 # Custom for Visual Studio
 *.cs     diff=csharp
 
+# Batch files must keep CRLF in the working tree: cmd.exe GOTO silently
+# fails on LF-only files ("The system cannot find the batch label specified")
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
 # Standard to msysgit
 *.doc	 diff=astextplain
 *.DOC	 diff=astextplain

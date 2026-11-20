@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -128,13 +128,13 @@
     <value>Search in Stores</value>
   </data>
   <data name="urlAmazonAppStore" xml:space="preserve">
-    <value>http://www.amazon.com/s?k={0}&amp;i=mobile-apps</value>
+    <value>https://www.amazon.com/s?k={0}&amp;i=mobile-apps</value>
   </data>
   <data name="urlApkMirror" xml:space="preserve">
-    <value>http://www.apkmirror.com/?s={0}&amp;searchtype=apk</value>
+    <value>https://www.apkmirror.com/?s={0}&amp;searchtype=apk</value>
   </data>
   <data name="urlAppleStore" xml:space="preserve">
-    <value>http://itunes.apple.com/app/id{0}</value>
+    <value>https://itunes.apple.com/app/id{0}</value>
   </data>
   <data name="urlGithubHome" xml:space="preserve">
     <value>https://kkguo.github.io/apkshellext</value>

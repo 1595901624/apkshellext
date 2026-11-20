@@ -1,7 +1,6 @@
-﻿using ApkQuickReader;
+using ApkQuickReader;
 using ApkShellext2.Properties;
 using Microsoft.Win32;
-using QRCoder;
 using SharpShell.Attributes;
 using SharpShell.Diagnostics;
 using SharpShell.Extensions;
@@ -31,6 +30,9 @@ namespace ApkShellext2 {
     [COMServerAssociation(AssociationType.ClassOfExtension, ".ipa")]
     [COMServerAssociation(AssociationType.ClassOfExtension, ".appxbundle")]
     [COMServerAssociation(AssociationType.ClassOfExtension, ".appx")]
+    [COMServerAssociation(AssociationType.ClassOfExtension, ".apks")]
+    [COMServerAssociation(AssociationType.ClassOfExtension, ".apkm")]
+    [COMServerAssociation(AssociationType.ClassOfExtension, ".xapk")]
     public class ApkContextMenu : SharpContextMenu {
         /// <summary>
         /// Determines whether this instance can a shell context show menu, given the specified selected file list.
@@ -74,9 +76,13 @@ namespace ApkShellext2 {
 
             bool singleSelected = SelectedItemPaths.Count() == 1;
             string appname = "";
+            string singleNewName = "";
             if (singleSelected) {
-                using (AppPackageReader reader = AppPackageReader.Read(SelectedItemPaths.ElementAt(0)))
+                // one parse feeds both the app name and the rename preview
+                using (AppPackageReader reader = AppPackageReader.Read(SelectedItemPaths.ElementAt(0))) {
                     appname = reader.AppName;
+                    singleNewName = getNewFileName(SelectedItemPaths.ElementAt(0), reader);
+                }
             }
 
             #region Rename Menu
@@ -85,9 +91,8 @@ namespace ApkShellext2 {
             };
 
             if (singleSelected) {
-                string newName = getNewFileName(SelectedItemPaths.ElementAt(0));
-                if (newName != "") {
-                    renameMenu.Text = string.Format(Resources.menuRenameAs, Path.GetFileName(newName));
+                if (singleNewName != "") {
+                    renameMenu.Text = string.Format(Resources.menuRenameAs, Path.GetFileName(singleNewName));
                 } else {
                     renameMenu.Text = Resources.strReadFileFailed;
                     renameMenu.Enabled = false;
@@ -201,47 +206,6 @@ namespace ApkShellext2 {
                 #endregion
             }
 
-            #region Barcode
-            /* Not enabled yet
-            var barcodeMenu = new ToolStripMenuItem();
-            barcodeMenu.Text = Resources.strScanToDownload;
-            barcodeMenu.Image = Utility.ResizeBitmap(Resources.QR_Scan, size);
-            barcodeMenu.Enabled = false;
-            if (SelectedItemPaths.Count() == 1) {
-                barcodeMenu.Enabled = true;
-                var barcode = new ToolStripMenuItem();
-
-                string md5;
-                using (MD5 md5Hash = MD5.Create()) {
-                    md5 = Utility.GetMd5Hash(md5Hash, SelectedItemPaths.First());
-                }
-
-                try {
-                    // Notice service regarding the path
-                    using (var client = new WebClient()) {
-                        var values = new NameValueCollection();
-                        client.QueryString.Add("md5", md5);
-                        client.QueryString.Add("path", SelectedItemPaths.First());
-                        client.BaseAddress = "http://localhost:42728";
-                        client.UploadValues("", values);
-                    }
-
-                    string url = @"http://" + Utility.LocalIPAddress() + @":42728/" + md5;
-                    QRCodeGenerator qrGenerator = new QRCodeGenerator();
-                    QRCodeGenerator.QRCode qrCode = qrGenerator.CreateQrCode(url, QRCodeGenerator.ECCLevel.M);
-                    barcode.Image = qrCode.GetGraphic(5);
-
-                    barcodeMenu.DropDownItems.Add(barcode);
-                    barcode.Click += (sender,args) => gotoDownload();
-                } catch (Exception ex) {
-                    Log(ex.Message);
-                    barcodeMenu.Enabled = false;
-                }
-            }
-            mainMenu.DropDownItems.Add(barcodeMenu);
-            */
-            #endregion
-
             #region Preferences Menu
             var settingsMenu = new ToolStripMenuItem {
                 Text = Resources.menuPreferences,
@@ -286,38 +250,37 @@ namespace ApkShellext2 {
             return menu;
         }
 
-        //private void gotoDownload() {
-        //    string md5;
-        //    using (MD5 md5Hash = MD5.Create()) {
-        //        md5 = Utility.GetMd5Hash(md5Hash, SelectedItemPaths.First());
-        //    }
-        //    System.Diagnostics.Process.Start(@"http://" + Utility.LocalIPAddress() + @":42728/" + md5);
-        //}
-
         /// <summary>
         /// get the new filename for renaming function
         /// </summary>
         /// <returns></returns>
-        private string getNewFileName(string path) {
+        private string getNewFileName(string path, AppPackageReader reader = null) {
             //bool key_RenameWithVersionCode = Settings.DefaultRenameWithVersionCode) == 1);
             string suffix = Path.GetExtension(path);
             string newFileName = "";
             string renamePattern = Utility.GetSetting("RenamePattern", NonLocalizeResources.strRenamePatternDefault);
-            bool isapk = SelectedItemPaths.ElementAt(0).EndsWith(".apk");
-            bool isipa = SelectedItemPaths.ElementAt(0).EndsWith(".ipa");
+            bool isapk = SelectedItemPaths.ElementAt(0).EndsWith(".apk", StringComparison.OrdinalIgnoreCase);
+            bool isipa = SelectedItemPaths.ElementAt(0).EndsWith(".ipa", StringComparison.OrdinalIgnoreCase);
 
             try {
-                using (AppPackageReader reader = AppPackageReader.Read(path)) {                    
-                    newFileName = ReplaceVariables(renamePattern,reader);
+                if (reader != null) {
+                    // menu build already holds a parsed reader; reuse it
+                    newFileName = ReplaceVariables(renamePattern, reader);
+                } else {
+                    using (AppPackageReader ownReader = AppPackageReader.Read(path)) {
+                        newFileName = ReplaceVariables(renamePattern, ownReader);
+                    }
                 }
 
-                newFileName = Regex.Replace(newFileName, @"[\/:*?""<>|-]+", ""); // remove invalid chars
+                newFileName = Regex.Replace(newFileName, @"[\\/:*?""<>|-]+", ""); // remove invalid chars (incl. backslash: File.Move below)
                 if (Utility.GetSetting("ReplaceSpace")=="True") {
                     newFileName = Regex.Replace(newFileName, @"\s+", "_");
                 }
                 string oldFileName = Path.GetFileName(path);
                 string folderPath = Path.GetDirectoryName(path);
-                string tmpFileName = newFileName + suffix;
+                // GetFileName: belt-and-braces, the rename target stays in the
+                // package's own folder no matter what the pattern produced
+                string tmpFileName = Path.GetFileName(newFileName) + suffix;
 
                 int i = 0;
                 while (File.Exists(folderPath + @"\" + tmpFileName) &&
@@ -340,10 +303,16 @@ namespace ApkShellext2 {
         }
 
         private void dumpXML(string apk, string xml) {
-            using (ApkReader reader = (ApkReader)AppPackageReader.Read(apk)) {
+            using (ApkReader reader = AppPackageReader.Read(apk) as ApkReader) {
+                if (reader == null) {
+                    // mixed selection contained a non-apk (ipa/appx):
+                    // dump only works on android binary xml, skip quietly
+                    Log("Not an apk, skipping dump: " + apk);
+                    return;
+                }
                 try {
                     XmlDocument doc = reader.ExtractCompressedXml(xml);
-                    string filepath = apk + "." + Regex.Replace(xml, @"[\/:*?""<>|-]+", "_"); // remove invalid chars
+                    string filepath = apk + "." + Path.GetFileName(Regex.Replace(xml, @"[\\/:*?""<>|-]+", "_")); // attribute name, kept next to the apk
                     XmlWriterSettings setting = new XmlWriterSettings();
                     setting.Indent = true;
                     XmlWriter writer = XmlWriter.Create(filepath,setting);
@@ -480,10 +449,27 @@ namespace ApkShellext2 {
             }
         }
 
+        // modeless settings window (kkguo/apkshellext: ShowDialog() froze the Explorer window that
+        // opened it — a modal dialog in the shell process blocks that folder view until closed)
+        private static Preferences settingFormInstance = null;
+
         private void showSettings() {
-            Preferences settingForm = new Preferences();
-            settingForm.currentFile = SelectedItemPaths.ElementAt(0);
-            settingForm.ShowDialog();
+            try {
+                if (settingFormInstance == null || settingFormInstance.IsDisposed) {
+                    settingFormInstance = new Preferences();
+                    settingFormInstance.FormClosed += (s, e) => settingFormInstance = null;
+                    settingFormInstance.currentFile = SelectedItemPaths.ElementAt(0);
+                    settingFormInstance.Show();
+                } else {
+                    settingFormInstance.currentFile = SelectedItemPaths.ElementAt(0);
+                    if (settingFormInstance.WindowState == FormWindowState.Minimized)
+                        settingFormInstance.WindowState = FormWindowState.Normal;
+                    settingFormInstance.Activate();
+                    settingFormInstance.BringToFront();
+                }
+            } catch (Exception ex) {
+                Log("showSettings " + ex.Message);
+            }
         }
 
         [CustomRegisterFunction]

@@ -196,7 +196,7 @@ Par défaut, APK Shell Extension n'affiche les liens que lors de la sélection d
   </data>
   <data name="strRenameToolTip" xml:space="preserve">
     <value>Pour éviter les situations où la révision change, mais pas la version
-Si cette case est cochée, le fichier sera renommée comme %AppName%_%Version%_%Revision%, à la place de %AppName%_%Version%.</value>
+Si cette case est cochée, le fichier sera renommé en %AppName%_%Version%_%Revision%, à la place de %AppName%_%Version%.</value>
   </data>
   <data name="strScanToDownload" xml:space="preserve">
     <value>Scanner le QR Code pour télécharger</value>
@@ -268,7 +268,7 @@ Si cette case est cochée, le fichier sera renommée comme %AppName%_%Version%_%
     <value>Afficher le lien vers le Windows Store dans le menu contextuel</value>
   </data>
   <data name="strInfoTipPattern" xml:space="preserve">
-    <value>Modèle d'info-bulle</value>
+    <value>Modèle d'info-bulle :</value>
   </data>
   <data name="btnBrowse" xml:space="preserve">
     <value>Parcourir</value>
@@ -330,4 +330,19 @@ Si cette case est cochée, le fichier sera renommée comme %AppName%_%Version%_%
   </data>
   
   
+  <data name="strReplaceSpaceWith_" xml:space="preserve">
+    <value>Remplacer les espaces par :</value>
+  </data>
+  <data name="strPatreonBtn" xml:space="preserve">
+    <value>Soutenez-moi !</value>
+  </data>
+  <data name="strPatreonTip" xml:space="preserve">
+    <value>Soutenez-moi sur Patreon</value>
+  </data>
+  <data name="strUseAppNameLang" xml:space="preserve">
+    <value>Langue du nom de l'application :</value>
+  </data>
+  <data name="strFollowUiLanguage" xml:space="preserve">
+    <value>(suivre la langue de l'interface)</value>
+  </data>
 </root>

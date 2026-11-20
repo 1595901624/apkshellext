@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -43,7 +43,7 @@
     <SignAssembly>true</SignAssembly>
   </PropertyGroup>
   <PropertyGroup>
-    <AssemblyOriginatorKeyFile>apkshellext2_hy.pfx</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>apkshellext2_hy.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <PropertyGroup>
     <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
@@ -60,9 +60,6 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Google.Protobuf, Version=3.8.0.0, Culture=neutral, PublicKeyToken=a7d26565bac4d604, processorArchitecture=MSIL">
-      <HintPath>..\packages\Google.Protobuf.3.8.0\lib\net45\Google.Protobuf.dll</HintPath>
-    </Reference>
     <Reference Include="Microsoft.VisualBasic" />
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
@@ -84,7 +81,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AabReader.cs" />
-    <Compile Include="ApkChunk.cs" />
+    <!-- ApkChunk.cs is dev tooling only (used by apkshellextTest); it is
+         linked into that project instead of shipping inside the shell dll. -->
+
     <Compile Include="ApkQuickReader.cs" />
     <Compile Include="ApkIconHandler.cs" />
     <Compile Include="ApkInfoTipHandler.cs" />
@@ -93,19 +92,6 @@
     <Compile Include="AppPackageReader.cs" />
     <Compile Include="AppxBundleReader.cs" />
     <Compile Include="AppxReader.cs" />
-    <Compile Include="Ionic.Zlib\Ionic.Zlib\CRC32.cs" />
-    <Compile Include="Ionic.Zlib\Ionic.Zlib\Deflate.cs" />
-    <Compile Include="Ionic.Zlib\Ionic.Zlib\DeflateStream.cs" />
-    <Compile Include="Ionic.Zlib\Ionic.Zlib\GZipStream.cs" />
-    <Compile Include="Ionic.Zlib\Ionic.Zlib\Inflate.cs" />
-    <Compile Include="Ionic.Zlib\Ionic.Zlib\InfTree.cs" />
-    <Compile Include="Ionic.Zlib\Ionic.Zlib\ParallelDeflateOutputStream.cs" />
-    <Compile Include="Ionic.Zlib\Ionic.Zlib\Tree.cs" />
-    <Compile Include="Ionic.Zlib\Ionic.Zlib\Zlib.cs" />
-    <Compile Include="Ionic.Zlib\Ionic.Zlib\ZlibBaseStream.cs" />
-    <Compile Include="Ionic.Zlib\Ionic.Zlib\ZlibCodec.cs" />
-    <Compile Include="Ionic.Zlib\Ionic.Zlib\ZlibConstants.cs" />
-    <Compile Include="Ionic.Zlib\Ionic.Zlib\ZlibStream.cs" />
     <Compile Include="IpaReader.cs" />
     <Compile Include="PlistCS\PlistCS\Src\Plist.cs" />
     <Compile Include="PNGDecrush\PNGDecrush\BinaryReaderNetworkHostOrderAdditions.cs" />
@@ -134,7 +120,6 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
-    <Compile Include="QRCoder\QRCoder\QRCoder.cs" />
     <Compile Include="Properties\Settings.cs" />
     <Compile Include="SharpShell\SharpShell\SharpShell\Attributes\AssociationType.cs" />
     <Compile Include="SharpShell\SharpShell\SharpShell\Attributes\COMServerAssociationAttribute.cs" />
@@ -373,291 +358,18 @@
     <Compile Include="SharpShell\SharpShell\SharpShell\SharpShellServer.cs" />
     <Compile Include="SharpShell\SharpShell\SharpShell\SharpThumbnailHandler\SharpThumbnailHandler.cs" />
     <Compile Include="SharpShell\SharpShell\SharpShell\ShellExtInitServer.cs" />
-    <Compile Include="SharpZipLib\src\Checksums\Adler32.cs" />
-    <Compile Include="SharpZipLib\src\Checksums\CRC32.cs" />
-    <Compile Include="SharpZipLib\src\Checksums\IChecksum.cs" />
-    <Compile Include="SharpZipLib\src\Checksums\StrangeCRC.cs" />
-    <Compile Include="SharpZipLib\src\Core\FileSystemScanner.cs" />
-    <Compile Include="SharpZipLib\src\Core\INameTransform.cs" />
-    <Compile Include="SharpZipLib\src\Core\IScanFilter.cs" />
-    <Compile Include="SharpZipLib\src\Core\NameFilter.cs" />
-    <Compile Include="SharpZipLib\src\Core\PathFilter.cs" />
-    <Compile Include="SharpZipLib\src\Core\StreamUtils.cs" />
-    <Compile Include="SharpZipLib\src\Core\WindowsPathUtils.cs" />
-    <Compile Include="SharpZipLib\src\Encryption\PkzipClassic.cs" />
-    <Compile Include="SharpZipLib\src\Encryption\ZipAESStream.cs" />
-    <Compile Include="SharpZipLib\src\Encryption\ZipAESTransform.cs" />
-    <Compile Include="SharpZipLib\src\SharpZipBaseException.cs" />
-    <Compile Include="SharpZipLib\src\Zip\Compression\Deflater.cs" />
-    <Compile Include="SharpZipLib\src\Zip\Compression\DeflaterConstants.cs" />
-    <Compile Include="SharpZipLib\src\Zip\Compression\DeflaterEngine.cs" />
-    <Compile Include="SharpZipLib\src\Zip\Compression\DeflaterHuffman.cs" />
-    <Compile Include="SharpZipLib\src\Zip\Compression\DeflaterPending.cs" />
-    <Compile Include="SharpZipLib\src\Zip\Compression\Inflater.cs" />
-    <Compile Include="SharpZipLib\src\Zip\Compression\InflaterDynHeader.cs" />
-    <Compile Include="SharpZipLib\src\Zip\Compression\InflaterHuffmanTree.cs" />
-    <Compile Include="SharpZipLib\src\Zip\Compression\PendingBuffer.cs" />
-    <Compile Include="SharpZipLib\src\Zip\Compression\Streams\DeflaterOutputStream.cs" />
-    <Compile Include="SharpZipLib\src\Zip\Compression\Streams\InflaterInputStream.cs" />
-    <Compile Include="SharpZipLib\src\Zip\Compression\Streams\OutputWindow.cs" />
-    <Compile Include="SharpZipLib\src\Zip\Compression\Streams\StreamManipulator.cs" />
-    <Compile Include="SharpZipLib\src\Zip\FastZip.cs" />
-    <Compile Include="SharpZipLib\src\Zip\IEntryFactory.cs" />
-    <Compile Include="SharpZipLib\src\Zip\WindowsNameTransform.cs" />
-    <Compile Include="SharpZipLib\src\Zip\ZipConstants.cs" />
-    <Compile Include="SharpZipLib\src\Zip\ZipEntry.cs" />
-    <Compile Include="SharpZipLib\src\Zip\ZipEntryFactory.cs" />
-    <Compile Include="SharpZipLib\src\Zip\ZipException.cs" />
-    <Compile Include="SharpZipLib\src\Zip\ZipExtraData.cs" />
-    <Compile Include="SharpZipLib\src\Zip\ZipFile.cs" />
-    <Compile Include="SharpZipLib\src\Zip\ZipHelperStream.cs" />
-    <Compile Include="SharpZipLib\src\Zip\ZipInputStream.cs" />
-    <Compile Include="SharpZipLib\src\Zip\ZipNameTransform.cs" />
-    <Compile Include="SharpZipLib\src\Zip\ZipOutputStream.cs" />
-    <Compile Include="SVG\Source\Basic Shapes\SvgCircle.cs" />
-    <Compile Include="SVG\Source\Basic Shapes\SvgEllipse.cs" />
-    <Compile Include="SVG\Source\Basic Shapes\SvgImage.cs" />
-    <Compile Include="SVG\Source\Basic Shapes\SvgLine.cs" />
-    <Compile Include="SVG\Source\Basic Shapes\SvgMarkerElement.cs" />
-    <Compile Include="SVG\Source\Basic Shapes\SvgPathBasedElement.cs" />
-    <Compile Include="SVG\Source\Basic Shapes\SvgPolygon.cs" />
-    <Compile Include="SVG\Source\Basic Shapes\SvgPolyline.cs" />
-    <Compile Include="SVG\Source\Basic Shapes\SvgRectangle.cs" />
-    <Compile Include="SVG\Source\Basic Shapes\SvgVisibility.cs" />
-    <Compile Include="SVG\Source\Basic Shapes\SvgVisualElement.cs" />
-    <Compile Include="SVG\Source\Basic Shapes\SvgVisualElementStyle.cs" />
-    <Compile Include="SVG\Source\Clipping and Masking\ISvgClipable.cs" />
-    <Compile Include="SVG\Source\Clipping and Masking\SvgClipPath.cs" />
-    <Compile Include="SVG\Source\Clipping and Masking\SvgClipRule.cs" />
-    <Compile Include="SVG\Source\Clipping and Masking\SvgMask.cs" />
-    <Compile Include="SVG\Source\Css\CssQuery.cs" />
-    <Compile Include="SVG\Source\Css\SvgElementOps.cs" />
-    <Compile Include="SVG\Source\DataTypes\ISvgSupportsCoordinateUnits.cs" />
-    <Compile Include="SVG\Source\DataTypes\ISvgViewPort.cs" />
-    <Compile Include="SVG\Source\DataTypes\SvgAspectRatio.cs" />
-    <Compile Include="SVG\Source\DataTypes\SvgAspectRatioConverter.cs" />
-    <Compile Include="SVG\Source\DataTypes\SvgColourInterpolation.cs" />
-    <Compile Include="SVG\Source\DataTypes\SvgCoordinateUnits.cs" />
-    <Compile Include="SVG\Source\DataTypes\SvgElementStyle.cs" />
-    <Compile Include="SVG\Source\DataTypes\SvgFontStyle.cs" />
-    <Compile Include="SVG\Source\DataTypes\SvgFontVariant.cs" />
-    <Compile Include="SVG\Source\DataTypes\SvgFontWeight.cs" />
-    <Compile Include="SVG\Source\DataTypes\SvgMarkerUnits.cs" />
-    <Compile Include="SVG\Source\DataTypes\SvgOrient.cs" />
-    <Compile Include="SVG\Source\DataTypes\SvgOrientConverter.cs" />
-    <Compile Include="SVG\Source\DataTypes\SvgOverflow.cs" />
-    <Compile Include="SVG\Source\DataTypes\SvgPoint.cs" />
-    <Compile Include="SVG\Source\DataTypes\SvgPointCollection.cs" />
-    <Compile Include="SVG\Source\DataTypes\SvgTextDecoration.cs" />
-    <Compile Include="SVG\Source\DataTypes\SvgTextLengthAdjust.cs" />
-    <Compile Include="SVG\Source\DataTypes\SvgTextPathMethod.cs" />
-    <Compile Include="SVG\Source\DataTypes\SvgTextPathSpacing.cs" />
-    <Compile Include="SVG\Source\DataTypes\SvgTextTransformation.cs" />
-    <Compile Include="SVG\Source\DataTypes\SvgUnit.cs" />
-    <Compile Include="SVG\Source\DataTypes\SvgUnitCollection.cs" />
-    <Compile Include="SVG\Source\DataTypes\SvgUnitConverter.cs" />
-    <Compile Include="SVG\Source\DataTypes\SvgViewBox.cs" />
-    <Compile Include="SVG\Source\DataTypes\XmlSpaceHandling.cs" />
-    <Compile Include="SVG\Source\Document Structure\SvgDefinitionList.cs" />
-    <Compile Include="SVG\Source\Document Structure\SvgDescription.cs" />
-    <Compile Include="SVG\Source\Document Structure\SvgDocumentMetadata.cs" />
-    <Compile Include="SVG\Source\Document Structure\SvgFragment.cs" />
-    <Compile Include="SVG\Source\Document Structure\SvgGroup.cs" />
-    <Compile Include="SVG\Source\Document Structure\SvgSwitch.cs" />
-    <Compile Include="SVG\Source\Document Structure\SvgSymbol.cs" />
-    <Compile Include="SVG\Source\Document Structure\SvgTitle.cs" />
-    <Compile Include="SVG\Source\Document Structure\SvgUse.cs" />
-    <Compile Include="SVG\Source\Exceptions\SvgException.cs" />
-    <Compile Include="SVG\Source\Exceptions\SvgGdiPlusCannotBeLoadedException.cs" />
-    <Compile Include="SVG\Source\Exceptions\SvgMemoryException.cs" />
-    <Compile Include="SVG\Source\Extensibility\SvgForeignObject.cs" />
-    <Compile Include="SVG\Source\ExtensionMethods\UriExtensions.cs" />
-    <Compile Include="SVG\Source\Extensions.cs" />
-    <Compile Include="SVG\Source\External\ExCSS\IToString.cs" />
-    <Compile Include="SVG\Source\External\ExCSS\Lexer.cs" />
-    <Compile Include="SVG\Source\External\ExCSS\Model\Enumerations.cs" />
-    <Compile Include="SVG\Source\External\ExCSS\Model\Extensions\CharacterExtensions.cs" />
-    <Compile Include="SVG\Source\External\ExCSS\Model\Extensions\StringExtensions.cs" />
-    <Compile Include="SVG\Source\External\ExCSS\Model\FunctionBuffer.cs" />
-    <Compile Include="SVG\Source\External\ExCSS\Model\HtmlEncoding.cs" />
-    <Compile Include="SVG\Source\External\ExCSS\Model\ICssRules.cs" />
-    <Compile Include="SVG\Source\External\ExCSS\Model\ICssSelector.cs" />
-    <Compile Include="SVG\Source\External\ExCSS\Model\IStyleDeclaration.cs" />
-    <Compile Include="SVG\Source\External\ExCSS\Model\ISupportsMedia.cs" />
-    <Compile Include="SVG\Source\External\ExCSS\Model\MediaTypeList.cs" />
-    <Compile Include="SVG\Source\External\ExCSS\Model\Rules\AggregateRule.cs" />
-    <Compile Include="SVG\Source\External\ExCSS\Model\Rules\CharacterSetRule.cs" />
-    <Compile Include="SVG\Source\External\ExCSS\Model\Rules\ConditionalRule.cs" />
-    <Compile Include="SVG\Source\External\ExCSS\Model\Rules\DocumentRule.cs" />
-    <Compile Include="SVG\Source\External\ExCSS\Model\Rules\FontFaceRule.cs" />
-    <Compile Include="SVG\Source\External\ExCSS\Model\Rules\GenericRule.cs" />
-    <Compile Include="SVG\Source\External\ExCSS\Model\Rules\ImportRule.cs" />
-    <Compile Include="SVG\Source\External\ExCSS\Model\Rules\IRuleContainer.cs" />
-    <Compile Include="SVG\Source\External\ExCSS\Model\Rules\KeyframeRule.cs" />
-    <Compile Include="SVG\Source\External\ExCSS\Model\Rules\KeyframesRule.cs" />
-    <Compile Include="SVG\Source\External\ExCSS\Model\Rules\MediaRule.cs" />
-    <Compile Include="SVG\Source\External\ExCSS\Model\Rules\NamespaceRule.cs" />
-    <Compile Include="SVG\Source\External\ExCSS\Model\Rules\PageRule.cs" />
-    <Compile Include="SVG\Source\External\ExCSS\Model\Rules\RuleSet.cs" />
-    <Compile Include="SVG\Source\External\ExCSS\Model\Rules\StyleDeclaration.cs" />
-    <Compile Include="SVG\Source\External\ExCSS\Model\Rules\StyleRule.cs" />
-    <Compile Include="SVG\Source\External\ExCSS\Model\Rules\SupportsRule.cs" />
-    <Compile Include="SVG\Source\External\ExCSS\Model\Selector\AggregateSelectorList.cs" />
-    <Compile Include="SVG\Source\External\ExCSS\Model\Selector\BaseSelector.cs" />
-    <Compile Include="SVG\Source\External\ExCSS\Model\Selector\CombinatorSelector.cs" />
-    <Compile Include="SVG\Source\External\ExCSS\Model\Selector\ComplexSelector.cs" />
-    <Compile Include="SVG\Source\External\ExCSS\Model\Selector\FirstChildSelector.cs" />
-    <Compile Include="SVG\Source\External\ExCSS\Model\Selector\LastChildSelector.cs" />
-    <Compile Include="SVG\Source\External\ExCSS\Model\Selector\MultipleSelectorList.cs" />
-    <Compile Include="SVG\Source\External\ExCSS\Model\Selector\NthChildSelector.cs" />
-    <Compile Include="SVG\Source\External\ExCSS\Model\Selector\NthFirstChildSelector.cs" />
-    <Compile Include="SVG\Source\External\ExCSS\Model\Selector\NthLastChildSelector.cs" />
-    <Compile Include="SVG\Source\External\ExCSS\Model\Selector\NthLastOfTypeSelector.cs" />
-    <Compile Include="SVG\Source\External\ExCSS\Model\Selector\NthOfTypeSelector.cs" />
-    <Compile Include="SVG\Source\External\ExCSS\Model\Selector\SelectorFactory.cs" />
-    <Compile Include="SVG\Source\External\ExCSS\Model\Selector\SelectorList.cs" />
-    <Compile Include="SVG\Source\External\ExCSS\Model\Selector\SimpleSelector.cs" />
-    <Compile Include="SVG\Source\External\ExCSS\Model\Specification.cs" />
-    <Compile Include="SVG\Source\External\ExCSS\Model\TextBlocks\Block.cs" />
-    <Compile Include="SVG\Source\External\ExCSS\Model\TextBlocks\BracketBlock.cs" />
-    <Compile Include="SVG\Source\External\ExCSS\Model\TextBlocks\CharacterBlock.cs" />
-    <Compile Include="SVG\Source\External\ExCSS\Model\TextBlocks\CommentBlock.cs" />
-    <Compile Include="SVG\Source\External\ExCSS\Model\TextBlocks\DelimiterBlock.cs" />
-    <Compile Include="SVG\Source\External\ExCSS\Model\TextBlocks\MatchBlock.cs" />
-    <Compile Include="SVG\Source\External\ExCSS\Model\TextBlocks\NumericBlock.cs" />
-    <Compile Include="SVG\Source\External\ExCSS\Model\TextBlocks\PipeBlock.cs" />
-    <Compile Include="SVG\Source\External\ExCSS\Model\TextBlocks\RangeBlock.cs" />
-    <Compile Include="SVG\Source\External\ExCSS\Model\TextBlocks\SpecialCharacter.cs" />
-    <Compile Include="SVG\Source\External\ExCSS\Model\TextBlocks\StringBlock.cs" />
-    <Compile Include="SVG\Source\External\ExCSS\Model\TextBlocks\SymbolBlock.cs" />
-    <Compile Include="SVG\Source\External\ExCSS\Model\TextBlocks\UnitBlock.cs" />
-    <Compile Include="SVG\Source\External\ExCSS\Model\Values\GenericFunction.cs" />
-    <Compile Include="SVG\Source\External\ExCSS\Model\Values\HtmlColor.cs" />
-    <Compile Include="SVG\Source\External\ExCSS\Model\Values\InheritTerm.cs" />
-    <Compile Include="SVG\Source\External\ExCSS\Model\Values\PrimitiveTerm.cs" />
-    <Compile Include="SVG\Source\External\ExCSS\Model\Values\Property.cs" />
-    <Compile Include="SVG\Source\External\ExCSS\Model\Values\Term.cs" />
-    <Compile Include="SVG\Source\External\ExCSS\Model\Values\TermList.cs" />
-    <Compile Include="SVG\Source\External\ExCSS\Parser.Blocks.cs" />
-    <Compile Include="SVG\Source\External\ExCSS\Parser.cs" />
-    <Compile Include="SVG\Source\External\ExCSS\StyleSheet.cs" />
-    <Compile Include="SVG\Source\External\ExCSS\StylesheetParseError.cs" />
-    <Compile Include="SVG\Source\External\ExCSS\StylesheetReader.cs" />
-    <Compile Include="SVG\Source\External\Fizzler\Either.cs" />
-    <Compile Include="SVG\Source\External\Fizzler\HumanReadableSelectorGenerator.cs" />
-    <Compile Include="SVG\Source\External\Fizzler\IElementOps.cs" />
-    <Compile Include="SVG\Source\External\Fizzler\ISelectorGenerator.cs" />
-    <Compile Include="SVG\Source\External\Fizzler\NamespacePrefix.cs" />
-    <Compile Include="SVG\Source\External\Fizzler\Parser.cs" />
-    <Compile Include="SVG\Source\External\Fizzler\Reader.cs" />
-    <Compile Include="SVG\Source\External\Fizzler\Selector.cs" />
-    <Compile Include="SVG\Source\External\Fizzler\SelectorGenerator.cs" />
-    <Compile Include="SVG\Source\External\Fizzler\SelectorGeneratorTee.cs" />
-    <Compile Include="SVG\Source\External\Fizzler\SelectorsCachingCompiler.cs" />
-    <Compile Include="SVG\Source\External\Fizzler\Token.cs" />
-    <Compile Include="SVG\Source\External\Fizzler\Tokener.cs" />
-    <Compile Include="SVG\Source\External\Fizzler\TokenKind.cs" />
-    <Compile Include="SVG\Source\Filter Effects\feColourMatrix\SvgColourMatrix.cs" />
-    <Compile Include="SVG\Source\Filter Effects\feColourMatrix\SvgColourMatrixType.cs" />
-    <Compile Include="SVG\Source\Filter Effects\feGaussianBlur\RawBitmap.cs" />
-    <Compile Include="SVG\Source\Filter Effects\feGaussianBlur\SvgGaussianBlur.cs" />
-    <Compile Include="SVG\Source\Filter Effects\feMerge\SvgMerge.cs" />
-    <Compile Include="SVG\Source\Filter Effects\feMerge\SvgMergeNode.cs" />
-    <Compile Include="SVG\Source\Filter Effects\feOffset\SvgOffset.cs" />
-    <Compile Include="SVG\Source\Filter Effects\ImageBuffer.cs" />
-    <Compile Include="SVG\Source\Filter Effects\ISvgFilterable.cs" />
-    <Compile Include="SVG\Source\Filter Effects\SvgFilter.cs" />
-    <Compile Include="SVG\Source\Filter Effects\SvgFilterPrimitive.cs" />
-    <Compile Include="SVG\Source\NonSvgElement.cs" />
-    <Compile Include="SVG\Source\Painting\EnumConverters.cs" />
-    <Compile Include="SVG\Source\Painting\GenericBoundable.cs" />
-    <Compile Include="SVG\Source\Painting\ISvgBoundable.cs" />
-    <Compile Include="SVG\Source\Painting\ISvgStylable.cs" />
-    <Compile Include="SVG\Source\Painting\SvgColourConverter.cs" />
-    <Compile Include="SVG\Source\Painting\SvgColourServer.cs" />
-    <Compile Include="SVG\Source\Painting\SvgDeferredPaintServer.cs" />
-    <Compile Include="SVG\Source\Painting\SvgFallbackPaintServer .cs" />
-    <Compile Include="SVG\Source\Painting\SvgFillRule.cs" />
-    <Compile Include="SVG\Source\Painting\SvgGradientServer.cs" />
-    <Compile Include="SVG\Source\Painting\SvgGradientSpreadMethod.cs" />
-    <Compile Include="SVG\Source\Painting\SvgGradientStop.cs" />
-    <Compile Include="SVG\Source\Painting\SvgLinearGradientServer.cs" />
-    <Compile Include="SVG\Source\Painting\SvgMarker.cs" />
-    <Compile Include="SVG\Source\Painting\SvgPaintServer.cs" />
-    <Compile Include="SVG\Source\Painting\SvgPaintServerFactory.cs" />
-    <Compile Include="SVG\Source\Painting\SvgPatternServer.cs" />
-    <Compile Include="SVG\Source\Painting\SvgRadialGradientServer.cs" />
-    <Compile Include="SVG\Source\Painting\SvgStrokeLineCap.cs" />
-    <Compile Include="SVG\Source\Painting\SvgStrokeLineJoin.cs" />
-    <Compile Include="SVG\Source\Paths\CoordinateParser.cs" />
-    <Compile Include="SVG\Source\Paths\SvgArcSegment.cs" />
-    <Compile Include="SVG\Source\Paths\SvgClosePathSegment.cs" />
-    <Compile Include="SVG\Source\Paths\SvgCubicCurveSegment.cs" />
-    <Compile Include="SVG\Source\Paths\SvgLineSegment.cs" />
-    <Compile Include="SVG\Source\Paths\SvgMoveToSegment.cs" />
-    <Compile Include="SVG\Source\Paths\SvgPath.cs" />
-    <Compile Include="SVG\Source\Paths\SvgPathBuilder.cs" />
-    <Compile Include="SVG\Source\Paths\SvgPathSegment.cs" />
-    <Compile Include="SVG\Source\Paths\SvgPathSegmentList.cs" />
-    <Compile Include="SVG\Source\Paths\SvgQuadraticCurveSegment.cs" />
-    <Compile Include="SVG\Source\Rendering\IGraphicsProvider.cs" />
-    <Compile Include="SVG\Source\Rendering\ISvgRenderer.cs" />
-    <Compile Include="SVG\Source\Rendering\SvgRenderer.cs" />
-    <Compile Include="SVG\Source\Rendering\SvgRendering.cs" />
-    <Compile Include="SVG\Source\SvgAttributeAttribute.cs" />
-    <Compile Include="SVG\Source\SvgAttributeCollection.cs" />
-    <Compile Include="SVG\Source\SvgContentNode.cs" />
-    <Compile Include="SVG\Source\SvgDefinitionDefaults.cs" />
-    <Compile Include="SVG\Source\SvgDocument.cs" />
-    <Compile Include="SVG\Source\SvgDtdResolver.cs" />
-    <Compile Include="SVG\Source\SvgElement.cs" />
-    <Compile Include="SVG\Source\SvgElementAttribute.cs" />
-    <Compile Include="SVG\Source\SvgElementCollection.cs" />
-    <Compile Include="SVG\Source\SvgElementFactory.cs" />
-    <Compile Include="SVG\Source\SvgElementIdManager.cs" />
-    <Compile Include="SVG\Source\SvgElementStyle.cs" />
-    <Compile Include="SVG\Source\SvgExtentions.cs" />
-    <Compile Include="SVG\Source\SvgFontManager.cs" />
-    <Compile Include="SVG\Source\SvgNodeReader.cs" />
-    <Compile Include="SVG\Source\SvgTextReader.cs" />
-    <Compile Include="SVG\Source\SvgUnknownElement.cs" />
-    <Compile Include="SVG\Source\Text\FontFamily.cs" />
-    <Compile Include="SVG\Source\Text\GdiFontDefn.cs" />
-    <Compile Include="SVG\Source\Text\IFontDefn.cs" />
-    <Compile Include="SVG\Source\Text\PathStatistics.cs" />
-    <Compile Include="SVG\Source\Text\SvgFont.cs" />
-    <Compile Include="SVG\Source\Text\SvgFontDefn.cs" />
-    <Compile Include="SVG\Source\Text\SvgFontFace.cs" />
-    <Compile Include="SVG\Source\Text\SvgFontFaceSrc.cs" />
-    <Compile Include="SVG\Source\Text\SvgFontFaceUri.cs" />
-    <Compile Include="SVG\Source\Text\SvgGlyph.cs" />
-    <Compile Include="SVG\Source\Text\SvgKern.cs" />
-    <Compile Include="SVG\Source\Text\SvgMissingGlyph.cs" />
-    <Compile Include="SVG\Source\Text\SvgText.cs" />
-    <Compile Include="SVG\Source\Text\SvgTextAnchor.cs" />
-    <Compile Include="SVG\Source\Text\SvgTextBase.cs" />
-    <Compile Include="SVG\Source\Text\SvgTextPath.cs" />
-    <Compile Include="SVG\Source\Text\SvgTextRef.cs" />
-    <Compile Include="SVG\Source\Text\SvgTextSpan.cs" />
-    <Compile Include="SVG\Source\Transforms\ISvgTransformable.cs" />
-    <Compile Include="SVG\Source\Transforms\SvgMatrix.cs" />
-    <Compile Include="SVG\Source\Transforms\SvgRotate.cs" />
-    <Compile Include="SVG\Source\Transforms\SvgScale.cs" />
-    <Compile Include="SVG\Source\Transforms\SvgShear.cs" />
-    <Compile Include="SVG\Source\Transforms\SvgSkew.cs" />
-    <Compile Include="SVG\Source\Transforms\SvgTransform.cs" />
-    <Compile Include="SVG\Source\Transforms\SvgTransformCollection.cs" />
-    <Compile Include="SVG\Source\Transforms\SvgTransformConverter.cs" />
-    <Compile Include="SVG\Source\Transforms\SvgTranslate.cs" />
-    <Compile Include="SVG\Source\Web\SvgHandler.cs" />
+    <Compile Include="FacadeResolver.cs" />
+    <Compile Include="VectorDrawableToSvg.cs" />
+    <Compile Include="ZipSafety.cs" />
+    <Compile Include="SplitApkBundleReader.cs" />
     <Compile Include="VectorDrawableRender.cs" />
     <Compile Include="Utility.cs" />
     <Compile Include="WebP-wrapper\WebPTest\WebPWrapper.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Resources\Patreon_Mark_Coral.jpg" />
-    <Content Include="WebP-wrapper\WebPTest\libwebp_x64.dll" />
-    <Content Include="WebP-wrapper\WebPTest\libwebp_x86.dll" />
+    <Content Include="LibWebP\libwebp_x64.dll" />
+    <Content Include="LibWebP\libwebp_x86.dll" />
     <None Include="apkshellext2_hy.pfx" />
     <None Include="app.config">
       <SubType>Designer</SubType>
@@ -676,19 +388,24 @@
     <EmbeddedResource Include="Properties\Resources.ar-SA.resx" />
     <EmbeddedResource Include="Properties\Resources.de-DE.resx" />
     <EmbeddedResource Include="Properties\Resources.el-GR.resx" />
+    <EmbeddedResource Include="Properties\Resources.es-ES.resx">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.fa-IR.resx" />
     <EmbeddedResource Include="Properties\Resources.fr-FR.resx" />
     <EmbeddedResource Include="Properties\Resources.he-IL.resx" />
+    <EmbeddedResource Include="Properties\Resources.it-IT.resx" />
     <EmbeddedResource Include="Properties\Resources.ja-JP.resx" />
     <EmbeddedResource Include="Properties\Resources.ko-KR.resx">
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Properties\Resources.es-ES.resx">
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.my-MM.resx" />
+    <EmbeddedResource Include="Properties\Resources.nl-NL.resx" />
+    <EmbeddedResource Include="Properties\Resources.pl-PL.resx" />
     <EmbeddedResource Include="Properties\Resources.pt-PT.resx" />
     <EmbeddedResource Include="Properties\Resources.ru-RU.resx" />
     <EmbeddedResource Include="Properties\Resources.tr-TR.resx" />
+    <EmbeddedResource Include="Properties\Resources.uk-UA.resx" />
     <EmbeddedResource Include="Properties\Resources.zh-TW.resx" />
     <None Include="Resources\Apple.png" />
     <None Include="Resources\Android.png" />
@@ -701,7 +418,6 @@
     <None Include="Resources\msft store icon.png" />
     <None Include="Resources\restart.png" />
     <Content Include="Resources\udpate.png" />
-    <EmbeddedResource Include="Properties\Resources.it-IT.resx" />
     <Content Include="Resources\Windows.png" />
     <Content Include="SharpShell\SharpShell\SharpShell\NativeBridge\SharpShellNativeBridge32.dll" />
     <Content Include="SharpShell\SharpShell\SharpShell\NativeBridge\SharpShellNativeBridge64.dll" />
@@ -736,31 +452,7 @@
     </PreBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
-    <PostBuildEvent>copy /Y $(ProjectDir)\Resources\install.bat  $(TargetDir)
-copy /Y $(ProjectDir)\Resources\restart_explorer.bat  $(TargetDir)
-copy /Y $(ProjectDir)\Resources\uninstall.bat  $(TargetDir)
-copy /Y $(ProjectDir)\WebP-wrapper\WebPTest\libwebp_*.dll $(TargetDir)
-if $(ConfigurationName) == Release (
-"C:\Program Files\7-Zip\7z.exe" a ApkShellext2.7z ApkShellext2.dll *.bat libwebp_*.dll
-"C:\Program Files\7-Zip\7z.exe" a ar-SA.7z ar-SA
-"C:\Program Files\7-Zip\7z.exe" a de-DE.7z de-DE
-"C:\Program Files\7-Zip\7z.exe" a el-GR.7z el-GR
-"C:\Program Files\7-Zip\7z.exe" a es-ES.7z es-ES
-"C:\Program Files\7-Zip\7z.exe" a fa-IR.7z fa-IR
-"C:\Program Files\7-Zip\7z.exe" a  fr-FR.7z fr-FR
-"C:\Program Files\7-Zip\7z.exe" a  he-IL.7z he-IL
-"C:\Program Files\7-Zip\7z.exe" a  it-IT.7z it-IT
-"C:\Program Files\7-Zip\7z.exe" a  ja-JP.7z ja-JP
-"C:\Program Files\7-Zip\7z.exe" a  ko-KR.7z ko-KR
-"C:\Program Files\7-Zip\7z.exe" a  pt-PT.7z pt-PT
-"C:\Program Files\7-Zip\7z.exe" a  ru-RU.7z ru-RU
-"C:\Program Files\7-Zip\7z.exe" a  tr-TR.7z tr-TR
-"C:\Program Files\7-Zip\7z.exe" a zh-CN.7z zh-CN
-"C:\Program Files\7-Zip\7z.exe" a zh-TW.7z zh-TW
-) else (
-copy /Y $(ProjectDir)\Resources\debug.bat  $(TargetDir)
-)
-start $(TargetDir)</PostBuildEvent>
+    <PostBuildEvent>call "$(ProjectDir)Resources\postbuild.cmd" "$(TargetDir)" "$(ProjectDir)" $(ConfigurationName)</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
@@ -769,4 +461,70 @@ start $(TargetDir)</PostBuildEvent>
   <Target Name="AfterBuild">
   </Target>
   -->
+  <PropertyGroup>
+    <!-- Svg 3.5.0 source-embedded: language + framework symbols -->
+    <LangVersion>10.0</LangVersion>
+    <DefineConstants>$(DefineConstants);NETFULL;NETFRAMEWORK;NET48;NET462_OR_GREATER</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- Svg 3.5.0 (v3.5.0 tag, source-embedded; wildcard include) -->
+    <Compile Include="SVG\Source\**\*.cs" />
+    <Compile Remove="SVG\Source\Properties\**\*.cs" />
+    <EmbeddedResource Include="SVG\Source\Resources\svg11.dtd">
+      <LogicalName>Svg.Resources.svg11.dtd</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
+  <!-- QRCoder (and with it System.Text.Encoding.CodePages) was removed after
+       3.4.3 dropped the QR-code menu entry; nothing references it any more. -->
+  <ItemGroup>
+    <Reference Include="ExCSS">
+      <HintPath>..\packages\ExCSS.4.2.3\lib\net48\ExCSS.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Memory">
+      <HintPath>..\packages\System.Memory.4.5.5\lib\net461\System.Memory.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Buffers">
+      <HintPath>..\packages\System.Buffers.4.5.1\lib\net461\System.Buffers.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Numerics.Vectors">
+      <HintPath>..\packages\System.Numerics.Vectors.4.5.0\lib\net46\System.Numerics.Vectors.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Runtime.CompilerServices.Unsafe">
+      <HintPath>..\packages\System.Runtime.CompilerServices.Unsafe.6.0.0\lib\net461\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="WindowsBase" />
+    <Reference Include="System.Xaml" />
+    <!-- SvgElement/SvgElementIdManager use HttpClient for remote SVG loading. Resolved from
+         the net48 targeting pack; on target machines the 4.8 runtime provides it from the
+         GAC, so nothing extra is deployed next to the shell extension. -->
+    <Reference Include="System.Net.Http" />
+    <!-- Only used when building with dotnet-CLI MSBuild (coreclr GenerateResource refuses
+         non-string resx payloads without this). VS's own MSBuild takes the classic path and
+         this reference stays out of the build. Verification invocation:
+         dotnet msbuild ... /p:GenerateResourceUsePreserializedResources=true -->
+    <Reference Include="System.Resources.Extensions" Condition="'$(GenerateResourceUsePreserializedResources)' == 'true'">
+      <HintPath>..\packages\System.Resources.Extensions.6.0.0\lib\net461\System.Resources.Extensions.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <!-- SharpZipLib v1.4.2 (official icsharpcode tag, source-embedded; was kkguo fork @v0.86-era.
+         Fork's single private commit (InflaterInputStream.Length -> NotSupportedException) is
+         already upstream at Zip/Compression/Streams/InflaterInputStream.cs.
+         Exclusions: unused codecs (GZip/Lzw/Tar, incl. its only System.Memory dependency
+         ExactMemoryPool.cs) match the pre-upgrade compile surface; BZip2 is now REQUIRED
+         (ZipFile.cs:921/:2700 reference it); AssemblyInfo.cs excluded (host owns asm attributes). -->
+    <Compile Include="SharpZipLib\src\ICSharpCode.SharpZipLib\**\*.cs" />
+    <Compile Remove="SharpZipLib\src\ICSharpCode.SharpZipLib\AssemblyInfo.cs" />
+    <Compile Remove="SharpZipLib\src\ICSharpCode.SharpZipLib\GZip\**\*.cs" />
+    <Compile Remove="SharpZipLib\src\ICSharpCode.SharpZipLib\Lzw\**\*.cs" />
+    <Compile Remove="SharpZipLib\src\ICSharpCode.SharpZipLib\Tar\**\*.cs" />
+    <Compile Remove="SharpZipLib\src\ICSharpCode.SharpZipLib\Core\ExactMemoryPool.cs" />
+  </ItemGroup>
+  <!-- Ionic.Zlib (DotNetZip 1.9, dead since 2011) removed: its single use (zlib wrap + CRC32
+       in PNGDecrush PNGDecrusher.cs) now runs on the already-embedded SharpZipLib 1.4.2 streams. -->
 </Project>
