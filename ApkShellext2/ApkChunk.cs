@@ -1246,7 +1246,7 @@ namespace ApkShellext2.ApkChunk
 
         public ApkXMLElementChunk(MemoryStream ms, ApkXMLChunk top) : base(ms,top) { }
 
-        public XmlNode Node {
+        public new XmlNode Node {
             get {
                 XmlElement elem = XMLDoc.CreateElement("");
                 return elem;
@@ -1323,7 +1323,9 @@ namespace ApkShellext2.ApkChunk
     [Serializable]
     public class ApkXMLCDATAChunk : ApkXMLChunk
     {
-        private UInt16 dataid;
+        // TODO(upstream): the CDATA string index is never parsed from the stream, so
+        // OutputXML() always looks up pool index 0; pinned to 0 explicitly to state that
+        private UInt16 dataid = 0;
         public ApkXMLCDATAChunk(MemoryStream ms, ApkXMLChunk top) : base(ms, top) { }
 
         public override string OutputXML() {

@@ -40,8 +40,11 @@ namespace ApkShellext2
                     if (!figureOpen) {
                         path.StartFigure();
                         figureOpen = true;
+#pragma warning disable CS0618 // SvgPathSegment.Start is flagged "will be removed" in the
+                        // pinned Svg 3.5.0 but has no successor API yet; keep reading it as-is
                         if (s.Start.IsEmpty)
                             cur = PointF.Empty;
+#pragma warning restore CS0618
                     }
                     if (s is Svg.Pathing.SvgClosePathSegment) {
                         path.CloseFigure();

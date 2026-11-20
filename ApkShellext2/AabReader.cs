@@ -274,52 +274,17 @@ namespace ApkShellext2
             {
                 XmlElement vector = (XmlElement)node.SelectSingleNode("/vector");
                 float viewportWidth = 0, viewportHeight = 0;
-                int width = 0, height = 0;
-                GraphicsUnit units = GraphicsUnit.Display;
                 // hostile XML may carry "NaN"/garbage where a float is expected -
                 // parse leniently and let ClampCanvas decide, never crash the icon thread
                 viewportWidth = GetXmlFloat(vector, "viewportWidth", 0f);
                 viewportHeight = GetXmlFloat(vector, "viewportHeight", 0f);
                 if (viewportWidth == 0) viewportWidth = viewportHeight;
                 if (viewportHeight == 0) viewportHeight = viewportWidth;
-                if (vector.HasAttribute("width"))
-                {
-                    string ori = vector.GetAttribute("width");
-                    try
-                    {
-                        width = int.Parse(ori);
-                    }
-                    catch
-                    {
-                        string strunit = ori.Substring(ori.Length - 2);
-                        width = int.Parse(ori.Substring(0, ori.Length - 2));
-                        switch (strunit)
-                        {
-                            case "dp":
-                                units = GraphicsUnit.Display;
-                                break;
-                            case "in":
-                                units = GraphicsUnit.Inch;
-                                break;
-                            case "mm":
-                                units = GraphicsUnit.Millimeter;
-                                break;
-                            case "px":
-                                units = GraphicsUnit.Pixel;
-                                break;
-                            case "sp":
-                                units = GraphicsUnit.World;
-                                break;
-                            case "pt":
-                                units = GraphicsUnit.Point;
-                                break;
-                            default:
-                                units = GraphicsUnit.Display;
-                                break;
-                        }
-                    }
-                    //Not finished yet
-                }
+                // android:width/android:height and their units are advisory only for the
+                // legacy renderer: the canvas is sized from the clamped viewport below and
+                // resized to the caller's icon size afterwards. (Upstream parsed them into
+                // locals it never read; the dead parse also rejected hostile width values
+                // that the viewport path handles fine.)
                 // viewport comes from attacker XML: a huge/NaN value would OOM explorer's
                 // process via the intermediate canvas. Real adaptive vectors are ≤ 108dp.
                 Bitmap b = new Bitmap(ClampCanvas(viewportWidth), ClampCanvas(viewportHeight));

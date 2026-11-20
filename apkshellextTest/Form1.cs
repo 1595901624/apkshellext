@@ -50,6 +50,7 @@ namespace apkshellextTest
             //textBox4.Text = ApkContextMenu.ReplaceVariables(TipPattern, reader);
 
             return;
+#if PARKED_EXPERIMENTS // kept out of compilation: scratch code below the early return
             AppPackageReader reader = AppPackageReader.Read(textBox1.Text);
             reader.setFlag("ImageSize", 48);
             pictureBox2.Image = reader.Icon;
@@ -73,6 +74,7 @@ namespace apkshellextTest
             pictureBox1.Size = b.Size;
             pictureBox1.Image = b;
             pictureBox1.Size = new Size(100, 100);
+#endif
         }
 
         private void parseapk() {

@@ -100,6 +100,10 @@
     <Compile Include="SVG\Source\**\*.cs" />
     <Compile Remove="SVG\Source\Properties\**\*.cs" />
     <Compile Remove="SVG\Source\Generated\**\*.cs" />
+    <!-- the ASP.NET request handler is dead weight in a shell extension and the tree's only
+         System.Web consumer; it also calls an obsolete SvgDocument.Open overload upstream
+         never migrated (its csproj Reference to System.Web dropped together with it) -->
+    <Compile Remove="SVG\Source\Web\**\*.cs" />
 
     <!-- SharpShell 2.7.1 (vendored sources). Excluded beyond the old compile list:
          RegAsm.cs + Properties\AssemblyInfo.cs + SharpDeskBand\ (never compiled before
@@ -179,7 +183,6 @@
     <Reference Include="System.Drawing" />
     <Reference Include="System.EnterpriseServices" />
     <Reference Include="System.Security" />
-    <Reference Include="System.Web" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
