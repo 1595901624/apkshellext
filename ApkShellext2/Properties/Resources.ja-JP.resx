@@ -201,7 +201,7 @@
     <value>オーバーレイアイコンを表示する</value>
   </data>
   <data name="strShowOverlayIconToolTip" xml:space="preserve">
-    <value>ファイルタイプのオーバーレイアイコンを表示します。</value>
+    <value>OS ごとにオーバーレイアイコンを表示します。</value>
   </data>
   <data name="strShowContextMenuIcon" xml:space="preserve">
     <value>コンテキストメニューアイコンの表示</value>
@@ -259,7 +259,7 @@
   </data>
   
   <data name="strShowNewVerInfo" xml:space="preserve">
-    <value>アプリの更新をコンテキストメニューで知らせる</value>
+    <value>新しいバージョンがあれば知らせる</value>
   </data>
   
   <data name="strStretchThumbnail" xml:space="preserve">

@@ -179,7 +179,7 @@
     <value>해당 기능을 사용하려면 ApkShellextService가 필요합니다. 해당 서비스가 실행 중인지 확인해 주십시오.</value>
   </data>
   <data name="strNewVersionAvailible" xml:space="preserve">
-    <value>새 버전 {0}을 사용할 수 있습니다.</value>
+    <value>새 버전 {0} 사용 가능.</value>
   </data>
   <data name="strPreferencesCaption" xml:space="preserve">
     <value>ApkShellext2 설정</value>
@@ -240,7 +240,7 @@
     <value>우클릭 메뉴에서 ApkMirror 링크를 표시하기</value>
   </data>
   <data name="strShowAppleStore" xml:space="preserve">
-    <value>(ipa 파일) 우클릭 메뉴에서 애플 앱 스토어 메뉴에 표시하기</value>
+    <value>(ipa 파일) 우클릭 메뉴에서 애플 앱 스토어 링크 표시하기</value>
   </data>
   
   <data name="strShowMSStore" xml:space="preserve">

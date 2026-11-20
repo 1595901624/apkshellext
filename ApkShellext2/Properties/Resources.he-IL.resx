@@ -131,7 +131,7 @@
   
   
   <data name="menuGotoGooglePlay" xml:space="preserve">
-    <value>בדוק ב-GooglePlay</value>
+    <value>בדוק את {0} ב-Google Play</value>
   </data>
   
   <data name="menuMain" xml:space="preserve">
@@ -352,7 +352,7 @@
     <value>תמונה ממוזערת</value>
   </data>
   <data name="strStretchThumbnail" xml:space="preserve">
-    <value>מרחץ את התמונה הממוזערת אם Windows מבקש גודל גדול יותר</value>
+    <value>מרח את התמונה הממוזערת אם Windows מבקש גודל גדול יותר</value>
   </data>
   <data name="strHelpTranslate" xml:space="preserve">
     <value>עזרו לתרגם את הפרוייקט הזה.</value>

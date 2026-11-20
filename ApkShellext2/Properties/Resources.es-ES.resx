@@ -139,7 +139,7 @@
     <value>Vea {0} en Apple AppStore</value>
   </data>
   <data name="menuGotoGooglePlay" xml:space="preserve">
-    <value>Ver en Google Play</value>
+    <value>Ver {0} en Google Play</value>
   </data>
   <data name="menuGotoMicrosoftStore" xml:space="preserve">
     <value>Vea {0} en Microsoft Store</value>
@@ -158,14 +158,14 @@
   </data>
   <data name="strAlwaysShowGooglePlayToolTip" xml:space="preserve">
     <value>Si está marcada, se mostrarán los menús de las tiendas de apps, incluso cuando múltiples archivos .apk esten seleccionados. 
-Nota: puede que abra muchas ventana del navegador y afecte significativamente al rendimiento.
+Nota: pueden abrirse muchas ventanas del navegador y afectar significativamente al rendimiento.
 Por defecto, sólo mostrar el menú cuando se selecciona un archivo</value>
   </data>
   <data name="strCheckingNewVersion" xml:space="preserve">
     <value>Comprobando nueva versión ...</value>
   </data>
   <data name="strCheckProjectSite" xml:space="preserve">
-    <value>Vea el sitio del proyecto para actualizar.</value>
+    <value>Busque actualizaciones en el sitio del proyecto.</value>
   </data>
   <data name="strCurrVersion" xml:space="preserve">
     <value>Versión Actual: {0}</value>
@@ -196,7 +196,7 @@ Por defecto, sólo mostrar el menú cuando se selecciona un archivo</value>
   </data>
   <data name="strRenameToolTip" xml:space="preserve">
     <value>Para evitar la situación de la misma versión pero el diferente número de revisión, especialmente en los archivos de aplicaciones para Android. 
-Tildando eso, cambia el nombre del archivo de app a %NombreDeApp%_%Versión%_%Revisión%, De lo contrario, se va a mostrar como %NombreDeApp%_%Versión%.</value>
+Tildando eso, cambia el nombre del archivo de app a %AppName%_%Version%_%Revision%, De lo contrario, se va a mostrar como %AppName%_%Version%.</value>
   </data>
   <data name="strScanToDownload" xml:space="preserve">
     <value>Escanear código QR para descargar</value>
@@ -262,10 +262,10 @@ Tildando eso, cambia el nombre del archivo de app a %NombreDeApp%_%Versión%_%Re
     <value>Mostrar link a la tienda de Apple (para .ipa) en el menú contextual</value>
   </data>
   <data name="strShowGooglePlay" xml:space="preserve">
-    <value>Mostrar link de Google play en el menú contextual</value>
+    <value>Mostrar link de Google Play en el menú contextual</value>
   </data>
   <data name="strShowMSStore" xml:space="preserve">
-    <value>Mostrar link de Microsoft Store (para .aprox/appxbundle) en el menú contextual</value>
+    <value>Mostrar link de Microsoft Store (para .appx/appxbundle) en el menú contextual</value>
   </data>
   <data name="strInfoTipPattern" xml:space="preserve">
     <value>Patrón de InfoTip:</value>

@@ -192,7 +192,7 @@
     <value>فشل في قراءة الملف</value>
   </data>
   <data name="strReferToWiki" xml:space="preserve">
-    <value>استخدام مختلف! يرجى الرجوع إلى "مشروع Wiki"</value>
+    <value>لاستخدام المتغيرات، يرجى الرجوع إلى "مشروع Wiki"</value>
   </data>
   <data name="strRenameToolTip" xml:space="preserve">
     <value>لتجنب وضع نفس النسخة لكن برقم مراجعة مختلف، ذلك يحدث في معظم ملفات تطبيقات الاندرويد.
@@ -287,7 +287,7 @@
     <value>صورة مصغرة</value>
   </data>
   <data name="strStretchThumbnail" xml:space="preserve">
-    <value>تمديد الصورة المصغرة اذا Windows طلب حجم اكبر</value>
+    <value>تمديد الصورة المصغرة إذا طلب Windows حجمًا أكبر</value>
   </data>
   <data name="strHelpTranslate" xml:space="preserve">
     <value>المساعدة في ترجمة هذا المشروع.</value>
@@ -296,7 +296,7 @@
     <value>تنظيف الايقونات و مسح الملفات المؤقتة</value>
   </data>
   <data name="dialogClearCache" xml:space="preserve">
-    <value>سيتم إغلاق جميع "مستكشف الملفات" المفتوحة، استمرار؟</value>
+    <value>سيتم إغلاق جميع "مستكشف الملفات" المفتوحة. هل تريد المتابعة؟</value>
   </data>
   <data name="strEnableThumbnail" xml:space="preserve">
     <value>عرض صورة مصغرة بدلاً من الأيقونة.</value>

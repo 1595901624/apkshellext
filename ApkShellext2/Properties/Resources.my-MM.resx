@@ -209,7 +209,7 @@
     <value>Apple Appstore တွင် {0} ကို ရှာဖွေရန်</value>
   </data>
   <data name="menuGotoGooglePlay" xml:space="preserve">
-    <value>GooglePlay တွင် {0} ကို ရှာဖွေရန်</value>
+    <value>Google Play တွင် {0} ကို ရှာဖွေရန်</value>
   </data>
   <data name="menuGotoMicrosoftStore" xml:space="preserve">
     <value>Microsoft Store တွင် {0} ကို ရှာဖွေရန်</value>

@@ -139,7 +139,7 @@
     <value>Verifica {0} sull'Appstore di Apple</value>
   </data>
   <data name="menuGotoGooglePlay" xml:space="preserve">
-    <value>Visualizza sul Google Play</value>
+    <value>Visualizza {0} su Google Play</value>
   </data>
   <data name="menuGotoMicrosoftStore" xml:space="preserve">
     <value>Verifica {0} sull'Appstore Microsoft</value>
@@ -154,7 +154,7 @@
     <value>Rinomina in {0}</value>
   </data>
   <data name="strAlwaysShowGooglePlay" xml:space="preserve">
-    <value>Mostra i Menu dei vari Appstore quando selezioni più di un FIle</value>
+    <value>Mostra i Menu dei vari Appstore quando selezioni più di un file</value>
   </data>
   <data name="strAlwaysShowGooglePlayToolTip" xml:space="preserve">
     <value>Se selezionato, il menu Google Play (o altro Appstore) apparirà anche se hai selezionato più di un file APK.
@@ -165,7 +165,7 @@ Per impostazione predefinita il Menu verrà mostrato quando si seleziona solo un
     <value>Verificando nuova versione ...</value>
   </data>
   <data name="strCheckProjectSite" xml:space="preserve">
-    <value>Cerca aggiornamenti sul Sito.</value>
+    <value>Cerca aggiornamenti sul sito del progetto.</value>
   </data>
   <data name="strCurrVersion" xml:space="preserve">
     <value>Versione attuale: {0}</value>
@@ -180,7 +180,7 @@ Per impostazione predefinita il Menu verrà mostrato quando si seleziona solo un
     <value>Lingua:</value>
   </data>
   <data name="strNeedApkShellextService" xml:space="preserve">
-    <value>Questa funzionalità richiede ApkShellextService, si prega di assicurarsi il servizio sia avviato.</value>
+    <value>Questa funzionalità richiede ApkShellextService, si prega di assicurarsi che il servizio sia avviato.</value>
   </data>
   <data name="strNewVersionAvailible" xml:space="preserve">
     <value>Nuova versione {0} disponibile</value>
@@ -189,20 +189,20 @@ Per impostazione predefinita il Menu verrà mostrato quando si seleziona solo un
     <value>Impostazioni di ApkShellext2</value>
   </data>
   <data name="strReadFileFailed" xml:space="preserve">
-    <value>Impossibile leggere il File</value>
+    <value>Impossibile leggere il file</value>
   </data>
   <data name="strReferToWiki" xml:space="preserve">
-    <value>Per l'utilizzo della variabile fare riferimento al progetto Wiki</value>
+    <value>Per l'utilizzo delle variabili fare riferimento al Wiki del progetto</value>
   </data>
   <data name="strRenameToolTip" xml:space="preserve">
-    <value>Per evitare situazioni del tipo: stessa Versione ma numero Revisione differente, come spesso succede nelle App Android. Selezionando questo, i FIle verranno rinominati come segue
+    <value>Per evitare situazioni del tipo: stessa Versione ma numero Revisione differente, come spesso succede nelle App Android. Selezionando questo, i file verranno rinominati come segue
 %AppName%_%Version%_%Revision%, altrimenti usa %AppName%_%Version%.</value>
   </data>
   <data name="strScanToDownload" xml:space="preserve">
     <value>Scansiona il codice QR per scaricare</value>
   </data>
   <data name="strShowAppxIcon" xml:space="preserve">
-    <value>Visualizza le icone delle App WIndowsPhone (appx, appxbundle).</value>
+    <value>Visualizza le icone delle App Windows Phone (appx, appxbundle).</value>
   </data>
   <data name="strShowIpaIcon" xml:space="preserve">
     <value>Mostra l'icona iOs (ipa)</value>
@@ -229,7 +229,7 @@ Per impostazione predefinita il Menu verrà mostrato quando si seleziona solo un
     <value>Confermi di rinominare il file come {0}?</value>
   </data>
   <data name="strRenamePattern" xml:space="preserve">
-    <value>Rinominare il modello: (senza estensione)</value>
+    <value>Modello di rinomina: (senza estensione)</value>
   </data>
   <data name="twContextMenu" xml:space="preserve">
     <value>Menu contestuale</value>
@@ -259,7 +259,7 @@ Per impostazione predefinita il Menu verrà mostrato quando si seleziona solo un
     <value>Visualizza il link a ApkMirror nel Menu Contestuale</value>
   </data>
   <data name="strShowAppleStore" xml:space="preserve">
-    <value>Visualizza il link all'Appstore Apple (per i FIle ipa) nel Menu Contestuale</value>
+    <value>Visualizza il link all'Appstore Apple (per i file ipa) nel Menu Contestuale</value>
   </data>
   <data name="strShowGooglePlay" xml:space="preserve">
     <value>Mostra il link sul Google Play Store</value>
@@ -268,7 +268,7 @@ Per impostazione predefinita il Menu verrà mostrato quando si seleziona solo un
     <value>Visualizza il link all'Appstore Microsoft (file appx/appxbundle)</value>
   </data>
   <data name="strInfoTipPattern" xml:space="preserve">
-    <value>Info modello:</value>
+    <value>Modello InfoTip:</value>
   </data>
   <data name="btnBrowse" xml:space="preserve">
     <value>Sfoglia</value>
@@ -281,13 +281,13 @@ Per impostazione predefinita il Menu verrà mostrato quando si seleziona solo un
   </data>
   
   <data name="strShowNewVerInfo" xml:space="preserve">
-    <value>Ricordami la nuova versione</value>
+    <value>Avvisami quando è disponibile una nuova versione</value>
   </data>
   <data name="twThumbnail" xml:space="preserve">
     <value>Anteprima</value>
   </data>
   <data name="strStretchThumbnail" xml:space="preserve">
-    <value>Ridimensione l'anteprima se WIndows richiede dimensioni maggiori</value>
+    <value>Ridimensione l'anteprima se Windows richiede dimensioni maggiori</value>
   </data>
   <data name="strHelpTranslate" xml:space="preserve">
     <value>Aiutaci a tradurre questo progetto.</value>
@@ -296,7 +296,7 @@ Per impostazione predefinita il Menu verrà mostrato quando si seleziona solo un
     <value>Pulisci la cache icone ed anteprime</value>
   </data>
   <data name="dialogClearCache" xml:space="preserve">
-    <value>Tutti i FIle aperti verranno chiusi. Continuare?</value>
+    <value>Tutte le finestre di Esplora file aperte verranno chiuse. Continuare?</value>
   </data>
   <data name="strEnableThumbnail" xml:space="preserve">
     <value>Visualizza l'anteprima invece dell'icona.</value>

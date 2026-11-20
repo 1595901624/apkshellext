@@ -139,7 +139,7 @@
     <value>Verificar {0} na Appstore da Apple</value>
   </data>
   <data name="menuGotoGooglePlay" xml:space="preserve">
-    <value>Verificar {0} na GooglePlay</value>
+    <value>Verificar {0} na Google Play</value>
   </data>
   <data name="menuGotoMicrosoftStore" xml:space="preserve">
     <value>Verificar {0} na Microsoft Store</value>
@@ -157,7 +157,7 @@
     <value>Mostrar menus da loja de app quando selecionar vários arquivos</value>
   </data>
   <data name="strAlwaysShowGooglePlayToolTip" xml:space="preserve">
-    <value>Se marcada, o menu da loja GooglePlay irá aparecer em vários arquivos apk selecionados. 
+    <value>Se marcada, o menu da loja Google Play irá aparecer em vários arquivos apk selecionados. 
 Observe que você pode abrir um monte de janelas do navegador e afetar o desempenho significativamente.
 Por padrão, apenas mostrar o menu quando um arquivo é selecionado</value>
   </data>
@@ -165,7 +165,7 @@ Por padrão, apenas mostrar o menu quando um arquivo é selecionado</value>
     <value>Verificando nova versão...</value>
   </data>
   <data name="strCheckProjectSite" xml:space="preserve">
-    <value>Verifique o site do projeto para atualização.</value>
+    <value>Verifique o site do projeto para procurar atualizações.</value>
   </data>
   <data name="strCurrVersion" xml:space="preserve">
     <value>Versão atual: {0}</value>
@@ -196,7 +196,7 @@ Por padrão, apenas mostrar o menu quando um arquivo é selecionado</value>
   </data>
   <data name="strRenameToolTip" xml:space="preserve">
     <value>Para evitar a situação de mesma versão mas número diferente de revisão, isto acontece mais frequentemente em arquivos app android. 
-Verificando isso, renomeie o arquivo app como %AppName % _ % versão % _ % revisão %, caso contrário, use %AppName % _ % versão %.</value>
+Verificando isso, renomeie o arquivo app como %AppName%_%Version%_%Revision%, caso contrário, use %AppName%_%Version%.</value>
   </data>
   <data name="strScanToDownload" xml:space="preserve">
     <value>Escaneie o código QR para transferir</value>
@@ -214,7 +214,7 @@ Verificando isso, renomeie o arquivo app como %AppName % _ % versão % _ % revis
     <value>Exibir o ícone de sobreposição para OS diferentes</value>
   </data>
   <data name="strShowContextMenuIcon" xml:space="preserve">
-    <value>Ícone de exibição para o menu de contexto</value>
+    <value>Exibir ícone no menu de contexto</value>
   </data>
   <data name="btnCancel" xml:space="preserve">
     <value>Cancelar</value>
@@ -262,13 +262,13 @@ Verificando isso, renomeie o arquivo app como %AppName % _ % versão % _ % revis
     <value>Exibir o link da Apple Store (para o ipa) no menu de contexto</value>
   </data>
   <data name="strShowGooglePlay" xml:space="preserve">
-    <value>Mostrar o link da GooglePlay</value>
+    <value>Mostrar o link da Google Play</value>
   </data>
   <data name="strShowMSStore" xml:space="preserve">
     <value>Mostrar o link da Microsoft Store (para appx/appxbundle)</value>
   </data>
   <data name="strInfoTipPattern" xml:space="preserve">
-    <value>Dicas padrão:</value>
+    <value>Padrão de dica de informações:</value>
   </data>
   <data name="btnBrowse" xml:space="preserve">
     <value>Navegar</value>

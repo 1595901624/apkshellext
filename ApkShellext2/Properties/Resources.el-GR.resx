@@ -150,7 +150,7 @@
     <value>Μετονομάστε σε {0}</value>
   </data>
   <data name="strAlwaysShowGooglePlay" xml:space="preserve">
-    <value>Εμφάνιση συντομέυσεων για app stores όταν έχουν επιλεχθεί πολλά αρχεία</value>
+    <value>Εμφάνιση συντομεύσεων για app stores όταν έχουν επιλεχθεί πολλά αρχεία</value>
   </data>
   
   <data name="strCheckingNewVersion" xml:space="preserve">
@@ -198,7 +198,7 @@
   
   
   <data name="strStretchThumbnail" xml:space="preserve">
-    <value>Μεγέθυνση εικονιδίου αν τα Windows ζητήσουν για μεγαλύτερο μέγεθος</value>
+    <value>Μεγέθυνση μικρογραφίας αν τα Windows ζητήσουν μεγαλύτερο μέγεθος</value>
   </data>
   
   
@@ -333,7 +333,7 @@
     <value>Μοτίβο Info Tip:</value>
   </data>
   <data name="btnBrowse" xml:space="preserve">
-    <value>Αναζήτηση</value>
+    <value>Εξερεύνηση</value>
   </data>
   <data name="btnSearchAdb" xml:space="preserve">
     <value>Αναζήτηση</value>

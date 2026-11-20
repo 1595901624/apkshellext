@@ -158,7 +158,7 @@
   </data>
   <data name="strAlwaysShowGooglePlayToolTip" xml:space="preserve">
     <value>Indien aangevinkt zullen app store menu's getoond worden zelfs wanneer meerdere apk-bestanden geselecteerd zijn.
-Let op, dit kan veel browservensters openen en de prestaties beduiden beïnvloeden.
+Let op, dit kan veel browservensters openen en de prestaties aanzienlijk beïnvloeden.
 Standaard, toon het menu alleen met één geselecteerd bestand</value>
   </data>
   <data name="strCheckingNewVersion" xml:space="preserve">
@@ -252,7 +252,7 @@ Standaard, toon het menu alleen met één geselecteerd bestand</value>
     <value>Gebruik laatst opgeslagen patroon</value>
   </data>
   <data name="strShowAmazonStore" xml:space="preserve">
-    <value>Toon Amazone app store link in contextmenu</value>
+    <value>Toon Amazon app store link in contextmenu</value>
   </data>
   <data name="strShowApkMirror" xml:space="preserve">
     <value>Toon ApkMirror link in contextmenu</value>
@@ -261,7 +261,7 @@ Standaard, toon het menu alleen met één geselecteerd bestand</value>
     <value>Toon Apple Store link (voor ipa) in contextmenu</value>
   </data>
   <data name="strShowGooglePlay" xml:space="preserve">
-    <value>Toon Google play link</value>
+    <value>Toon Google Play link</value>
   </data>
   <data name="strShowMSStore" xml:space="preserve">
     <value>Toon Microsoft Store link (voor appx/appxbundle)</value>
