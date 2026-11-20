@@ -252,6 +252,19 @@ csproj 重写为 **SDK 式**,从根上消掉这三件事 —— 这就是 §6–
 - 保留了老的 `Debug2` 配置(`Configurations=Debug;Debug2;Release`),行为等同 Debug。
   生成器 ProjectReference 通过 `SetConfiguration` 把它映射到生成器自身的 Debug 输出。
 
+### 5.3 零警告基线
+
+上游树长期带着 7 条编译器警告,现已全部消除,两条路线均 `0 警告 / 0 错误`:
+
+| 警告 | 位置 | 处理 |
+|---|---|---|
+| CS0219 ×4(`height`、`units`) | `AabReader` / `ApkQuickReader` 的 legacy 矢量回退 | 删除死代码:解析 `android:width` 单位后存入从未被读取的局部变量(画布尺寸来自钳制后的 viewport) |
+| CS0618 `SvgDocument.Open` 过时重载 | vendored 的 `SVG\Source\Web\SvgHandler.cs` | ASP.NET 请求处理器从编译面剔除(`Compile Remove`)——它是全树唯一的 `System.Web` 使用者,主 dll 引用列表随之缩短;子模块保持零改动 |
+| CS0618 `SvgPathSegment.Start` | `VectorDrawableRender.Convert2Path` | Svg 3.5.0 标记过时但无替代 API;唯一调用点用 `#pragma warning disable CS0618` 括起并注释说明 |
+| CS0108 `ApkXMLElementChunk.Node` 隐藏基类成员 | `ApkChunk.cs` | 显式加 `new`(隐藏行为不变) |
+| CS0649 `ApkXMLCDATAChunk.dataid` 从未赋值 | `ApkChunk.cs` | 显式 `= 0` 并留 `TODO(upstream)` 注——CDATA 的字符串索引本就从未从流里解析 |
+| CS0162 不可达代码 | `apkshellextTest\Form1.cs` | 早退 `return;` 之下的试验代码块用 `#if PARKED_EXPERIMENTS` 包起(测试场代码退出编译) |
+
 ## 6. 编译主工程
 
 ### 路线 A —— dotnet CLI
@@ -261,8 +274,7 @@ Set-Location E:\src\apkshellext
 E:\src\apkshellext-dep\dotnet-sdk-10\dotnet.exe build ApkShellext2\ApkShellext2.csproj -c Release --nologo
 ```
 
-就一行。restore 隐式执行。预期:`EXIT=0`,只有七条代码里原有的警告
-(CS0618 过时 SVG API ×2、CS0219 未用变量 ×4、CS0169 未用字段),输出
+就一行。restore 隐式执行。预期:`EXIT=0` 且**编译器零警告**(仓库警告基线已清零,见 §5.3),输出
 `ApkShellext2 -> …\bin\Release\ApkShellext2.dll`,随后是 7z 打包步骤(§8)。
 
 ### 路线 B —— Visual Studio / Build Tools 的 MSBuild

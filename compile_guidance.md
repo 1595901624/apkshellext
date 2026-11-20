@@ -281,6 +281,20 @@ before expecting a fresh clone elsewhere to build with the flag-free commands be
   behaves like Debug. The generator ProjectReference maps it to the generator's own
   Debug output via `SetConfiguration`.
 
+### 5.3 Zero-warning baseline
+
+The upstream tree carried seven long-lived compiler warnings; all are resolved, and both
+routes now build with `0 warnings / 0 errors`:
+
+| Warning | Where | Resolution |
+|---|---|---|
+| CS0219 ×4 (`height`, `units`) | `AabReader` / `ApkQuickReader` legacy vector fallback | dead `android:width` unit parse removed — it stored values nothing read (the canvas comes from the clamped viewport) |
+| CS0618 `SvgDocument.Open` overload | vendored `SVG\Source\Web\SvgHandler.cs` | ASP.NET handler excluded from compilation (`Compile Remove`); it was the tree's only `System.Web` consumer, and the main dll's reference list shrank accordingly — the submodule stays untouched |
+| CS0618 `SvgPathSegment.Start` | `VectorDrawableRender.Convert2Path` | marked obsolete in Svg 3.5.0 with no successor API; the single call site is wrapped in `#pragma warning disable CS0618` with a comment |
+| CS0108 `ApkXMLElementChunk.Node` hides base | `ApkChunk.cs` | explicit `new` keyword (hiding behaviour unchanged) |
+| CS0649 `ApkXMLCDATAChunk.dataid` never assigned | `ApkChunk.cs` | pinned `= 0` with a `TODO(upstream)` note — the CDATA string index was never parsed from the stream |
+| CS0162 unreachable code | `apkshellextTest\Form1.cs` | scratch block below an early `return;` wrapped in `#if PARKED_EXPERIMENTS` (test playground kept out of compilation) |
+
 ## 6. Build the main project
 
 ### Route A — dotnet CLI
@@ -290,10 +304,9 @@ Set-Location E:\src\apkshellext
 E:\src\apkshellext-dep\dotnet-sdk-10\dotnet.exe build ApkShellext2\ApkShellext2.csproj -c Release --nologo
 ```
 
-One line. Restore runs implicitly. Expected: `EXIT=0` with only the seven pre-existing
-code warnings (CS0618 obsolete SVG API ×2, CS0219 unused variable ×4, CS0169 unused
-field) and `ApkShellext2 -> …\bin\Release\ApkShellext2.dll`, followed by the 7z
-packaging step (§8).
+One line. Restore runs implicitly. Expected: `EXIT=0` with **zero compiler warnings**
+(the tree's warning baseline is clean, §5.3) and `ApkShellext2 -> …\bin\Release\ApkShellext2.dll`,
+followed by the 7z packaging step (§8).
 
 ### Route B — Visual Studio / Build Tools MSBuild
 
