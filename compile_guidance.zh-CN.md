@@ -16,6 +16,7 @@
 | 卫星程序集 | `bin\Release\{ar-SA,…,zh-CN,zh-TW}\ApkShellext2.resources.dll` × 19 |
 | 测试程序 | `apkshellextTest\bin\Release\apkshellextTest.exe` |
 | 分发包 | `bin\Release\ApkShellext2.7z` + 19 × `<locale>.7z`(需 7-Zip;postbuild 自动打包) |
+| 原生依赖 | `ApkShellext2\LibWebP\libwebp_x86.dll` + `libwebp_x64.dll` —— 预编译 libwebp 1.6.0,已入库;重建为可选项(§4.5) |
 | 路线 A | 独立 .NET SDK **10.0.404**:`dotnet build ApkShellext2\ApkShellext2.csproj -c Release` —— 一行命令,零参数 |
 | 路线 B | 装了*.NET 桌面开发*负载的 Visual Studio 2022/2026:`msbuild -t:restore` + `msbuild -p:Configuration=Release` —— 同样零参数 |
 | 关键坑 | ① 签名密钥 `apkshellext2_hy.snk` 不在仓库里,要自己生成(§4.2);② 机器可能**一个 NuGet 源都没配**,restore 直接 NU1100(§4.1);③ dotnet CLI 编出的产物要额外带 `System.Resources.Extensions.dll`(其预序列化资源的运行时依赖,postbuild 已自动打进包,§8) |
@@ -162,6 +163,55 @@ winget install 7zip.7zip
 版本会自动回退到 `Microsoft.NETFramework.ReferenceAssemblies` NuGet 包 —— 别指望这个,
 直接确认目录存在。
 
+### 4.5 LibWebP 原生依赖(可选重建)
+
+WebP 支持是原生代码。`WebPWrapper.cs`(来自 `WebP-wrapper` 子模块,直接编进主工程)
+P/Invoke 的 DLL 名 **`libwebp_x86.dll` / `libwebp_x64.dll`** 硬编码在其 `[DllImport]`
+特性里,运行时按 `switch (IntPtr.Size)` 二选一。外壳扩展寄宿在宿主进程内运行:64 位
+`explorer.exe` 加载 x64 DLL,32 位宿主进程(32 位文件对话框、老应用)加载 x86 那个。
+因此这两个文件必须以此文件名同放一个安装目录。
+
+两个 DLL 已**预编译入库**,位于 `ApkShellext2\LibWebP\`:**libwebp v1.6.0** 官方源码
+加一个本地补丁 —— `build\libwebp\sharpyuv-static.patch` 把 libsharpyuv *静态*链进
+libwebp,因为官方 Windows 构建会额外要求一个 `libsharpyuv.dll`,而它只有一个固定文件名,
+无法在同一目录同时服务两种位数。仓库里两个 DLL 的导入表都只有 `KERNEL32.dll`
+(静态 CRT、静态 libsharpyuv)。它们不带 VERSIONINFO 资源 —— `FileVersion` 为空是设计
+使然;`WebPGetDecoderVersion()` 返回 `0x010600`。csproj 以 `Content` 项把它们复制到
+输出根目录,postbuild 自动打包(§8)。
+
+**正常编译不需要本节的任何东西。** 只有要更换 libwebp 版本(功能或安全修复)、或预编译
+产物不覆盖你的目标平台时,才需要重建。
+
+重建套件在 `build\libwebp\`:先读那里的 `README.md`(动机 + 钉死的 ABI 事实),干活的是
+`build-libwebp.ps1`。
+
+| 步骤 | 命令(在 `build\libwebp\` 里运行) | 前置 |
+|---|---|---|
+| 拉取并打补丁 v1.6.0 源码 | `.\build-libwebp.ps1 -Fetch` | Git;`-Mirror` 可指定 GitHub 镜像 |
+| 编 x64 DLL(gcc) | `.\build-libwebp.ps1 -Gcc64` | MSYS2 ucrt64 的 gcc + CMake + Ninja(默认根 `-GccRoot D:\msys64\ucrt64`) |
+| 编 x86 DLL(MSVC) | `.\build-libwebp.ps1 -Msvc32`(想用 MSVC 编 x64 则 `-Msvc64`) | 装了**「使用 C++ 的桌面开发」**负载的 VS —— §1 的 *.NET 桌面开发* 负载**不含 C++ 编译器** |
+| 解码冒烟测试 | `.\build-libwebp.ps1 -Smoke <build-dir>` | `-GccRoot` 里的 gcc;`<build-dir>` 指向 `-Gcc64` 的输出 |
+| 替换仓库内 DLL | `.\build-libwebp.ps1 -Deploy` | 把 `lw-build-{x64,x86}-msvc\libwebp.dll` 复制为 `ApkShellext2\LibWebP\libwebp_x{64,86}.dll` |
+
+实际上要紧的几点:
+
+- **CMake/Ninja 来自 MSYS2**(`-GccRoot\bin`),gcc 路线完全不需要 Visual Studio;MSVC
+  模式也是在 `VsDevCmd -arch=…` 环境里复用这两个工具。
+- **MSVC 路线必须静态 CRT**(`/MT`,经 `CMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded`
+  设置);脚本会检查产物的导入表,出现 `VCRUNTIME*/MSVCP*` 即判失败 —— 发布的 DLL
+  不能依赖系统装没装运行库。
+- **冒烟测试**(`smoke.c`):合成图像先编码再解码回来,走的全是 wrapper 实际调用的导出
+  (`WebPGetInfo`、`WebPDecodeBGRInto`、`WebPDecodeBGRAInto`、`WebPGetFeatures`)。
+  `-Smoke` 用 gcc 对着构建目录的导入库编译它,把 `smoke.exe` 写到新编出的
+  `libwebp.dll` 旁边运行,通过打印 `SMOKE PASS`。ABI 的依据是解码器 ABI 主版本字节 ——
+  wrapper 传 `0x0208`,libwebp 1.6.0 是 `0x0210`,主字节相同即被接受。细节见
+  `build\libwebp\README.md`。
+- **文件名是硬约束。** 重建产物就是覆盖 `ApkShellext2\LibWebP\` 下的
+  `libwebp_x86.dll` / `libwebp_x64.dll` 两个文件 —— wrapper 里的 P/Invoke 名是硬编码的。
+- `WebP-wrapper` 子模块自带的 `BUILDING.md` / `Compile dll.txt` 是上游老口径(nmake +
+  `Makefile.vc`,钉在 libwebp 1.2.1,那还没有 libsharpyuv)。该口径与本仓库实际发布方式
+  不一致;把它们当子模块自己的说明看,重建一律以 `build\libwebp\` 为准。
+
 ## 5. 本检出相对上游的改动(现代化)
 
 上游是**老式** csproj。用 `dotnet msbuild` 编老式工程需要三个丑陋的绕行方案
@@ -255,7 +305,8 @@ E:\src\apkshellext-dep\dotnet-sdk-10\dotnet.exe build apkshellextTest\apkshellex
   `Condition="'$(Configuration)'=='Debug'"`。`CopyFilesToOutputDirectory` 在任何打包
   之前就把它们复制到位,所以 `bin\Release` 本身就是完整发布目录。每个项都带
   `TargetPath=<裸文件名>` —— 不带的话复制会在输出里重建 `Resources\`/`LibWebP\` 源
-  子目录(坑 5)。
+  子目录(坑 5)。两个 `libwebp_*.dll` 是仓库内预编译产物(来源与可选重建见 §4.5);
+  正常编译不需要任何原生工具链。
 - **打包钩子**:实现为 `<Target Name="PackageWith7z" AfterTargets="PostBuildEvent">`
   用 `Exec` 调脚本,**不是**老的 `<PostBuildEvent>` 属性 —— SDK 式工程里属性赋值里的
   宏在**求值期**展开,那时 `$(ProjectDir)`/`$(TargetDir)` 还没有值,老一行式会被烤成

@@ -18,6 +18,7 @@
 | Satellites | `bin\Release\{ar-SA,…,zh-CN,zh-TW}\ApkShellext2.resources.dll` × 19 |
 | Test app | `apkshellextTest\bin\Release\apkshellextTest.exe` |
 | Packages | `bin\Release\ApkShellext2.7z` + 19 × `<locale>.7z` (needs 7-Zip; postbuild packs automatically) |
+| Native deps | `ApkShellext2\LibWebP\libwebp_x86.dll` + `libwebp_x64.dll` — prebuilt libwebp 1.6.0, committed in-repo; rebuilding is optional (§4.5) |
 | Route A | .NET SDK **10.0.404** standalone: `dotnet build ApkShellext2\ApkShellext2.csproj -c Release` — one line, no flags |
 | Route B | Visual Studio 2022/2026 with *.NET desktop development*: `msbuild -t:restore` + `msbuild -p:Configuration=Release` — no flags either |
 | Key gotchas | ① signing key `apkshellext2_hy.snk` is not in the repo — generate one (§4.2); ② a machine can have **zero NuGet sources** configured and restore fails with NU1100 (§4.1); ③ outputs built with the dotnet CLI additionally ship `System.Resources.Extensions.dll` (runtime dependency of their preserialized resources — postbuild packs it automatically, §8) |
@@ -174,6 +175,64 @@ development* workload). If neither exists, the SDK falls back to the
 `Microsoft.NETFramework.ReferenceAssemblies` NuGet package automatically in some SDK
 versions; do not rely on that — check the folder exists.
 
+### 4.5 LibWebP native dependency (optional rebuild)
+
+WebP support is native code. `WebPWrapper.cs` (from the `WebP-wrapper` submodule, compiled
+straight into the main assembly) P/Invokes the DLL names **`libwebp_x86.dll` /
+`libwebp_x64.dll`** — hard-coded in its `[DllImport]` attributes — and picks between them
+at runtime with `switch (IntPtr.Size)`. The shell extension runs in-process inside its
+host: 64-bit `explorer.exe` loads the x64 DLL, a 32-bit host process (32-bit file dialogs,
+legacy apps) loads the x86 one. Both files therefore have to sit in the install directory
+under exactly those names.
+
+The two DLLs are **committed prebuilt** under `ApkShellext2\LibWebP\`: official **libwebp
+v1.6.0** sources plus one local patch — `build\libwebp\sharpyuv-static.patch` links
+libsharpyuv *statically* into libwebp, because an official Windows build would additionally
+require a `libsharpyuv.dll` whose single fixed file name cannot serve both bitnesses from
+one folder. Both shipped DLLs import only `KERNEL32.dll` (static CRT, static libsharpyuv).
+They carry no VERSIONINFO resource — `FileVersion` is empty by design; `WebPGetDecoderVersion()`
+returns `0x010600`. The csproj copies them to the output root as `Content` items and
+postbuild packs them (§8).
+
+**A normal compile needs nothing from this section.** Rebuild only to change the libwebp
+version (feature or security fix) or when the committed binaries do not cover your target
+platform.
+
+The rebuild kit lives in `build\libwebp\`: read its `README.md` first (rationale + pinned
+ABI facts); `build-libwebp.ps1` does the work.
+
+| Step | Command (from `build\libwebp\`) | Needs |
+|---|---|---|
+| Fetch + patch v1.6.0 sources | `.\build-libwebp.ps1 -Fetch` | Git; `-Mirror` selects a GitHub mirror |
+| Build the x64 DLL (gcc) | `.\build-libwebp.ps1 -Gcc64` | MSYS2 ucrt64 gcc + CMake + Ninja (default root `-GccRoot D:\msys64\ucrt64`) |
+| Build the x86 DLL (MSVC) | `.\build-libwebp.ps1 -Msvc32` (`-Msvc64` for an MSVC x64 too) | VS with the **Desktop development with C++** workload — the *.NET desktop development* workload of §1 has **no C++ compiler** |
+| Decode smoke test | `.\build-libwebp.ps1 -Smoke <build-dir>` | gcc from `-GccRoot`; point `<build-dir>` at the `-Gcc64` output |
+| Replace the repo DLLs | `.\build-libwebp.ps1 -Deploy` | copies `lw-build-{x64,x86}-msvc\libwebp.dll` → `ApkShellext2\LibWebP\libwebp_x{64,86}.dll` |
+
+What matters in practice:
+
+- **CMake/Ninja come from MSYS2** (`-GccRoot\bin`), so the gcc route needs no Visual
+  Studio at all; the MSVC modes reuse the same two tools inside a `VsDevCmd -arch=…`
+  environment.
+- **Static CRT is mandatory on the MSVC route** (`/MT`, set via
+  `CMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded`); the script inspects the built DLL's import
+  table and fails if `VCRUNTIME*/MSVCP*` appears — the shipped DLLs must not depend on a
+  redist being installed.
+- **Smoke test** (`smoke.c`): encodes a synthetic image and decodes it back through the
+  exports the wrapper actually calls (`WebPGetInfo`, `WebPDecodeBGRInto`,
+  `WebPDecodeBGRAInto`, `WebPGetFeatures`). `-Smoke` compiles it with gcc against the
+  build dir's import lib, writes `smoke.exe` next to the freshly built `libwebp.dll` and
+  prints `SMOKE PASS`. The ABI rests on the decoder ABI major byte — the wrapper passes
+  `0x0208`, libwebp 1.6.0 has `0x0210`; the compat rule accepts any same-major version.
+  Details in `build\libwebp\README.md`.
+- **File names are load-bearing.** A rebuild overwrites the two files in
+  `ApkShellext2\LibWebP\` as `libwebp_x86.dll` / `libwebp_x64.dll` — the P/Invoke names in
+  the wrapper are hard-coded.
+- The `WebP-wrapper` submodule's own docs (`BUILDING.md`, `Compile dll.txt`) give the
+  upstream recipe — nmake + `Makefile.vc`, pinned to libwebp 1.2.1, which predates
+  libsharpyuv entirely. That recipe does not match what this repo ships; treat those files
+  as the submodule's own notes and use `build\libwebp\` for rebuilds.
+
 ## 5. What this checkout changed vs. upstream (the modernization)
 
 Upstream ships **old-style** csproj files. Building them with `dotnet msbuild` needs
@@ -276,7 +335,9 @@ identically (`-c Debug` / `-p:Configuration=Debug`); the Debug output additional
   under `Condition="'$(Configuration)'=='Debug'"`. `CopyFilesToOutputDirectory` copies
   them before any packaging runs, so `bin\Release` is already a complete publish folder.
   Every item carries `TargetPath=<bare filename>` — without it the copy recreates the
-  `Resources\`/`LibWebP\` source subfolders inside the output (gotcha 5).
+  `Resources\`/`LibWebP\` source subfolders inside the output (gotcha 5). The two
+  `libwebp_*.dll` are prebuilt in-repo binaries (§4.5); no native toolchain is needed for
+  a normal build.
 - **Packaging hook**: implemented as `<Target Name="PackageWith7z" AfterTargets="PostBuildEvent">`
   calling the script via `Exec`, *not* the legacy `<PostBuildEvent>` property — in an
   SDK-style project a property assignment expands its macros at **evaluation time**,
