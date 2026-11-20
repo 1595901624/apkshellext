@@ -1,65 +1,174 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- SDK-style since 3.4.5-local (modernization). Builds on BOTH toolchains with no
+       extra command-line properties:
+         dotnet SDK (coreclr MSBuild)  -> satellites via Csc, preserialized resources below
+         Visual Studio MSBuild (FullFramework) -> satellites via AL.exe, classic resources
+       The old-style project is preserved in git history. -->
+
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{091659BA-A36B-45D5-AAF2-3CE764453FF2}</ProjectGuid>
+    <Configurations>Debug;Debug2;Release</Configurations>
+    <TargetFramework>net48</TargetFramework>
     <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>ApkShellext2</RootNamespace>
     <AssemblyName>ApkShellext2</AssemblyName>
-    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <NuGetPackageImportStamp>
-    </NuGetPackageImportStamp>
-    <TargetFrameworkProfile />
+    <!-- keep the output at bin\Debug|Release (no net48\ subfolder): install bat files,
+         postbuild.cmd and the docs all assume the flat layout -->
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <AssemblyTitle>ApkShellext2</AssemblyTitle>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <RegisterForComInterop>false</RegisterForComInterop>
-    <UseVSHostingProcess>false</UseVSHostingProcess>
-    <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>
-    </DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
+
   <PropertyGroup>
+    <!-- Svg 3.5.0 is source-embedded and needs modern language features on net48 -->
+    <LangVersion>10.0</LangVersion>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <!-- legacy: Debug/Debug2 full pdb + no opt; Release pdbonly + opt (unchanged) -->
+    <DebugType Condition="'$(Configuration)' != 'Release'">full</DebugType>
+    <DebugType Condition="'$(Configuration)' == 'Release'">pdbonly</DebugType>
+    <Optimize Condition="'$(Configuration)' == 'Release'">true</Optimize>
+    <!-- Debug2 is the legacy signed-local-debug config: behaves like Debug -->
+    <DefineConstants Condition="'$(Configuration)' == 'Debug2'">$(DefineConstants);DEBUG</DefineConstants>
+    <!-- NETFULL drives the net-framework code paths in Svg 3.5.0 sources.
+         NETFRAMEWORK/NET48/NET462_OR_GREATER are auto-defined by the SDK for net48. -->
+    <DefineConstants>$(DefineConstants);NETFULL</DefineConstants>
+
+    <!-- Assembly attributes (version/Guid/ComVisible/NeutralResourcesLanguage) come
+         from Properties\AssemblyInfo.cs; no generated Attributes file. -->
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+
+    <!-- Strong naming: the .snk is NOT in the repo (gitignored) - generate one locally,
+         see compile_guidance.md §4.3. Roslyn signs directly; no sn.exe needed. -->
     <SignAssembly>true</SignAssembly>
-  </PropertyGroup>
-  <PropertyGroup>
     <AssemblyOriginatorKeyFile>apkshellext2_hy.snk</AssemblyOriginatorKeyFile>
+
+    <!-- coreclr GenerateResource cannot deserialize legacy BinaryFormatter resx payloads
+         (non-string resources: images/icons) without preserialized mode; FullFramework
+         MSBuild (Visual Studio) uses the classic reader and must NOT set this, because
+         preserialized .resources embed System.Resources.Extensions types.
+         Keying on MSBuildRuntimeType makes plain `dotnet build` and plain VS/msbuild
+         builds each do the right thing with zero extra flags. -->
+    <GenerateResourceUsePreserializedResources Condition="'$(MSBuildRuntimeType)' == 'Core'">true</GenerateResourceUsePreserializedResources>
+
+    <!-- Submodule/legacy trees contain sources we deliberately do not compile;
+         keep item globs explicit and let the repo layout drive them. -->
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <EnableDefaultEmbeddedResourceItems>false</EnableDefaultEmbeddedResourceItems>
+    <EnableDefaultNoneItems>false</EnableDefaultNoneItems>
   </PropertyGroup>
+
   <PropertyGroup>
-    <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
+    <!-- the generator project only knows Debug/Release; map Debug2 onto Debug -->
+    <SvgGeneratorConfig Condition="'$(Configuration)' == 'Debug2'">Debug</SvgGeneratorConfig>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug2|AnyCPU'">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\Debug2\</OutputPath>
-    <DefineConstants>TRACE;DEBUG</DefineConstants>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <DebugType>full</DebugType>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <UseVSHostingProcess>false</UseVSHostingProcess>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-  </PropertyGroup>
+
   <ItemGroup>
+    <!-- main sources (project root). ApkChunk.cs is dev tooling compiled only into
+         apkshellextTest (stripped from the shell dll in 3.4.4). -->
+    <Compile Include="*.cs" Exclude="ApkChunk.cs" />
+    <Compile Include="Properties\**\*.cs" />
+    <Compile Update="Preferences.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Preferences.Designer.cs">
+      <DependentUpon>Preferences.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Properties\Resources1.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Update="Properties\NonLocalizeResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>NonLocalizeResources.resx</DependentUpon>
+    </Compile>
+    <Compile Update="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <DependentUpon>Settings.settings</DependentUpon>
+    </Compile>
+
+    <!-- small vendored sources, pinned files -->
+    <Compile Include="PlistCS\PlistCS\Src\Plist.cs" />
+    <Compile Include="PNGDecrush\PNGDecrush\*.cs" />
+    <Compile Include="WebP-wrapper\WebPTest\WebPWrapper.cs" />
+
+    <!-- Svg 3.5.0 (v3.5.0 tag, source-embedded). Generated\ is the legacy pregen output
+         folder - always excluded now that Svg.Generators runs as an analyzer below. -->
+    <Compile Include="SVG\Source\**\*.cs" />
+    <Compile Remove="SVG\Source\Properties\**\*.cs" />
+    <Compile Remove="SVG\Source\Generated\**\*.cs" />
+
+    <!-- SharpShell 2.7.1 (vendored sources). Excluded beyond the old compile list:
+         RegAsm.cs + Properties\AssemblyInfo.cs + SharpDeskBand\ (never compiled before
+         either). NativeBridge\, SharpPropertySheet\ and the SharpShellNativeBridge\
+         native project were physically deleted (dead property-sheet host needing the
+         SharpShellNativeBridge32/64.dll binaries that upstream removed; no compiled
+         file referenced those namespaces). -->
+    <Compile Include="SharpShell\SharpShell\SharpShell\**\*.cs" />
+    <Compile Remove="SharpShell\SharpShell\SharpShell\Properties\AssemblyInfo.cs" />
+    <Compile Remove="SharpShell\SharpShell\SharpShell\Helpers\RegAsm.cs" />
+    <Compile Remove="SharpShell\SharpShell\SharpShell\SharpDeskBand\**\*.cs" />
+    <Compile Update="SharpShell\SharpShell\SharpShell\SharpPreviewHandler\PreviewHandlerControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Update="SharpShell\SharpShell\SharpShell\SharpPreviewHandler\PreviewHandlerHost.cs">
+      <SubType>Form</SubType>
+    </Compile>
+
+    <!-- SharpZipLib v1.4.2 (official icsharpcode tag, source-embedded; was kkguo fork
+         @v0.86-era; BZip2 is REQUIRED - ZipFile.cs references it).
+         Exclusions: unused codecs (GZip/Lzw/Tar, incl. its only System.Memory dependency
+         ExactMemoryPool.cs) match the pre-upgrade compile surface; AssemblyInfo.cs
+         excluded (host owns asm attributes). -->
+    <Compile Include="SharpZipLib\src\ICSharpCode.SharpZipLib\**\*.cs" />
+    <Compile Remove="SharpZipLib\src\ICSharpCode.SharpZipLib\AssemblyInfo.cs" />
+    <Compile Remove="SharpZipLib\src\ICSharpCode.SharpZipLib\GZip\**\*.cs" />
+    <Compile Remove="SharpZipLib\src\ICSharpCode.SharpZipLib\Lzw\**\*.cs" />
+    <Compile Remove="SharpZipLib\src\ICSharpCode.SharpZipLib\Tar\**\*.cs" />
+    <Compile Remove="SharpZipLib\src\ICSharpCode.SharpZipLib\Core\ExactMemoryPool.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Svg element metadata: Roslyn source generator runs in-process at compile time,
+         replacing the old build\svg-pregen step (its output dir SVG\Source\Generated is
+         excluded above). Works under any MSBuild (dotnet CLI or Visual Studio) because
+         analyzers are compiler-side, not MSBuild-side. -->
+    <ProjectReference Include="SVG\Generators\Svg.Generators.csproj"
+                      OutputItemType="Analyzer"
+                      ReferenceOutputAssembly="false"
+                      SetConfiguration="$(SvgGeneratorConfig)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources1.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <!-- 19 localized satellites, culture taken from the filename by the SDK -->
+    <EmbeddedResource Include="Properties\Resources.*.resx" />
+    <EmbeddedResource Include="Properties\NonLocalizeResources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>NonLocalizeResources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Preferences.resx">
+      <DependentUpon>Preferences.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SharpShell\SharpShell\SharpShell\SharpPreviewHandler\PreviewHandlerHost.resx">
+      <DependentUpon>PreviewHandlerHost.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SVG\Source\Resources\svg11.dtd">
+      <LogicalName>Svg.Resources.svg11.dtd</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- framework references: kept explicit (the SDK adds no framework references for
+         a .NET Framework target beyond the targeting-pack basics) -->
     <Reference Include="Microsoft.VisualBasic" />
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
@@ -77,454 +186,96 @@
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
-    <Reference Include="WindowsBase" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="AabReader.cs" />
-    <!-- ApkChunk.cs is dev tooling only (used by apkshellextTest); it is
-         linked into that project instead of shipping inside the shell dll. -->
-
-    <Compile Include="ApkQuickReader.cs" />
-    <Compile Include="ApkIconHandler.cs" />
-    <Compile Include="ApkInfoTipHandler.cs" />
-    <Compile Include="ApkContextMenu.cs" />
-    <Compile Include="ApkThumbnailHandler.cs" />
-    <Compile Include="AppPackageReader.cs" />
-    <Compile Include="AppxBundleReader.cs" />
-    <Compile Include="AppxReader.cs" />
-    <Compile Include="IpaReader.cs" />
-    <Compile Include="PlistCS\PlistCS\Src\Plist.cs" />
-    <Compile Include="PNGDecrush\PNGDecrush\BinaryReaderNetworkHostOrderAdditions.cs" />
-    <Compile Include="PNGDecrush\PNGDecrush\PNGChunk.cs" />
-    <Compile Include="PNGDecrush\PNGDecrush\PNGChunkParser.cs" />
-    <Compile Include="PNGDecrush\PNGDecrush\PNGDecrusher.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Properties\NonLocalizeResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>NonLocalizeResources.resx</DependentUpon>
-    </Compile>
-    <Compile Include="Properties\Resources1.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
-    <Compile Include="Preferences.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Preferences.Designer.cs">
-      <DependentUpon>Preferences.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Properties\Settings.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTimeSharedInput>True</DesignTimeSharedInput>
-      <DependentUpon>Settings.settings</DependentUpon>
-    </Compile>
-    <Compile Include="Properties\Settings.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Attributes\AssociationType.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Attributes\COMServerAssociationAttribute.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Attributes\CustomRegisterFunctionAttribute.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Attributes\CustomUnregisterFunctionAttribute.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Attributes\DisplayNameAttribute.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Attributes\HandlerSubkeyAttribute.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Attributes\PredefinedShellObjectAttribute.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Attributes\RegistrationNameAttribute.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Attributes\ServerTypeAttribute.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Attributes\SpecialClassKeyAttribute.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Components\CategoryManager.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Components\ExtractIconImpl.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Configuration\LoggingMode.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Configuration\SystemConfiguration.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Configuration\SystemConfigurationProvider.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Diagnostics\ExplorerConfigurationManager.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Diagnostics\ExplorerManager.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Diagnostics\Loggers\DebugLogger.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Diagnostics\Loggers\EventLogLogger.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Diagnostics\Loggers\FileLogger.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Diagnostics\Loggers\ILogger.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Diagnostics\Logging.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Exceptions\ServerRegistrationException.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Extensions\ControlExtensions.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Extensions\EnumExtensions.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Extensions\GuidExtensions.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Extensions\IDataObjectExtensions.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Helpers\BitmapHelper.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Helpers\ComStream.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Helpers\Win32Helper.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\InitializeWithStreamServer.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\ASSOCCLASS.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\ASSOCIATIONELEMENT.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\BITMAPV5HEADER.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\CATEGORYINFO.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\CLIPFORMAT.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\CLSCTX.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\CMF.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\CMIC.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\CMINVOKECOMMANDINFO.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\CMINVOKECOMMANDINFOEX.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\COLORREF.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\Comctl32.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\CSFV.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\CSIDL.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\DEFCONTEXTMENU.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\DESKBANDINFO.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\DIB.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\DLGTEMPLATE.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\DRAWITEMSTRUCT.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\EXTRASEARCH.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\FILE_ATTRIBUTE.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\FOLDERFLAGS.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\FOLDERSETTINGS.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\FOLDERVIEWMODE.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\FontCharSet.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\FontClipPrecision.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\FontPitchAndFamily.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\FontPrecision.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\FontQuality.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\FontWeight.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\GCS.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\Gdi32.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\GILInFlags.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\GILOutFlags.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\ICatRegister.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\ICommDlgBrowser.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\IContextMenu.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\IContextMenu2.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\IContextMenu3.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\IContextMenuCB.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\IDefaultExtractIconInit.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\IDeskBand.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\IDeskBand2.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\IDockingWindow.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\IDropTarget.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\IEnumExtraSearch.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\IEnumIDList.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\IExtractIconA.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\IExtractIconW.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\IFolderView.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\IImageList.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\IInitializeWithFile.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\IInitializeWithStream.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\IInputObject.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\IInputObjectSite.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\IMAGEINFO.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\IMAGELISTDRAWPARAMS.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\IObjectWithSite.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\IOleWindow.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\IPersist.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\IPersistFolder.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\IPersistFolder2.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\IPersistIDList.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\IPersistStream.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\IPreviewHandler.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\IPreviewHandlerFrame.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\IPreviewHandlerVisuals.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\IQueryInfo.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\IServiceProvider.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\IShellBrowser.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\IShellDetails.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\IShellExtInit.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\IShellFolder.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\IShellFolder2.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\IShellFolderViewCB.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\IShellIconOverlayIdentifier.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\IShellPropSheetExt.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\IShellView.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\ISIOI.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\IThumbnailProvider.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\Kernel32.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\KnownFolders.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\KNOWN_FOLDER_FLAG.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\LOGFONT.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\LVCFMT.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\MARGINS.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\MEASUREITEMSTRUCT.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\MENUITEMINFO.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\MFS.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\MFT.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\MIIM.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\MSG.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\NMHDR.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\Ole32.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\OLEMENUGROUPWIDTHS.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\POINT.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\PREVIEWHANDLERFRAMEINFO.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\PROPERTYKEY.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\PROPSHEETHEADER.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\PROPSHEETPAGE.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\PSH.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\PSN.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\PSP.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\PSPCB.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\QITIPF.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\RECT.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\SBSP.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\SCHIDS.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\SEE.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\SFGAO.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\SFV_CREATE.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\SHCOLSTATE.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\SHCOLUMNID.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\SHCONTF.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\Shell32.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\SHELLDETAILS.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\SHELLEXECUTEINFO.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\SHFILEINFO.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\SHGDNF.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\SHGFI.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\Shlwapi.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\SIZE.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\STGM.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\STRRET.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\SVUIA_STATUS.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\TBBUTTON.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\User32.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\Uxtheme.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\WindowsMessages.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\WindowStyles.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\WinError.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\WTS_ALPHATYPE.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\_SVGIO.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Interop\_SVSIF.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\ISharpShellServer.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\NativeBridge\NativeBridge.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\PersistFileServer.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Pidl\IdList.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Pidl\PidlManager.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Pidl\ShellId.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Registry\InMemoryRegistry.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Registry\InMemoryRegistryKey.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Registry\IRegistry.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Registry\IRegistryKey.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Registry\WindowsRegistry.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\Registry\WindowsRegistryKey.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\ServerRegistration\ClassRegistration.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\ServerRegistration\FileExtensionClass.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\ServerRegistration\RegistrationType.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\ServerRegistration\ServerRegistationType.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\ServerRegistration\ServerRegistrationManager.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\ServerRegistration\ShellExtensionRegistrationInfo.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\ServerRegistration\ShellExtensionType.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\ServerRegistration\SpecialRegistryClass.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\ServerType.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\ServiceRegistry\ServiceRegistry.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\SharpContextMenu\InvokeCommandInfo.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\SharpContextMenu\NativeContextMenuWrapper.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\SharpContextMenu\PARGB32.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\SharpContextMenu\SharpContextMenu.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\SharpDataHandler\SharpDataHandler.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\SharpDropHandler\SharpDropHandler.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\SharpIconHandler\SharpIconHandler.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\SharpIconOverlayHandler\SharpIconOverlayHandler.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\SharpInfoTipHandler\SharpInfoTipHandler.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\SharpNamespaceExtension\AttributeFlags.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\SharpNamespaceExtension\ColumnAlignment.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\SharpNamespaceExtension\CustomNamespaceFolderView.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\SharpNamespaceExtension\DefaultNamespaceFolderView.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\SharpNamespaceExtension\DisplayNameContext.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\SharpNamespaceExtension\IShellNamespaceFolder.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\SharpNamespaceExtension\IShellNamespaceFolderContextMenuProvider.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\SharpNamespaceExtension\IShellNamespaceItem.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\SharpNamespaceExtension\NamespaceExtensionAvailability.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\SharpNamespaceExtension\NamespaceExtensionJunctionPointAttribute.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\SharpNamespaceExtension\NamespaceExtensionRegistrationSettings.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\SharpNamespaceExtension\PropertyKey.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\SharpNamespaceExtension\PropertyKeyAttribute.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\SharpNamespaceExtension\RegistryKeyAttribute.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\SharpNamespaceExtension\SharpNamespaceExtension.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\SharpNamespaceExtension\ShellDetailColumn.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\SharpNamespaceExtension\ShellFolderImpl.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\SharpNamespaceExtension\ShellFolderProxy.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\SharpNamespaceExtension\ShellNamespaceEnumerationFlags.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\SharpNamespaceExtension\ShellNamespaceFolderIdListEnumerator.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\SharpNamespaceExtension\ShellNamespaceFolderView.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\SharpNamespaceExtension\ShellViewHost.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\SharpNamespaceExtension\StandardPropertyKey.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\SharpNamespaceExtension\VirtualFolder.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\SharpPreviewHandler\PreviewHandlerAttribute.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\SharpPreviewHandler\PreviewHandlerControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="SharpShell\SharpShell\SharpShell\SharpPreviewHandler\PreviewHandlerHost.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="SharpShell\SharpShell\SharpShell\SharpPreviewHandler\PreviewHandlerRegistrar.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\SharpPreviewHandler\SharpPreviewHandler.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\SharpPropertySheet\PropertyPageProxy.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\SharpPropertySheet\SharpPropertyPage.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="SharpShell\SharpShell\SharpShell\SharpPropertySheet\SharpPropertySheet.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\SharpShellServer.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\SharpThumbnailHandler\SharpThumbnailHandler.cs" />
-    <Compile Include="SharpShell\SharpShell\SharpShell\ShellExtInitServer.cs" />
-    <Compile Include="FacadeResolver.cs" />
-    <Compile Include="VectorDrawableToSvg.cs" />
-    <Compile Include="ZipSafety.cs" />
-    <Compile Include="SplitApkBundleReader.cs" />
-    <Compile Include="VectorDrawableRender.cs" />
-    <Compile Include="Utility.cs" />
-    <Compile Include="WebP-wrapper\WebPTest\WebPWrapper.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Resources\Patreon_Mark_Coral.jpg" />
-    <Content Include="LibWebP\libwebp_x64.dll" />
-    <Content Include="LibWebP\libwebp_x86.dll" />
-    <None Include="apkshellext2_hy.pfx" />
-    <None Include="app.config">
-      <SubType>Designer</SubType>
-    </None>
-    <None Include="Properties\Settings.settings">
-      <Generator>SettingsSingleFileGenerator</Generator>
-      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
-    </None>
-    <None Include="Resources\play.png" />
-    <None Include="Resources\rename.png" />
-    <None Include="Resources\GitHub.png" />
-    <EmbeddedResource Include="Properties\NonLocalizeResources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>NonLocalizeResources.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Properties\Resources.ar-SA.resx" />
-    <EmbeddedResource Include="Properties\Resources.de-DE.resx" />
-    <EmbeddedResource Include="Properties\Resources.el-GR.resx" />
-    <EmbeddedResource Include="Properties\Resources.es-ES.resx">
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Properties\Resources.fa-IR.resx" />
-    <EmbeddedResource Include="Properties\Resources.fr-FR.resx" />
-    <EmbeddedResource Include="Properties\Resources.he-IL.resx" />
-    <EmbeddedResource Include="Properties\Resources.it-IT.resx" />
-    <EmbeddedResource Include="Properties\Resources.ja-JP.resx" />
-    <EmbeddedResource Include="Properties\Resources.ko-KR.resx">
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Properties\Resources.my-MM.resx" />
-    <EmbeddedResource Include="Properties\Resources.nl-NL.resx" />
-    <EmbeddedResource Include="Properties\Resources.pl-PL.resx" />
-    <EmbeddedResource Include="Properties\Resources.pt-PT.resx" />
-    <EmbeddedResource Include="Properties\Resources.ru-RU.resx" />
-    <EmbeddedResource Include="Properties\Resources.tr-TR.resx" />
-    <EmbeddedResource Include="Properties\Resources.uk-UA.resx" />
-    <EmbeddedResource Include="Properties\Resources.zh-TW.resx" />
-    <None Include="Resources\Apple.png" />
-    <None Include="Resources\Android.png" />
-    <Content Include="Resources\Amazon.png" />
-    <None Include="Resources\apkm.png" />
-    <None Include="Resources\App-store-icon.png" />
-    <Content Include="Resources\output.png" />
-    <Content Include="Resources\logo.png" />
-    <None Include="Resources\QR-Scan.png" />
-    <None Include="Resources\msft store icon.png" />
-    <None Include="Resources\restart.png" />
-    <Content Include="Resources\udpate.png" />
-    <Content Include="Resources\Windows.png" />
-    <Content Include="SharpShell\SharpShell\SharpShell\NativeBridge\SharpShellNativeBridge32.dll" />
-    <Content Include="SharpShell\SharpShell\SharpShell\NativeBridge\SharpShellNativeBridge64.dll" />
-    <None Include="SVG\Source\Basic Shapes\DOM.cd" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Properties\Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources1.Designer.cs</LastGenOutput>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Preferences.resx">
-      <DependentUpon>Preferences.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Properties\Resources.zh-CN.resx">
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="SharpShell\SharpShell\SharpShell\SharpPreviewHandler\PreviewHandlerHost.resx">
-      <DependentUpon>PreviewHandlerHost.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="SharpShell\SharpShell\SharpShell\SharpPropertySheet\SharpPropertyPage.resx">
-      <DependentUpon>SharpPropertyPage.cs</DependentUpon>
-    </EmbeddedResource>
-  </ItemGroup>
-  <ItemGroup>
-    <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
-  </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <PropertyGroup>
-    <PreBuildEvent>
-    </PreBuildEvent>
-  </PropertyGroup>
-  <PropertyGroup>
-    <PostBuildEvent>call "$(ProjectDir)Resources\postbuild.cmd" "$(TargetDir)" "$(ProjectDir)" $(ConfigurationName)</PostBuildEvent>
-  </PropertyGroup>
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
-  <PropertyGroup>
-    <!-- Svg 3.5.0 source-embedded: language + framework symbols -->
-    <LangVersion>10.0</LangVersion>
-    <DefineConstants>$(DefineConstants);NETFULL;NETFRAMEWORK;NET48;NET462_OR_GREATER</DefineConstants>
-  </PropertyGroup>
-  <ItemGroup>
-    <!-- Svg 3.5.0 (v3.5.0 tag, source-embedded; wildcard include) -->
-    <Compile Include="SVG\Source\**\*.cs" />
-    <Compile Remove="SVG\Source\Properties\**\*.cs" />
-    <EmbeddedResource Include="SVG\Source\Resources\svg11.dtd">
-      <LogicalName>Svg.Resources.svg11.dtd</LogicalName>
-    </EmbeddedResource>
-  </ItemGroup>
-  <!-- QRCoder (and with it System.Text.Encoding.CodePages) was removed after
-       3.4.3 dropped the QR-code menu entry; nothing references it any more. -->
-  <ItemGroup>
-    <Reference Include="ExCSS">
-      <HintPath>..\packages\ExCSS.4.2.3\lib\net48\ExCSS.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="System.Memory">
-      <HintPath>..\packages\System.Memory.4.5.5\lib\net461\System.Memory.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="System.Buffers">
-      <HintPath>..\packages\System.Buffers.4.5.1\lib\net461\System.Buffers.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="System.Numerics.Vectors">
-      <HintPath>..\packages\System.Numerics.Vectors.4.5.0\lib\net46\System.Numerics.Vectors.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="System.Runtime.CompilerServices.Unsafe">
-      <HintPath>..\packages\System.Runtime.CompilerServices.Unsafe.6.0.0\lib\net461\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="WindowsBase" />
     <Reference Include="System.Xaml" />
+    <Reference Include="WindowsBase" />
     <!-- SvgElement/SvgElementIdManager use HttpClient for remote SVG loading. Resolved from
          the net48 targeting pack; on target machines the 4.8 runtime provides it from the
          GAC, so nothing extra is deployed next to the shell extension. -->
     <Reference Include="System.Net.Http" />
-    <!-- Only used when building with dotnet-CLI MSBuild (coreclr GenerateResource refuses
-         non-string resx payloads without this). VS's own MSBuild takes the classic path and
-         this reference stays out of the build. Verification invocation:
-         dotnet msbuild ... /p:GenerateResourceUsePreserializedResources=true -->
-    <Reference Include="System.Resources.Extensions" Condition="'$(GenerateResourceUsePreserializedResources)' == 'true'">
-      <HintPath>..\packages\System.Resources.Extensions.6.0.0\lib\net461\System.Resources.Extensions.dll</HintPath>
-    </Reference>
   </ItemGroup>
+
   <ItemGroup>
-    <!-- SharpZipLib v1.4.2 (official icsharpcode tag, source-embedded; was kkguo fork @v0.86-era.
-         Fork's single private commit (InflaterInputStream.Length -> NotSupportedException) is
-         already upstream at Zip/Compression/Streams/InflaterInputStream.cs.
-         Exclusions: unused codecs (GZip/Lzw/Tar, incl. its only System.Memory dependency
-         ExactMemoryPool.cs) match the pre-upgrade compile surface; BZip2 is now REQUIRED
-         (ZipFile.cs:921/:2700 reference it); AssemblyInfo.cs excluded (host owns asm attributes). -->
-    <Compile Include="SharpZipLib\src\ICSharpCode.SharpZipLib\**\*.cs" />
-    <Compile Remove="SharpZipLib\src\ICSharpCode.SharpZipLib\AssemblyInfo.cs" />
-    <Compile Remove="SharpZipLib\src\ICSharpCode.SharpZipLib\GZip\**\*.cs" />
-    <Compile Remove="SharpZipLib\src\ICSharpCode.SharpZipLib\Lzw\**\*.cs" />
-    <Compile Remove="SharpZipLib\src\ICSharpCode.SharpZipLib\Tar\**\*.cs" />
-    <Compile Remove="SharpZipLib\src\ICSharpCode.SharpZipLib\Core\ExactMemoryPool.cs" />
+    <!-- NuGet via restore: System.Memory drags System.Buffers + System.Numerics.Vectors;
+         the direct Unsafe 6.0.0 overrides its transitive 4.5.3 (nearest-wins), which is
+         exactly what the old HintPath set resolved to. No more manual package fetching. -->
+    <PackageReference Include="ExCSS" Version="4.2.3" />
+    <PackageReference Include="System.Memory" Version="4.5.5" />
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.0.0" />
+    <!-- only the coreclr resource path needs it at compile time (see the property above) -->
+    <PackageReference Include="System.Resources.Extensions" Version="6.0.0"
+                      Condition="'$(GenerateResourceUsePreserializedResources)' == 'true'" />
   </ItemGroup>
-  <!-- Ionic.Zlib (DotNetZip 1.9, dead since 2011) removed: its single use (zlib wrap + CRC32
-       in PNGDecrush PNGDecrusher.cs) now runs on the already-embedded SharpZipLib 1.4.2 streams. -->
+
+  <ItemGroup>
+    <None Include="apkshellext2_hy.pfx" />
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <None Include="Resources\**\*.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Resources\Amazon.png" />
+    <Content Include="Resources\output.png" />
+    <Content Include="Resources\logo.png" />
+    <Content Include="Resources\update.png" />
+    <Content Include="Resources\Windows.png" />
+    <Content Include="LibWebP\libwebp_x64.dll">
+      <TargetPath>libwebp_x64.dll</TargetPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="LibWebP\libwebp_x86.dll">
+      <TargetPath>libwebp_x86.dll</TargetPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <!-- Publish layout assembled by MSBuild (used to be copy commands at the top
+       of Resources\postbuild.cmd; that script now only does 7z packaging).
+       Content items are copied by CopyFilesToOutputDirectory during the build,
+       before PostBuildEvent runs, so the output folder is already complete.
+       TargetPath flattens each file to the output root - without it the
+       Resources\/LibWebP\ source subfolders would be recreated in the output. -->
+  <ItemGroup>
+    <Content Include="Resources\install.bat">
+      <TargetPath>install.bat</TargetPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\install_user.bat">
+      <TargetPath>install_user.bat</TargetPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\uninstall.bat">
+      <TargetPath>uninstall.bat</TargetPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\uninstall_user.bat">
+      <TargetPath>uninstall_user.bat</TargetPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\restart_explorer.bat">
+      <TargetPath>restart_explorer.bat</TargetPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <!-- Dev helper: Debug-only, so the Release *.bat wildcard in the 7z
+         packaging step never picks it up. -->
+    <Content Include="Resources\debug.bat" Condition="'$(Configuration)'=='Debug'">
+      <TargetPath>debug.bat</TargetPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <!-- 7z packaging step (Resources\postbuild.cmd). NOTE: implemented as an
+       AfterBuild target, not the legacy <PostBuildEvent> property - in an SDK-style
+       project a property assignment expands its macros at EVALUATION time, when
+       $(ProjectDir)/$(TargetDir) are not defined yet, so the old one-liner would
+       bake into `call "Resources\postbuild.cmd" "" ""`. Task parameters inside a
+       target expand at execution time, when everything is known.
+       The script exits 0 quickly when 7-Zip is absent; it only packages, never
+       copies (the publish layout above is already in $(TargetDir) by then). -->
+  <Target Name="PackageWith7z" AfterTargets="PostBuildEvent">
+    <Exec Command="call &quot;$(MSBuildProjectDirectory)\Resources\postbuild.cmd&quot; &quot;$(TargetDir)&quot; &quot;$(MSBuildProjectDirectory)\&quot; $(Configuration)" />
+  </Target>
+
 </Project>
