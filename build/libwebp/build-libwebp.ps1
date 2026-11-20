@@ -34,7 +34,9 @@ function CMake-Build([string]$buildDir) {
     $off = @('-DWEBP_BUILD_ANIM_UTILS=OFF','-DWEBP_BUILD_CWEB=OFF','-DWEBP_BUILD_DWEB=OFF',
              '-DWEBP_BUILD_GIF2WEBP=OFF','-DWEBP_BUILD_IMG2WEBP=OFF','-DWEBP_BUILD_VWEBP=OFF',
              '-DWEBP_BUILD_WEBPINFO=OFF','-DWEBP_BUILD_WEBPMUX=OFF','-DWEBP_BUILD_EXTRAS=OFF')
-    & $cmake -S $SrcDir -B $buildDir -G Ninja -DCMAKE_MAKE_PROGRAM=$ninja `
+    # NOTE: the token must be quoted — a bare `-DCMAKE_MAKE_PROGRAM=$ninja` is parsed as a
+    # parameter-style argument and the variable is NOT expanded (reproduces on 5.1 and 7).
+    & $cmake -S $SrcDir -B $buildDir -G Ninja "-DCMAKE_MAKE_PROGRAM=$ninja" `
         -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=ON @off -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded
     if ($LASTEXITCODE) { throw "cmake configure failed" }
     & $cmake --build $buildDir --target webp -j 12
@@ -85,13 +87,16 @@ if ($Msvc64 -or $Msvc32) {
 }
 
 if ($Smoke) {
+    # exe is written next to the built libwebp.dll so the loader finds it (exe dir is
+    # searched first); never drop build artifacts into this source directory.
     Push-Location $PSScriptRoot
     $env:PATH = "$GccRoot\bin;$env:PATH"
-    gcc -O2 -I "$SrcDir\src" "$PSScriptRoot\smoke.c" -L $Smoke -lwebp -o smoke.exe
+    gcc -O2 -I "$SrcDir\src" "$PSScriptRoot\smoke.c" -L $Smoke -lwebp -o "$Smoke\smoke.exe"
     if ($LASTEXITCODE) { Pop-Location; throw 'smoke compile failed' }
-    .\smoke.exe
-    if ($LASTEXITCODE) { Pop-Location; throw 'smoke test FAILED' }
+    & "$Smoke\smoke.exe"
+    $rc = $LASTEXITCODE
     Pop-Location
+    if ($rc) { throw 'smoke test FAILED' }
     Write-Host 'SMOKE PASS'
 }
 

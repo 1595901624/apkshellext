@@ -41,8 +41,9 @@ headers and by the runtime smoke test (`smoke.c`).
 # build x64 with MSVC too (optional, for symmetry)
 .\build-libwebp.ps1 -Msvc64
 
-# decode smoke test (compiles smoke.c against the built DLL, runs it)
-.\build-libwebp.ps1 -Smoke <build-dir> <compiler>
+# decode smoke test (compiles smoke.c against the built DLL with gcc, writes smoke.exe
+# into <build-dir> and runs it — run it against the gcc output, -Gcc64's lw-build-x64-gcc)
+.\build-libwebp.ps1 -Smoke <build-dir>
 
 # copy results into ApkShellext2\LibWebP\ (main repo)
 .\build-libwebp.ps1 -Deploy   # lw-build-x64-msvc\libwebp.dll -> LibWebP\libwebp_x64.dll etc.
