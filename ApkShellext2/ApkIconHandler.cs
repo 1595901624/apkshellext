@@ -6,6 +6,7 @@ using SharpShell.Extensions;
 using SharpShell.ServerRegistration;
 using SharpShell.SharpIconHandler;
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -30,37 +31,91 @@ namespace ApkShellext2 {
     [COMServerAssociation(AssociationType.ClassOfExtension, ".apkm")]
     [COMServerAssociation(AssociationType.ClassOfExtension, ".xapk")]
     public class ApkIconHandler : SharpIconHandler {
+        // SharpShell makes one COM instance per request and DontCacheIcons is
+        // on, so every folder refresh re-opened and inflated every package in
+        // view. This small bounded cache kills that churn. Only the base icon
+        // is cached (the expensive part: opening the package + rasterising);
+        // the overlay stays per-instance so its setting takes effect at once.
+        // Evicted bitmaps are left to the GC - another instance may still
+        // hold the reference.
+        private const int IconCacheSize = 64;
+        private static readonly object iconCacheLock = new object();
+        private static readonly Dictionary<string, Bitmap> iconCache = new Dictionary<string, Bitmap>();
+        private static readonly Queue<string> iconCacheOrder = new Queue<string>();
+
+        private static string IconCacheKey(string path, uint iconSize) {
+            try {
+                var fi = new FileInfo(path);
+                return path.ToLowerInvariant() + "|" + fi.LastWriteTimeUtc.Ticks + "|" + fi.Length + "|" + iconSize;
+            } catch {
+                return null;
+            }
+        }
+
+        private static Bitmap LookupIcon(string key) {
+            if (key == null) return null;
+            lock (iconCacheLock) {
+                Bitmap b;
+                return iconCache.TryGetValue(key, out b) ? b : null;
+            }
+        }
+
+        private static void StoreIcon(string key, Bitmap bitmap) {
+            if (key == null || bitmap == null) return;
+            lock (iconCacheLock) {
+                if (!iconCache.ContainsKey(key)) {
+                    iconCache[key] = bitmap;
+                    iconCacheOrder.Enqueue(key);
+                    if (iconCacheOrder.Count > IconCacheSize)
+                        iconCache.Remove(iconCacheOrder.Dequeue());
+                }
+            }
+        }
+
         private Bitmap m_icon = null;
         protected override Icon GetIcon(bool smallIcon, uint iconSize) {
             if (m_icon == null) {
-                try {
-                    using (AppPackageReader reader = AppPackageReader.Read(SelectedItemPath)) {
-                        if (reader.Type == AppPackageReader.AppType.iOSApp && Utility.GetSetting("ShowIpaIcon", "True") != "True") {
-                            m_icon = Utility.AppTypeIcon(reader.Type);
-                        } else if ((reader.Type == AppPackageReader.AppType.WindowsPhoneApp ||
-                            reader.Type == AppPackageReader.AppType.WindowsPhoneAppBundle) &&
-                            Utility.GetSetting("ShowAppxIcon", "False") != "True") {
-                            m_icon = Utility.AppTypeIcon(reader.Type);
-                        } else {
-                            m_icon = reader.getIcon(new Size((int)iconSize, (int)iconSize));
+                string key = IconCacheKey(SelectedItemPath, iconSize);
+                m_icon = LookupIcon(key);
+                if (m_icon == null) {
+                    try {
+                        using (AppPackageReader reader = AppPackageReader.Read(SelectedItemPath)) {
+                            if (reader.Type == AppPackageReader.AppType.iOSApp && Utility.GetSetting("ShowIpaIcon", "True") != "True") {
+                                m_icon = Utility.AppTypeIcon(reader.Type);
+                            } else if ((reader.Type == AppPackageReader.AppType.WindowsPhoneApp ||
+                                reader.Type == AppPackageReader.AppType.WindowsPhoneAppBundle) &&
+                                Utility.GetSetting("ShowAppxIcon", "False") != "True") {
+                                m_icon = Utility.AppTypeIcon(reader.Type);
+                            } else {
+                                m_icon = reader.getIcon(new Size((int)iconSize, (int)iconSize));
+                            }
+                            if (m_icon == null)
+                                throw new Exception("Cannot find Icon for " + Path.GetFileName(SelectedItemPath) + ", draw default");
                         }
-                        if (m_icon == null)
-                            throw new Exception("Cannot find Icon for " + Path.GetFileName(SelectedItemPath) + ", draw default");
+                        StoreIcon(key, m_icon);
+                    } catch (Exception ex) {
+                        Log("Error in reading icon for " + Path.GetFileName(SelectedItemPath) + ", draw default : " + ex.Message);
+                        // read error, draw the default icon
+                        m_icon = Utility.AppTypeIcon(AppPackageReader.getAppType(SelectedItemPath));
                     }
-                    if (Utility.GetSetting("ShowOverLayIcon") == "True")
+                    // overlay after the cache: it depends on a live setting and
+                    // is cheap next to parsing the package
+                    if (Utility.GetSetting("ShowOverLayIcon") == "True") try {
                         m_icon = Utility.CombineBitmap(m_icon,
                            Utility.AppTypeIcon(AppPackageReader.getAppType(SelectedItemPath)),
                            new Rectangle((int)(m_icon.Width * 0.05), 0, (int)(m_icon.Width * 0.95), (int)(m_icon.Height * 0.95)),
                            new Rectangle(0, (int)m_icon.Height / 2, (int)m_icon.Width / 2, (int)m_icon.Height / 2),
                            new Size((int)m_icon.Width, (int)m_icon.Height));
-                } catch (Exception ex) {
-                    Log("Error in reading icon for " + Path.GetFileName(SelectedItemPath) + ", draw default : " + ex.Message);
-                    // read error, draw the default icon
-                    m_icon = Utility.AppTypeIcon(AppPackageReader.getAppType(SelectedItemPath));
+                    } catch (Exception ex) {
+                        Log("Overlay failed for " + Path.GetFileName(SelectedItemPath) + ", keeping base icon: " + ex.Message);
+                    }
                 }
             }
 
-            return Icon.FromHandle(Utility.ResizeBitmap(m_icon, new Size((int)iconSize, (int)iconSize)).GetHicon());
+            // ResizeBitmap always returns a fresh bitmap (null only if the
+            // source is null, which cannot happen here); dispose the temp
+            using (Bitmap resized = Utility.ResizeBitmap(m_icon, new Size((int)iconSize, (int)iconSize)))
+                return Icon.FromHandle(resized.GetHicon());
         }
 
         [CustomRegisterFunction]

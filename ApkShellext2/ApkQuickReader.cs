@@ -1360,10 +1360,14 @@ namespace ApkQuickReader
                     }
                 }
                 Bitmap bmp = new Bitmap(size.Width, size.Height);
-                Graphics g = Graphics.FromImage(bmp);
-                foreach (Bitmap b in bitmapList) {
-                    g.DrawImage(Utility.ResizeBitmap(b, new Size(bmp.Width, bmp.Height)), 0, 0);
+                using (Graphics g = Graphics.FromImage(bmp)) {
+                    foreach (Bitmap b in bitmapList) {
+                        if (b == null) continue;
+                        using (Bitmap scaled = Utility.ResizeBitmap(b, new Size(bmp.Width, bmp.Height)))
+                            g.DrawImage(scaled, 0, 0);
+                    }
                 }
+                foreach (Bitmap b in bitmapList) if (b != null) b.Dispose();
                 return bmp;
             } catch (Exception ex) {
                 throw new Exception(ex.Message + "\nError happens during parsing layer-list: " + node.InnerXml);
@@ -1451,7 +1455,9 @@ namespace ApkQuickReader
                 using (Graphics g = Graphics.FromImage(b)) {
                     DrawVectorGroup(g, vector, new System.Drawing.Drawing2D.Matrix());
                 }
-                return Utility.ResizeBitmap(b,size);
+                Bitmap legacyResized = Utility.ResizeBitmap(b, size);
+                b.Dispose(); // native-size canvas is dead once resized
+                return legacyResized;
             } catch (Exception ex) {
                 throw new Exception(ex.Message + "\nError happens during parsing vectordrawable: " + node.InnerXml);
             }
@@ -1768,7 +1774,6 @@ namespace ApkQuickReader
                 else {
                     b = new Bitmap(size.Width, size.Height);
                 }
-                Graphics g = Graphics.FromImage(b);
                 GraphicsPath p = new GraphicsPath();
                 Brush brush;
                 XmlElement ebrush = (XmlElement)eShape.SelectSingleNode("solid");
@@ -1796,8 +1801,14 @@ namespace ApkQuickReader
                 } else {
                     throw new Exception("Unsupported shape type: " + (int)type);
                 }
-                g.FillPath(brush, p);
-                return Utility.ResizeBitmap(b, size);
+                using (Graphics g = Graphics.FromImage(b))
+                using (brush)
+                using (p) {
+                    g.FillPath(brush, p);
+                }
+                Bitmap shapeResized = Utility.ResizeBitmap(b, size);
+                b.Dispose(); // native-size shape canvas is dead once resized
+                return shapeResized;
             } catch (Exception ex) {
                 throw new Exception(ex.Message + "\nError happending during parsing shape:" + shapeNode.InnerXml);
             }
@@ -2350,10 +2361,14 @@ namespace ApkQuickReader
 
         public void Close() {
             Dispose(true);
+            GC.SuppressFinalize(this);
         }
 
         ~ApkReader() {
-            Dispose(true);
+            // never touch managed objects from a finalizer: they may already be
+            // gone and a throw here would take down the process; the owned
+            // streams release their handles via their own finalizers
+            Dispose(false);
         }
         #endregion
     }

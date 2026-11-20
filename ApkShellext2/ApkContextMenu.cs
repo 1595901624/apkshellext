@@ -77,9 +77,13 @@ namespace ApkShellext2 {
 
             bool singleSelected = SelectedItemPaths.Count() == 1;
             string appname = "";
+            string singleNewName = "";
             if (singleSelected) {
-                using (AppPackageReader reader = AppPackageReader.Read(SelectedItemPaths.ElementAt(0)))
+                // one parse feeds both the app name and the rename preview
+                using (AppPackageReader reader = AppPackageReader.Read(SelectedItemPaths.ElementAt(0))) {
                     appname = reader.AppName;
+                    singleNewName = getNewFileName(SelectedItemPaths.ElementAt(0), reader);
+                }
             }
 
             #region Rename Menu
@@ -88,9 +92,8 @@ namespace ApkShellext2 {
             };
 
             if (singleSelected) {
-                string newName = getNewFileName(SelectedItemPaths.ElementAt(0));
-                if (newName != "") {
-                    renameMenu.Text = string.Format(Resources.menuRenameAs, Path.GetFileName(newName));
+                if (singleNewName != "") {
+                    renameMenu.Text = string.Format(Resources.menuRenameAs, Path.GetFileName(singleNewName));
                 } else {
                     renameMenu.Text = Resources.strReadFileFailed;
                     renameMenu.Enabled = false;
@@ -252,7 +255,7 @@ namespace ApkShellext2 {
         /// get the new filename for renaming function
         /// </summary>
         /// <returns></returns>
-        private string getNewFileName(string path) {
+        private string getNewFileName(string path, AppPackageReader reader = null) {
             //bool key_RenameWithVersionCode = Settings.DefaultRenameWithVersionCode) == 1);
             string suffix = Path.GetExtension(path);
             string newFileName = "";
@@ -261,8 +264,13 @@ namespace ApkShellext2 {
             bool isipa = SelectedItemPaths.ElementAt(0).EndsWith(".ipa", StringComparison.OrdinalIgnoreCase);
 
             try {
-                using (AppPackageReader reader = AppPackageReader.Read(path)) {                    
-                    newFileName = ReplaceVariables(renamePattern,reader);
+                if (reader != null) {
+                    // menu build already holds a parsed reader; reuse it
+                    newFileName = ReplaceVariables(renamePattern, reader);
+                } else {
+                    using (AppPackageReader ownReader = AppPackageReader.Read(path)) {
+                        newFileName = ReplaceVariables(renamePattern, ownReader);
+                    }
                 }
 
                 newFileName = Regex.Replace(newFileName, @"[\\/:*?""<>|-]+", ""); // remove invalid chars (incl. backslash: File.Move below)

@@ -244,17 +244,26 @@ namespace ApkShellext2 {
             // Opt-out: HKCU\SOFTWARE\ApkShellext2 "CheckForUpdates"=dword 0 / "False"
             // stops the daily background request to GitHub entirely.
             if (Utility.GetSetting("CheckForUpdates", "True") != "True") return;
-            try {
-                checkUpdateMutex.WaitOne();
-                DateTime t = DateTime.Parse(Utility.GetSetting("LastCheckUpdateTime", "0"));
-                if (t < System.DateTime.Today) {
-                    Utility.SaveSetting("LastCheckUpdateTime", System.DateTime.Today.ToString());
-                    Thread thUpdate = new Thread(new ThreadStart(() => { Utility.getLatestVersion(); }));
-                    thUpdate.Start();
-                }
-            } catch { } finally {
-                checkUpdateMutex.ReleaseMutex();
-            }
+            // Menu building must never wait on this: the mutex, the registry
+            // and the network all move to a fire-and-forget background thread.
+            Thread thUpdate = new Thread(new ThreadStart(() => {
+                try {
+                    if (!checkUpdateMutex.WaitOne(TimeSpan.FromSeconds(5))) return;
+                    try {
+                        DateTime t;
+                        if (!DateTime.TryParse(Utility.GetSetting("LastCheckUpdateTime", "0"), out t))
+                            t = DateTime.MinValue;
+                        if (t < System.DateTime.Today) {
+                            Utility.SaveSetting("LastCheckUpdateTime", System.DateTime.Today.ToString());
+                            Utility.getLatestVersion();
+                        }
+                    } finally {
+                        checkUpdateMutex.ReleaseMutex();
+                    }
+                } catch { }
+            }));
+            thUpdate.IsBackground = true;
+            thUpdate.Start();
         }
 
         public static void getLatestVersion() {
@@ -271,7 +280,14 @@ namespace ApkShellext2 {
                 if (count != 0) {
                     s = Encoding.ASCII.GetString(buf, 0, count);
                 }
-                s = Regex.Replace(s, @"\t|\n|\r", "");
+                s = Regex.Replace(s, @"\t|\n|\r", "").Trim();
+                // whatever comes back lands in HKCU and feeds NewVersionAvailible;
+                // store only something shaped like a version, never the raw body
+                if (!Regex.IsMatch(s, @"^\d+(\.\d+){0,3}$")) {
+                    Log(null, "Update", "Unexpected update-check response, ignored: " +
+                        (s.Length > 80 ? s.Substring(0, 80) + "..." : s));
+                    return;
+                }
                 Utility.SaveSetting("LatestVersion", s);
                 Log(null, "Update", "Get the latest version :" + s);
             } catch (Exception ex) {
@@ -285,9 +301,14 @@ namespace ApkShellext2 {
                 return false;
             string[] curV = Assembly.GetExecutingAssembly().GetName().Version.ToString().Split(new Char[] { '.' });
             // version number should be always 4 parts
+            float latest, current;
             for (int i = 0; i < latestV.Length; i++) {
                 if (latestV[i] != curV[i]) {
-                    if (float.Parse(latestV[i]) > float.Parse(curV[i]))
+                    // the registry value is only version-shaped by convention,
+                    // never let a hand-edited/corrupt value throw into the menu
+                    if (!float.TryParse(latestV[i], out latest) || !float.TryParse(curV[i], out current))
+                        return false;
+                    if (latest > current)
                         return true;
                     break;
                 }

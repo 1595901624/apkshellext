@@ -47,7 +47,13 @@ namespace ApkQuickReader {
             baseEntryName = selectBaseEntry();
             if (baseEntryName == null)
                 throw new NotSupportedException(filename + " contains no base apk (encrypted apkm or unsupported layout?)");
+            // the base apk itself is only inflated on demand (EnsureInner):
+            // icon and infotip usually resolve from the root icon.png alone,
+            // which costs a few KB instead of decompressing up to 512 MB
+        }
 
+        private void EnsureInner() {
+            if (inner != null) return;
             ZipEntry baseEntry = outer.GetEntry(baseEntryName);
             // The nested apk must be seekable for ZipFile; SZL's decompression
             // streams are not, so buffer the whole entry — under hard caps so a
@@ -55,12 +61,14 @@ namespace ApkQuickReader {
             // possible later optimisation; correctness and safety first.)
             byte[] baseBytes = ZipSafety.ReadEntryBounded(outer, baseEntry, ZipSafety.MAX_BASE_APK, "base apk " + baseEntryName);
             MemoryStream ms = new MemoryStream(baseBytes, 0, baseBytes.Length, false, false);
-            inner = new ApkReader(ms);
+            AppPackageReader candidate = new ApkReader(ms);
             // wrong-base guard: a split has android:split in its manifest
-            if (!string.IsNullOrEmpty(((ApkReader)inner).getAttribute("manifest", "split"))) {
+            if (!string.IsNullOrEmpty(((ApkReader)candidate).getAttribute("manifest", "split"))) {
+                candidate.Dispose();
                 Log("selected base " + baseEntryName + " looks like a split, rejecting");
                 throw new NotSupportedException("base candidate " + baseEntryName + " is a split apk");
             }
+            inner = candidate;
         }
 
         private string selectBaseEntry() {
@@ -147,15 +155,15 @@ namespace ApkQuickReader {
         }
 
         public override AppPackageReader.AppType Type { get { return AppType.AndroidApp; } }
-        public override string AppName { get { return inner.AppName; } }
-        public override string PackageName { get { return inner.PackageName; } }
-        public override string Version { get { return inner.Version; } }
-        public override string Revision { get { return inner.Revision; } }
-        public override string Publisher { get { return inner.Publisher; } }
-        public override string AppID { get { return inner.AppID; } }
+        public override string AppName { get { EnsureInner(); return inner.AppName; } }
+        public override string PackageName { get { EnsureInner(); return inner.PackageName; } }
+        public override string Version { get { EnsureInner(); return inner.Version; } }
+        public override string Revision { get { EnsureInner(); return inner.Revision; } }
+        public override string Publisher { get { EnsureInner(); return inner.Publisher; } }
+        public override string AppID { get { EnsureInner(); return inner.AppID; } }
         public override CultureInfo Culture {
-            get { return inner.Culture; }
-            set { inner.Culture = value; }
+            get { EnsureInner(); return inner.Culture; }
+            set { EnsureInner(); inner.Culture = value; }
         }
 
         // Root-level icon.png shipped by APKMirror/APKPure — the cheap, high-quality path.
@@ -163,14 +171,18 @@ namespace ApkQuickReader {
             get {
                 Bitmap b = readRootIcon();
                 if (b != null) return b;
+                EnsureInner();
                 return inner.Icon;
             }
         }
 
         public override Bitmap getIcon(Size size) {
             Bitmap b = readRootIcon();
-            if (b == null) return inner.getIcon(size);
-            return Utility.ResizeBitmap(b, size);
+            if (b == null) {
+                EnsureInner();
+                return inner.getIcon(size);
+            }
+            using (b) return Utility.ResizeBitmap(b, size);
         }
 
         private Bitmap readRootIcon() {
