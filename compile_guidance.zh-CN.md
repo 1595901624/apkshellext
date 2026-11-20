@@ -188,18 +188,24 @@ libwebp,因为官方 Windows 构建会额外要求一个 `libsharpyuv.dll`,而�
 | 步骤 | 命令(在 `build\libwebp\` 里运行) | 前置 |
 |---|---|---|
 | 拉取并打补丁 v1.6.0 源码 | `.\build-libwebp.ps1 -Fetch` | Git;`-Mirror` 可指定 GitHub 镜像 |
-| 编 x64 DLL(gcc) | `.\build-libwebp.ps1 -Gcc64` | MSYS2 ucrt64 的 gcc + CMake + Ninja(默认根 `-GccRoot D:\msys64\ucrt64`) |
-| 编 x86 DLL(MSVC) | `.\build-libwebp.ps1 -Msvc32`(想用 MSVC 编 x64 则 `-Msvc64`) | 装了**「使用 C++ 的桌面开发」**负载的 VS —— §1 的 *.NET 桌面开发* 负载**不含 C++ 编译器** |
+| 编 x64 DLL —— **gcc、MSVC 二选一** | gcc:`.\build-libwebp.ps1 -Gcc64 -GccRoot <root>`;MSVC:`.\build-libwebp.ps1 -Msvc64 -GccRoot <root>` | gcc:MSYS2 ucrt64(gcc+CMake+Ninja),无需 Visual Studio。MSVC:装了**「使用 C++ 的桌面开发」**负载的 VS —— §1 的 *.NET 桌面开发* 负载**不含 C++ 编译器** |
+| 编 x86 DLL —— **仅 MSVC** | `.\build-libwebp.ps1 -Msvc32 -GccRoot <root>` | 同 MSVC x64;脚本没有 gcc-x86 模式 |
 | 解码冒烟测试 | `.\build-libwebp.ps1 -Smoke <build-dir>` | `-GccRoot` 里的 gcc;`<build-dir>` 指向 `-Gcc64` 的输出 |
 | 替换仓库内 DLL | `.\build-libwebp.ps1 -Deploy` | 把 `lw-build-{x64,x86}-msvc\libwebp.dll` 复制为 `ApkShellext2\LibWebP\libwebp_x{64,86}.dll` |
 
 实际上要紧的几点:
 
-- **CMake/Ninja 来自 MSYS2**(`-GccRoot\bin`),gcc 路线完全不需要 Visual Studio;MSVC
-  模式也是在 `VsDevCmd -arch=…` 环境里复用这两个工具。
+- **`-GccRoot` 指定工具根目录**:任意 `bin\` 下同时有 `gcc.exe`、`cmake.exe`、
+  `ninja.exe` 的目录(MSYS2 ucrt64 是最常见来源)——**MSVC 模式也从这里取
+  CMake/Ninja**,两条路线都要传它。gcc 路线完全不需要 Visual Studio;MSVC 模式在
+  `VsDevCmd -arch=…` 环境里调 `cl`。
 - **MSVC 路线必须静态 CRT**(`/MT`,经 `CMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded`
   设置);脚本会检查产物的导入表,出现 `VCRUNTIME*/MSVCP*` 即判失败 —— 发布的 DLL
   不能依赖系统装没装运行库。
+- **`-Deploy` 只收割 MSVC 产物**(`lw-build-x64-msvc`、`lw-build-x86-msvc`)。用 gcc
+  编的 x64 要自己把 dll 复制成 `ApkShellext2\LibWebP\libwebp_x64.dll`。另注意 MSYS2
+  gcc 产物链接 UCRT api-set(Windows 10+ 默认自带),而在库的两个 DLL(MSVC `/MT`
+  产物)只导入 `KERNEL32.dll`;要真正发布,优先走 MSVC 路线。
 - **冒烟测试**(`smoke.c`):合成图像先编码再解码回来,走的全是 wrapper 实际调用的导出
   (`WebPGetInfo`、`WebPDecodeBGRInto`、`WebPDecodeBGRAInto`、`WebPGetFeatures`)。
   `-Smoke` 用 gcc 对着构建目录的导入库编译它,把 `smoke.exe` 写到新编出的

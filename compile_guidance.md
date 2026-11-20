@@ -205,20 +205,27 @@ ABI facts); `build-libwebp.ps1` does the work.
 | Step | Command (from `build\libwebp\`) | Needs |
 |---|---|---|
 | Fetch + patch v1.6.0 sources | `.\build-libwebp.ps1 -Fetch` | Git; `-Mirror` selects a GitHub mirror |
-| Build the x64 DLL (gcc) | `.\build-libwebp.ps1 -Gcc64` | MSYS2 ucrt64 gcc + CMake + Ninja (default root `-GccRoot D:\msys64\ucrt64`) |
-| Build the x86 DLL (MSVC) | `.\build-libwebp.ps1 -Msvc32` (`-Msvc64` for an MSVC x64 too) | VS with the **Desktop development with C++** workload — the *.NET desktop development* workload of §1 has **no C++ compiler** |
+| Build the x64 DLL — **gcc or MSVC, either works** | `.\build-libwebp.ps1 -Gcc64 -GccRoot <root>` (gcc route) or `.\build-libwebp.ps1 -Msvc64 -GccRoot <root>` (MSVC route) | gcc: MSYS2 ucrt64 (gcc+CMake+Ninja), no Visual Studio required. MSVC: VS with the **Desktop development with C++** workload — the *.NET desktop development* workload of §1 has **no C++ compiler** |
+| Build the x86 DLL — **MSVC only** | `.\build-libwebp.ps1 -Msvc32 -GccRoot <root>` | same prerequisites as MSVC x64; the script has no gcc-x86 mode |
 | Decode smoke test | `.\build-libwebp.ps1 -Smoke <build-dir>` | gcc from `-GccRoot`; point `<build-dir>` at the `-Gcc64` output |
 | Replace the repo DLLs | `.\build-libwebp.ps1 -Deploy` | copies `lw-build-{x64,x86}-msvc\libwebp.dll` → `ApkShellext2\LibWebP\libwebp_x{64,86}.dll` |
 
 What matters in practice:
 
-- **CMake/Ninja come from MSYS2** (`-GccRoot\bin`), so the gcc route needs no Visual
-  Studio at all; the MSVC modes reuse the same two tools inside a `VsDevCmd -arch=…`
-  environment.
+- **`-GccRoot` selects the tool root**, any folder whose `bin\` holds `gcc.exe`,
+  `cmake.exe`, `ninja.exe` (MSYS2 ucrt64 is the usual supplier) — the **MSVC modes take
+  CMake/Ninja from there too**, so both routes pass it. The gcc route needs no Visual
+  Studio; the MSVC modes run `cl` inside a `VsDevCmd -arch=…` environment.
 - **Static CRT is mandatory on the MSVC route** (`/MT`, set via
   `CMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded`); the script inspects the built DLL's import
   table and fails if `VCRUNTIME*/MSVCP*` appears — the shipped DLLs must not depend on a
   redist being installed.
+- **`-Deploy` only harvests the MSVC outputs** (`lw-build-x64-msvc`,
+  `lw-build-x86-msvc`). A gcc-built x64 must be copied to
+  `ApkShellext2\LibWebP\libwebp_x64.dll` by hand. And note MSYS2 gcc output links the
+  UCRT api-set DLLs (present by default on Windows 10+), while the in-repo DLLs — MSVC
+  `/MT` builds — import `KERNEL32.dll` only; prefer the MSVC route for binaries that will
+  actually ship.
 - **Smoke test** (`smoke.c`): encodes a synthetic image and decodes it back through the
   exports the wrapper actually calls (`WebPGetInfo`, `WebPDecodeBGRInto`,
   `WebPDecodeBGRAInto`, `WebPGetFeatures`). `-Smoke` compiles it with gcc against the
