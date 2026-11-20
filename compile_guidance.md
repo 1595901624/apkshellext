@@ -3,10 +3,11 @@
 > This document records the **complete, actually-executed** procedure for going from a
 > fresh clone to a working `ApkShellext2.dll` (with 19 localized satellite assemblies)
 > and `apkshellextTest.exe`. Every command was run and verified on 2026-11-20 in
-> `E:\src\apkshellext` (ApkShellExt **3.4.5**, HEAD `076f182`). Copy them verbatim,
+> `E:\src\apkshellext` — upstream 3.4.5 (`076f182`) plus the local modernization
+> commits described in §5, which are part of this checkout. Copy them verbatim,
 > adjusting drive/paths.
 >
-> The two project files in this checkout were **modernized to SDK-style csproj**
+> This checkout's build system was **modernized to SDK-style csproj**
 > (§5), which is what makes both build routes work with **zero extra MSBuild
 > properties**. Companion document: [中文对照版 compile_guidance.zh-CN.md](compile_guidance.zh-CN.md).
 

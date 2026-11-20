@@ -2,10 +2,10 @@
 
 > 本文记录从**全新克隆**到产出可用 `ApkShellext2.dll`(含 19 个语言卫星程序集)与
 > `apkshellextTest.exe` 的**完整、实际执行过**的流程。所有命令均于 2026-11-20 在
-> `E:\src\apkshellext`(ApkShellExt **3.4.5**,HEAD `076f182`)实测通过,可直接复制,
-> 只需调整盘符/路径。
+> `E:\src\apkshellext` 验证通过 —— 基线为上游 3.4.5(`076f182`),加上 §5 所述的
+> 本地现代化提交(它们是本检出的一部分)。可直接复制,只需调整盘符/路径。
 >
-> 本检出的两个工程文件已**现代化为 SDK 式 csproj**(§5),这是两条编译路线都能
+> 本检出的构建体系已**现代化为 SDK 式 csproj**(§5),这是两条编译路线都能
 > **零附加 MSBuild 参数**的原因。对照文档:[English compile_guidance.md](compile_guidance.md)。
 
 ## 0. 速览
