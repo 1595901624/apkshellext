@@ -1,0 +1,13 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 39d3d8f..4dc9a84 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -334,7 +334,7 @@ function(libwebp_add_stub_file TARGET)
+ endfunction()
+ 
+ parse_makefile_am(${CMAKE_CURRENT_SOURCE_DIR}/sharpyuv "WEBP_SHARPYUV_SRCS" "")
+-add_library(sharpyuv ${WEBP_SHARPYUV_SRCS})
++add_library(sharpyuv STATIC ${WEBP_SHARPYUV_SRCS})
+ target_link_libraries(sharpyuv ${SHARPYUV_DEP_LIBRARIES})
+ set_version(sharpyuv/Makefile.am sharpyuv sharpyuv)
+ target_include_directories(
