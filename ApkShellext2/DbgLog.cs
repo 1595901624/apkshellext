@@ -29,13 +29,24 @@ namespace ApkShellext2 {
             try { _proc = Process.GetCurrentProcess().ProcessName; }
             catch { _proc = "?"; }
             if (_enabled == true) {
+#if DEBUG
+                // Hijacking the process-wide Trace/Debug listeners is a DEBUG-only diagnostic:
+                // a release shell extension must not rewrite the host's (explorer's) listeners.
+                // Debug.Listeners additionally does not exist on CoreCLR — referencing it
+                // statically threw MissingMethodException from this cctor in pwsh7 harness runs.
                 try {
                     System.Diagnostics.Trace.Listeners.Clear();
                     System.Diagnostics.Trace.Listeners.Add(new TraceToFileListener());
-                    System.Diagnostics.Debug.Listeners.Clear();
-                    System.Diagnostics.Debug.Listeners.Add(new TraceToFileListener());
+                    var dbgL = typeof(System.Diagnostics.Debug).GetProperty("Listeners",
+                        System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+                    if (dbgL != null) {
+                        var coll = (TraceListenerCollection)dbgL.GetValue(null);
+                        coll.Clear();
+                        coll.Add(new TraceToFileListener());
+                    }
                     W("TRACE listeners attached");
                 } catch { }
+#endif
                 try {
                     var st = typeof(Svg.SvgDocument);
                     var an = st.Assembly;

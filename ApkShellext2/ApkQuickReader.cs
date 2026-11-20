@@ -1332,6 +1332,8 @@ namespace ApkQuickReader
                         return parseShape(doc, size);
                     } else if (doc.FirstChild.Name == "layer-list") {
                         return parseLayerDrawable(doc, size);
+                    } else if (doc.FirstChild.Name == "bitmap") {
+                        return parseBitmapDrawable(doc, size);
                     } else {
                         throw new Exception("unsupported image file " + path + " with tag " + doc.FirstChild.Name);
                     }
@@ -1376,6 +1378,37 @@ namespace ApkQuickReader
             } catch (Exception ex) {
                 throw new Exception(ex.Message + "\nError happens during parsing layer-list: " + node.InnerXml);
             }
+        }
+
+        /// <summary>
+        /// &lt;bitmap android:src="..." [android:round="true"]&gt; — a BitmapDrawable declared in
+        /// XML (Storage Isolation's launcher icon is &lt;bitmap&gt; pointing at a png). Resolve the
+        /// referenced drawable exactly like a layer-list item; round="true" maps to a circular
+        /// mask (round-icon variant). gravity/tileMode are display options irrelevant for
+        /// icon-sized rendering.
+        /// </summary>
+        private Bitmap parseBitmapDrawable(XmlNode node, Size size) {
+            XmlElement bmp = node as XmlElement;
+            if (bmp == null) bmp = node.SelectSingleNode("/bitmap") as XmlElement;
+            if (bmp == null || !bmp.HasAttribute("src"))
+                throw new Exception("bitmap drawable without src: " + node.InnerXml);
+            Bitmap b = getImage(bmp.GetAttribute("src"), size);
+            if (b == null)
+                throw new Exception("bitmap src not found: " + bmp.GetAttribute("src"));
+            if (string.Equals(bmp.GetAttribute("round"), "true", StringComparison.OrdinalIgnoreCase)) {
+                Bitmap round = new Bitmap(b.Width, b.Height);
+                using (Graphics g = Graphics.FromImage(round)) {
+                    g.SmoothingMode = SmoothingMode.AntiAlias;
+                    using (GraphicsPath gp = new GraphicsPath()) {
+                        gp.AddEllipse(0, 0, b.Width - 1, b.Height - 1);
+                        using (Region r = new Region(gp)) g.SetClip(r, CombineMode.Replace);
+                        g.DrawImage(b, 0, 0);
+                    }
+                }
+                b.Dispose();
+                return round;
+            }
+            return b;
         }
 
         private Bitmap parseVectorDrawable(XmlNode node, Size size) {
