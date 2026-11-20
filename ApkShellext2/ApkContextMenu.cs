@@ -265,13 +265,15 @@ namespace ApkShellext2 {
                     newFileName = ReplaceVariables(renamePattern,reader);
                 }
 
-                newFileName = Regex.Replace(newFileName, @"[\/:*?""<>|-]+", ""); // remove invalid chars
+                newFileName = Regex.Replace(newFileName, @"[\\/:*?""<>|-]+", ""); // remove invalid chars (incl. backslash: File.Move below)
                 if (Utility.GetSetting("ReplaceSpace")=="True") {
                     newFileName = Regex.Replace(newFileName, @"\s+", "_");
                 }
                 string oldFileName = Path.GetFileName(path);
                 string folderPath = Path.GetDirectoryName(path);
-                string tmpFileName = newFileName + suffix;
+                // GetFileName: belt-and-braces, the rename target stays in the
+                // package's own folder no matter what the pattern produced
+                string tmpFileName = Path.GetFileName(newFileName) + suffix;
 
                 int i = 0;
                 while (File.Exists(folderPath + @"\" + tmpFileName) &&
@@ -303,7 +305,7 @@ namespace ApkShellext2 {
                 }
                 try {
                     XmlDocument doc = reader.ExtractCompressedXml(xml);
-                    string filepath = apk + "." + Regex.Replace(xml, @"[\/:*?""<>|-]+", "_"); // remove invalid chars
+                    string filepath = apk + "." + Path.GetFileName(Regex.Replace(xml, @"[\\/:*?""<>|-]+", "_")); // attribute name, kept next to the apk
                     XmlWriterSettings setting = new XmlWriterSettings();
                     setting.Indent = true;
                     XmlWriter writer = XmlWriter.Create(filepath,setting);

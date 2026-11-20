@@ -1143,6 +1143,16 @@ namespace ApkQuickReader
         private const string viewportHeight = "viewportHeight";
         private const string adaptive_icon = @"adaptive-icon";
 
+        static ApkReader() {
+            // Icons parsed here are attacker-controlled data rendered inside
+            // explorer: never let Svg.NET fetch external images/elements
+            // (a crafted drawable could read local files or dial out - SSRF),
+            // and never parse DTDs from package content.
+            Svg.SvgDocument.DisableDtdProcessing = true;
+            Svg.SvgDocument.ResolveExternalImages = Svg.ExternalType.None;
+            Svg.SvgDocument.ResolveExternalElements = Svg.ExternalType.None;
+        }
+
         /// <summary>
         /// extract the manifext
         /// </summary>
@@ -1449,7 +1459,10 @@ namespace ApkQuickReader
 
         private static int ClampCanvas(float v) {
             if (float.IsNaN(v) || float.IsInfinity(v) || v <= 1f) return 1;
-            return (int)Math.Min(v, 4096f);
+            // icons are rasterised at <=256px by every caller; 1024 keeps even
+            // 8x supersampling honest while a hostile viewport can no longer
+            // demand a 4096x4096 (64 MB) bitmap
+            return (int)Math.Min(v, 1024f);
         }
 
         /// <summary>
@@ -1872,10 +1885,20 @@ namespace ApkQuickReader
                         }
                         tagDepth--;
                     }
-                    ms.Seek(chunkPos + chunkSize, SeekOrigin.Begin);
+                    SeekNextChunk(ms, chunkPos, chunkSize);
                 }
                 return "";
             }
+        }
+
+        // Every forward chunk walk in this class is driven by a
+        // while (ms.Position < ms.Length) loop. A malformed chunk header
+        // claiming size < 8 (the minimum RES chunk header) would make the
+        // walk revisit the same offset forever and hang the shell UI thread.
+        private static void SeekNextChunk(MemoryStream ms, long chunkPos, int chunkSize) {
+            if (chunkSize < 8)
+                throw new InvalidDataException("chunk at offset " + chunkPos + " claims size " + chunkSize);
+            ms.Seek(chunkPos + chunkSize, SeekOrigin.Begin);
         }
 
         public XmlDocument ExtractCompressedXml(string path) {
@@ -1941,7 +1964,7 @@ namespace ApkQuickReader
                         } else if (chunkType == RES_TYPE.RES_XML_END_ELEMENT_TYPE) {
                             currentNode = currentNode.ParentNode;
                         }
-                        ms.Seek(chunkPos + chunkSize, SeekOrigin.Begin);
+                        SeekNextChunk(ms, chunkPos, chunkSize);
                     }
                     return doc;
                 } catch (Exception ex) {
@@ -2038,6 +2061,10 @@ namespace ApkQuickReader
                             if ((u8len & 0x80) != 0) {// larger than 128
                                 u8len = ((u8len & 0x7F) << 8) + br.ReadByte();
                             }
+                            // hostile pool entry may claim more bytes than the pool
+                            // holds; ReadBytes would pre-allocate the claimed size (OOM)
+                            if (u8len > ms.Length - ms.Position)
+                                throw new InvalidDataException("string pool entry out of bounds");
                             return Encoding.UTF8.GetString(br.ReadBytes(u8len));
                         } else // UTF_16
                         {
@@ -2046,10 +2073,12 @@ namespace ApkQuickReader
                                 u16len = ((u16len & 0x7FFF) << 16) + br.ReadUInt16();
                             }
 
+                            if (u16len < 0 || u16len > (ms.Length - ms.Position) / 2)
+                                throw new InvalidDataException("string pool entry out of bounds");
                             return Encoding.Unicode.GetString(br.ReadBytes(u16len * 2));
                         }
                     } else {
-                        ms.Seek(chunkPos + chunkSize, SeekOrigin.Begin);
+                        SeekNextChunk(ms, chunkPos, chunkSize);
                     }
                 }
                 return "";
@@ -2079,7 +2108,7 @@ namespace ApkQuickReader
                         else
                             return "";
                     } else {
-                        ms.Seek(chunkPos + chunkSize, SeekOrigin.Begin);
+                        SeekNextChunk(ms, chunkPos, chunkSize);
                     }
                 }
                 return "";
@@ -2208,7 +2237,7 @@ namespace ApkQuickReader
                                     //ms.Seek(EntryID * 4, SeekOrigin.Current); // goto index
                                     uint entryIndic = br.ReadUInt32();
                                     if (entryIndic == 0xffffffff) {
-                                        ms.Seek(chunkPos + chunkSize, SeekOrigin.Begin);
+                                        SeekNextChunk(ms, chunkPos, chunkSize);
                                         continue; //no entry here, go to next chunk
                                     }
                                     ms.Seek(chunkPos + entryStart + entryIndic, SeekOrigin.Begin);
@@ -2222,7 +2251,7 @@ namespace ApkQuickReader
                                     } else if (dataType == (byte)DATA_TYPE.TYPE_REFERENCE) {
                                         // the entry is null, or it's referencing in loop, go to next chunk
                                         if (data == 0x00000000 || searchstack.Contains(data)) {
-                                            ms.Seek(chunkPos + chunkSize, SeekOrigin.Begin);
+                                            SeekNextChunk(ms, chunkPos, chunkSize);
                                             continue;
                                         }
                                         res.Add(QuickSearchResource((UInt32)data));
@@ -2231,7 +2260,7 @@ namespace ApkQuickReader
                                     }
                                 }
                             }
-                            ms.Seek(chunkPos + chunkSize, SeekOrigin.Begin); // skip this chunk
+                            SeekNextChunk(ms, chunkPos, chunkSize); // skip this chunk
                         } while (ms.Position < PackChunkPos + PackChunkSize);
                     }
                 }

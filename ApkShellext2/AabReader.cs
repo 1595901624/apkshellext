@@ -616,7 +616,7 @@ namespace ApkShellext2
                         }
                         tagDepth--;
                     }
-                    ms.Seek(chunkPos + chunkSize, SeekOrigin.Begin);
+                    SeekNextChunk(ms, chunkPos, chunkSize);
                 }
                 return "";
             }
@@ -701,7 +701,7 @@ namespace ApkShellext2
                         {
                             currentNode = currentNode.ParentNode;
                         }
-                        ms.Seek(chunkPos + chunkSize, SeekOrigin.Begin);
+                        SeekNextChunk(ms, chunkPos, chunkSize);
                     }
                     return doc;
                 }
@@ -758,6 +758,16 @@ namespace ApkShellext2
             }
         }
 
+        // Guards the forward chunk walks below (same hazard as in ApkReader:
+        // a chunk header claiming size < 8 spins the while loops forever and
+        // hangs the shell UI thread).
+        private static void SeekNextChunk(MemoryStream ms, long chunkPos, int chunkSize)
+        {
+            if (chunkSize < 8)
+                throw new InvalidDataException("chunk at offset " + chunkPos + " claims size " + chunkSize);
+            ms.Seek(chunkPos + chunkSize, SeekOrigin.Begin);
+        }
+
         private string QuickSearchCompressedXmlStringPoolAndResMap(byte[] xml, uint id)
         {
             if (id == 0xffffffff) return "";
@@ -809,6 +819,10 @@ namespace ApkShellext2
                             {// larger than 128
                                 u8len = ((u8len & 0x7F) << 8) + br.ReadByte();
                             }
+                            // a hostile pool entry may claim more bytes than the pool
+                            // holds; ReadBytes would pre-allocate the claimed size (OOM)
+                            if (u8len > ms.Length - ms.Position)
+                                throw new InvalidDataException("string pool entry out of bounds");
                             return Encoding.UTF8.GetString(br.ReadBytes(u8len));
                         }
                         else // UTF_16
@@ -819,12 +833,14 @@ namespace ApkShellext2
                                 u16len = ((u16len & 0x7FFF) << 16) + br.ReadUInt16();
                             }
 
+                            if (u16len < 0 || u16len > (ms.Length - ms.Position) / 2)
+                                throw new InvalidDataException("string pool entry out of bounds");
                             return Encoding.Unicode.GetString(br.ReadBytes(u16len * 2));
                         }
                     }
                     else
                     {
-                        ms.Seek(chunkPos + chunkSize, SeekOrigin.Begin);
+                        SeekNextChunk(ms, chunkPos, chunkSize);
                     }
                 }
                 return "";
@@ -860,7 +876,7 @@ namespace ApkShellext2
                     }
                     else
                     {
-                        ms.Seek(chunkPos + chunkSize, SeekOrigin.Begin);
+                        SeekNextChunk(ms, chunkPos, chunkSize);
                     }
                 }
                 return "";

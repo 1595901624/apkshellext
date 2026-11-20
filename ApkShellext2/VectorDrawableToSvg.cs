@@ -48,6 +48,9 @@ namespace ApkQuickReader
 
         static void EmitChildren(StringBuilder sb, Ctx ctx, XmlElement parent, int depth)
         {
+            // hostile packages can nest <group> thousands deep; without a cap
+            // this recursion stack-overflows (uncatchable) and kills explorer
+            if (depth > 128) throw new Exception("group nesting too deep");
             // <clip-path> children of <group> clip all siblings of the same group
             string clipId = null;
             foreach (XmlNode n in parent.ChildNodes)
@@ -131,11 +134,11 @@ namespace ApkQuickReader
                   .Append(" stroke-width=\"").Append(F(AttrF(e, "strokeWidth", 1f))).Append('"')
                   .Append(" stroke-opacity=\"").Append(F(soa)).Append('"');
                 string cap = e.GetAttribute("strokeLineCap");
-                if (cap.Length > 0) sb.Append(" stroke-linecap=\"").Append(cap).Append('"');
+                if (cap.Length > 0) sb.Append(" stroke-linecap=\"").Append(Esc(cap)).Append('"');
                 string join = e.GetAttribute("strokeLineJoin");
-                if (join.Length > 0) sb.Append(" stroke-linejoin=\"").Append(join).Append('"');
+                if (join.Length > 0) sb.Append(" stroke-linejoin=\"").Append(Esc(join)).Append('"');
                 string mit = e.GetAttribute("strokeMiterLimit");
-                if (mit.Length > 0) sb.Append(" stroke-miterlimit=\"").Append(mit).Append('"');
+                if (mit.Length > 0) sb.Append(" stroke-miterlimit=\"").Append(Esc(mit)).Append('"');
             }
             else sb.Append(" stroke=\"none\"");
             sb.Append(" d=\"").Append(Esc(d)).Append("\"/>");
