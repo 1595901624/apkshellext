@@ -233,25 +233,55 @@ namespace ApkShellext2
 
         private Bitmap parseVectorDrawable(XmlNode node, Size size)
         {
+            // Preferred path: translate the VectorDrawable to SVG and let the vendored
+            // Svg.NET renderer do the drawing (transforms, gradients, clips are mature
+            // there). The legacy GDI+ walker remains as fallback for anything the
+            // translator refuses. Mirrors ApkQuickReader.parseVectorDrawable.
+            try
+            {
+                XmlElement vec = node as XmlElement;
+                if (vec == null) vec = node.SelectSingleNode("/vector") as XmlElement;
+                if (vec != null)
+                {
+                    string svg = VectorDrawableToSvg.Translate(vec, new Func<string, XmlDocument>(ExtractCompressedXml));
+                    Svg.SvgDocument svgDoc = Svg.SvgDocument.FromSvg<Svg.SvgDocument>(svg);
+                    if (svgDoc != null)
+                    {
+                        using (Bitmap rendered = svgDoc.Draw(size.Width, size.Height))
+                        {
+                            if (rendered != null) return new Bitmap(rendered);
+                        }
+                    }
+                }
+            }
+            catch (Exception exSvg)
+            {
+                Log("svg vector render fallback for " + size.Width + "px: " + exSvg.Message);
+            }
+            try
+            {
+                return parseVectorDrawableLegacy(node, size);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message + "\nError happens during parsing vectordrawable: " + node.InnerXml);
+            }
+        }
+
+        private Bitmap parseVectorDrawableLegacy(XmlNode node, Size size)
+        {
             try
             {
                 XmlElement vector = (XmlElement)node.SelectSingleNode("/vector");
                 float viewportWidth = 0, viewportHeight = 0;
                 int width = 0, height = 0;
                 GraphicsUnit units = GraphicsUnit.Display;
-                if (vector.HasAttribute("viewportWidth"))
-                {
-                    viewportWidth = Convert.ToSingle(vector.GetAttribute("viewportWidth"));
-                }
-                if (vector.HasAttribute("viewportHeight"))
-                {
-                    viewportHeight = Convert.ToSingle(vector.GetAttribute("viewportHeight"));
-                    if (viewportWidth == 0) viewportWidth = viewportHeight;
-                }
-                else
-                {
-                    viewportHeight = viewportWidth;
-                }
+                // hostile XML may carry "NaN"/garbage where a float is expected -
+                // parse leniently and let ClampCanvas decide, never crash the icon thread
+                viewportWidth = GetXmlFloat(vector, "viewportWidth", 0f);
+                viewportHeight = GetXmlFloat(vector, "viewportHeight", 0f);
+                if (viewportWidth == 0) viewportWidth = viewportHeight;
+                if (viewportHeight == 0) viewportHeight = viewportWidth;
                 if (vector.HasAttribute("width"))
                 {
                     string ori = vector.GetAttribute("width");
@@ -290,43 +320,111 @@ namespace ApkShellext2
                     }
                     //Not finished yet
                 }
-                Bitmap b = new Bitmap((int)viewportWidth, (int)viewportHeight);
+                // viewport comes from attacker XML: a huge/NaN value would OOM explorer's
+                // process via the intermediate canvas. Real adaptive vectors are ≤ 108dp.
+                Bitmap b = new Bitmap(ClampCanvas(viewportWidth), ClampCanvas(viewportHeight));
                 using (Graphics g = Graphics.FromImage(b))
                 {
-                    XmlElement group = (XmlElement)vector.SelectSingleNode("group");
-                    XmlNodeList nl = (group != null) ? group.SelectNodes("path") :
-                                                      vector.SelectNodes("path");
-                    foreach (XmlElement elem in nl)
-                    {
-                        string pathdata = elem.GetAttribute("pathData");
-                        GraphicsPath gpath = VectorDrawableRender.Convert2Path(pathdata);
-                        Brush fill = null;
-                        if (elem.HasAttribute("fillColor"))
-                        {
-                            string fillcolor = elem.GetAttribute("fillColor");
-                            if (fillcolor.EndsWith(".xml"))
-                            {//gradien
-                                fill = parseGradient(fillcolor);
-                            }
-                            else
-                            {
-                                fill = new SolidBrush(stringToColor(elem.GetAttribute("fillColor")));
-                            }
-                        }
-                        else
-                        {
-                            fill = new SolidBrush(System.Drawing.Color.Black);
-                        }
-                        g.FillPath(fill, gpath);
-                        //g.DrawPath(new Pen(fill, 2), path);                    
-                    }
+                    DrawVectorGroup(g, vector, new Matrix());
                 }
-                return Utility.ResizeBitmap(b, size);
+                Bitmap legacyResized = Utility.ResizeBitmap(b, size);
+                b.Dispose(); // native-size canvas is dead once resized
+                return legacyResized;
             }
             catch (Exception ex)
             {
                 throw new Exception(ex.Message + "\nError happens during parsing vectordrawable: " + node.InnerXml);
             }
+        }
+
+        private static int ClampCanvas(float v)
+        {
+            if (float.IsNaN(v) || float.IsInfinity(v) || v <= 1f) return 1;
+            // icons are rasterised at <=256px by every caller; 1024 keeps even
+            // 8x supersampling honest while a hostile viewport can no longer
+            // demand a 4096x4096 (64 MB) bitmap
+            return (int)Math.Min(v, 1024f);
+        }
+
+        private static float GetXmlFloat(XmlElement elem, string name, float def)
+        {
+            if (!elem.HasAttribute(name)) return def;
+            float v;
+            return float.TryParse(elem.GetAttribute(name), System.Globalization.NumberStyles.Float,
+                System.Globalization.CultureInfo.InvariantCulture, out v) ? v : def;
+        }
+
+        /// <summary>
+        /// Fills paths of a &lt;vector&gt; or nested &lt;group&gt;, honouring the group
+        /// transforms (scale/rotation about pivot, then translation) defined by Android
+        /// VectorDrawable. Older code read only the paths of one first-level group and
+        /// silently ignored every transform, misplacing artwork such as the adaptive
+        /// foreground of 'Light Start' (drawn upper-left instead of centered).
+        /// </summary>
+        private void DrawVectorGroup(Graphics g, XmlElement parent, Matrix world)
+        {
+            foreach (XmlNode child in parent.ChildNodes)
+            {
+                XmlElement elem = child as XmlElement;
+                if (elem == null) continue;
+                if (elem.Name == "path")
+                {
+                    try
+                    {
+                        string pathdata = elem.GetAttribute("pathData");
+                        if (pathdata == "") continue;
+                        GraphicsPath gpath = VectorDrawableRender.Convert2Path(pathdata);
+                        gpath.Transform(world);
+                        Brush fill = null;
+                        if (elem.HasAttribute("fillColor"))
+                        {
+                            string fillcolor = elem.GetAttribute("fillColor");
+                            if (fillcolor.EndsWith(".xml"))
+                            {//gradient or indirect color resource
+                                try
+                                {
+                                    fill = parseGradient(fillcolor);
+                                }
+                                catch (Exception exGrad)
+                                {
+                                    Log("vector gradient failed, black fill: " + exGrad.Message.Split('\n')[0]);
+                                }
+                            }
+                            else
+                            {
+                                try { fill = new SolidBrush(stringToColor(fillcolor)); }
+                                catch { /* color resource ref - painted black below */ }
+                            }
+                        }
+                        if (fill == null) fill = new SolidBrush(System.Drawing.Color.Black);
+                        g.FillPath(fill, gpath);
+                    }
+                    catch (Exception exPath)
+                    {
+                        // one unparseable path (clipped/animated art) must not kill the icon
+                        Log("vector path skipped: " + exPath.Message.Split('\n')[0]);
+                    }
+                }
+                else if (elem.Name == "group")
+                {
+                    Matrix m = (Matrix)world.Clone();
+                    float pivotX = GetXmlFloat(elem, "pivotX", 0f);
+                    float pivotY = GetXmlFloat(elem, "pivotY", 0f);
+                    float sx = GetXmlFloat(elem, "scaleX", 1f);
+                    float sy = GetXmlFloat(elem, "scaleY", 1f);
+                    float rot = GetXmlFloat(elem, "rotation", 0f);
+                    // Android applies scale then rotation about the pivot, then translation;
+                    // appending mirrors that order for point transformation.
+                    if (sx != 1f || sy != 1f) m.Scale(sx, sy, MatrixOrder.Append);
+                    if (pivotX != 0f || pivotY != 0f) m.Translate(-pivotX, -pivotY, MatrixOrder.Append);
+                    if (rot != 0f) m.Rotate(rot, MatrixOrder.Append);
+                    if (pivotX != 0f || pivotY != 0f) m.Translate(pivotX, pivotY, MatrixOrder.Append);
+                    m.Translate(GetXmlFloat(elem, "translateX", 0f), GetXmlFloat(elem, "translateY", 0f), MatrixOrder.Append);
+                    DrawVectorGroup(g, elem, m);
+                    m.Dispose();
+                }
+            }
+            world.Dispose();
         }
 
         private Bitmap parseAdaptiveIcon(XmlNode node, Size size)

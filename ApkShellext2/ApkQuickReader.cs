@@ -1407,15 +1407,12 @@ namespace ApkQuickReader
                 float viewportWidth = 0, viewportHeight = 0;
                 int width = 0, height = 0;
                 GraphicsUnit units = GraphicsUnit.Display;
-                if (vector.HasAttribute("viewportWidth")) {
-                    viewportWidth = Convert.ToSingle(vector.GetAttribute("viewportWidth"));
-                }
-                if (vector.HasAttribute("viewportHeight")) {
-                    viewportHeight = Convert.ToSingle(vector.GetAttribute("viewportHeight"));
-                    if (viewportWidth == 0) viewportWidth = viewportHeight;
-                } else {
-                    viewportHeight = viewportWidth;
-                }
+                // hostile XML may carry "NaN"/garbage where a float is expected -
+                // parse leniently and let ClampCanvas decide, never crash the icon thread
+                viewportWidth = GetXmlFloat(vector, "viewportWidth", 0f);
+                viewportHeight = GetXmlFloat(vector, "viewportHeight", 0f);
+                if (viewportWidth == 0) viewportWidth = viewportHeight;
+                if (viewportHeight == 0) viewportHeight = viewportWidth;
                 if (vector.HasAttribute("width")) {
                     string ori = vector.GetAttribute("width");
                     try {
