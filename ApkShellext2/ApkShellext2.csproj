@@ -18,6 +18,10 @@
          postbuild.cmd and the docs all assume the flat layout -->
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <AssemblyTitle>ApkShellext2</AssemblyTitle>
+    <!-- determinism across toolchains: FullFramework MSBuild historically skips the NuGet
+         runtime closure in the output; make both copy it so bin layout never depends on the
+         last toolchain that ran (postbuild.cmd manifest then always finds its 12 files) -->
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -204,6 +208,11 @@
     <PackageReference Include="ExCSS" Version="4.2.3" />
     <PackageReference Include="System.Memory" Version="4.5.5" />
     <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.0.0" />
+    <!-- Direct (not just transitive) so BOTH toolchains copy it app-local: inside COM hosts
+         (explorer/dllhost) binding only probes app base + GAC, and the facade version the
+         compile references is newer than the GAC's 4.0.0.0 -> missing file = vector gradient
+         fills silently dropped (the "shield disappears" bug of 3.4.6). -->
+    <PackageReference Include="System.Numerics.Vectors" Version="4.4.0" />
     <!-- only the coreclr resource path needs it at compile time (see the property above) -->
     <PackageReference Include="System.Resources.Extensions" Version="6.0.0"
                       Condition="'$(GenerateResourceUsePreserializedResources)' == 'true'" />
